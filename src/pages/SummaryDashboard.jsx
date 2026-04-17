@@ -274,48 +274,11 @@ export default function OPDDashboard() {
                 }
             `}</style>
 
-<<<<<<< HEAD
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6 glass p-5 rounded-2xl soft-shadow border border-white/40">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800 tracking-tight">แดชบอร์ดสรุป </h1>
-            <p className="text-gray-400 text-sm mt-1">การให้บริการต่าง ๆ</p>
-          </div>
-
-          <div className="flex items-center gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm">
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
-              className="text-sm px-2 py-1 rounded border border-gray-300 bg-white text-gray-900 focus:outline-none focus:border-[#1e40af]" />
-            <span className="text-gray-500 text-sm">-</span>
-            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
-              className="text-sm px-2 py-1 rounded border border-gray-300 bg-white text-gray-900 focus:outline-none focus:border-[#1e40af]" />
-            <button onClick={applyDateFilter}
-              className="bg-[#1e40af] hover:bg-blue-800 text-white text-sm px-3 py-1.5 rounded transition shadow-sm">ค้นหา</button>
-            <button onClick={clearDateFilter}
-              className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isFilterMode ? 'hidden' : ''}`}>ล้าง</button>
-          </div>
-
-          <div className="flex items-center gap-3 whitespace-nowrap whitespace-nowrap">
-            <p className="text-gray-600 font-semibold text-sm">{currentTime}</p>
-            <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>{status.text}</span>
-
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          {/* Card 1 */}
-          <div className="stat-card bg-[#1e40af] text-white p-5 rounded-lg shadow-md relative overflow-hidden flex flex-col justify-between min-h-[140px]">
-            <div className="flex items-center gap-3 opacity-80 mb-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-              </svg>
-              <span className="text-base">รวมผู้รับบริการทั้งหมด (OPD Total)</span>
-=======
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-6 glass p-5 rounded-2xl soft-shadow border border-white/40">
             <div>
               <h1 className="text-2xl font-bold text-gray-800 tracking-tight">แดชบอร์ดสรุป </h1>
               <p className="text-gray-400 text-sm mt-1">การให้บริการต่าง ๆ</p>
->>>>>>> 6b8e4ff (add helmet NotFoundPage)
             </div>
 
             <div className="flex items-center gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm">
@@ -330,10 +293,9 @@ export default function OPDDashboard() {
                 className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isFilterMode ? 'hidden' : ''}`}>ล้าง</button>
             </div>
 
-            <div className="text-right w-[220px]">
-              <p className="text-gray-600 font-semibold text-sm whitespace-nowrap">{currentTime}</p>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>
-                {status.text}
+            <div className="flex items-center gap-3 whitespace-nowrap whitespace-nowrap">
+              <p className="text-gray-600 font-semibold text-sm">{currentTime}</p>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>{status.text}
               </span>
             </div>
           </div>
