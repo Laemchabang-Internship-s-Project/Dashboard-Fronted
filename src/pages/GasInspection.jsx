@@ -288,22 +288,22 @@ export default function GasInspection() {
               ) : (
                 filteredRecords.map((r, i) => (
                   <tr key={i} className="border-t border-gray-50 hover:bg-blue-50 transition">
-                    <td className="px-3 py-3 text-gray-400 text-xs">{i + 1}</td>
-                    <td className="px-3 py-3 whitespace-nowrap">
+                    <td className="px-2 py-3 text-gray-400 text-xs">{i + 1}</td>
+                    <td className="px-2 py-3 whitespace-nowrap">
                       <div className="font-semibold text-gray-700">{r.date || "—"}</div>
                       <div className="text-xs text-gray-400">{r.timestamp || ""}</div>
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap"><span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-bold">{r.machine || "—"}</span></td>
-                    <td className="px-3 py-3 text-center font-bold text-slate-600 whitespace-nowrap">{r.fuel_level_be4 ?? "—"} L</td>
-                    <td className="px-3 py-3 text-center font-bold text-green-600 whitespace-nowrap">{r.fuel_level_aft ?? "—"} L</td>
-                    <td className="px-3 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.battery_pole)}`}>{r.battery_pole || "—"}</span></td>
-                    <td className="px-3 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.battery_water)}`}>{r.battery_water || "—"}</span></td>
-                    <td className="px-3 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.radiator_water)}`}>{r.radiator_water || "—"}</span></td>
-                    <td className="px-3 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.engine_oil)}`}>{r.engine_oil || "—"}</span></td>
-                    <td className="px-3 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.control_light)}`}>{r.control_light || "—"}</span></td>
-                    <td className="px-3 py-3 text-gray-700 whitespace-nowrap">{r.tech_name || "—"}</td>
-                    <td className="px-3 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.status)}`}>{r.status || "—"}</span></td>
-                    <td className="px-3 py-3 text-gray-500 whitespace-nowrap">{r.app_name || "—"}</td>
+                    <td className="px-2 py-3 whitespace-nowrap"><span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-bold">{r.machine || "—"}</span></td>
+                    <td className="px-2 py-3 text-center font-bold text-slate-600 whitespace-nowrap">{r.fuel_level_be4 ?? "—"} L</td>
+                    <td className="px-2 py-3 text-center font-bold text-green-600 whitespace-nowrap">{r.fuel_level_aft ?? "—"} L</td>
+                    <td className="px-2 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.battery_pole)}`}>{r.battery_pole || "—"}</span></td>
+                    <td className="px-2 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.battery_water)}`}>{r.battery_water || "—"}</span></td>
+                    <td className="px-2 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.radiator_water)}`}>{r.radiator_water || "—"}</span></td>
+                    <td className="px-2 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.engine_oil)}`}>{r.engine_oil || "—"}</span></td>
+                    <td className="px-2 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.control_light)}`}>{r.control_light || "—"}</span></td>
+                    <td className="px-2 py-3 text-gray-700 whitespace-nowrap">{r.tech_name || "—"}</td>
+                    <td className="px-2 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.status)}`}>{r.status || "—"}</span></td>
+                    <td className="px-2 py-3 text-gray-500 whitespace-nowrap">{r.app_name || "—"}</td>
                   </tr>
                 ))
               )}
