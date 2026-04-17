@@ -56,7 +56,7 @@ export default function GasInspection() {
       const res = await fetch(`${API_URL}/api/fuel/history?limit=100`);
       const data = await res.json();
       setAllRecords(data.records || []);
-      setLastUpdated("อัปเดต: " + new Date().toLocaleTimeString("th-TH"));
+      setLastUpdated("ข้อมูลอัปเดต: " + new Date().toLocaleTimeString("th-TH"));
     } catch (err) {
       console.error(err);
     }
@@ -182,10 +182,11 @@ export default function GasInspection() {
           <button onClick={handleRefresh} disabled={isRefreshing} className={`p-1.5 border border-gray-200 text-gray-500 rounded-lg transition ${isRefreshing ? 'opacity-50' : 'hover:bg-gray-50'}`}>
             <FontAwesomeIcon icon={faRotateRight} className={`inline-block ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
-          <div className="flex items-center gap-3 whitespace-nowrap">
-            <p className="text-gray-600 font-semibold text-sm">{currentTime}</p>
+          <div className="flex flex-col items-end whitespace-nowrap">
+            <p className="text-gray-600 font-semibold text-sm leading-tight">{currentTime}</p>
+            <span className="text-[10px] text-gray-400 leading-tight">{lastUpdated}</span>
           </div>
-            <span className={`text-[10px] px-3 py-1 rounded-full uppercase font-semibold ${statusColor}`}>{statusText}</span>
+          <span className={`text-[10px] px-3 py-1 rounded-full uppercase font-semibold ${statusColor}`}>{statusText}</span>
         </div>
       </div>
 
