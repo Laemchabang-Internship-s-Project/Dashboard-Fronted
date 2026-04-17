@@ -247,6 +247,7 @@ export default function GasInspection() {
         </div>
       </div>
 
+      <p className="text-gray-400 text-xs text-right m-0 pb-1">*หลัง Redis restart หรือเมื่อข้อมูลใน Redis ไม่ตรงกับ Sheet ให้run backfillHistory ใน apps script</p>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex flex-wrap gap-3 justify-between items-center">
           <h2 className="font-bold text-gray-700">ประวัติการตรวจเช็ค <span className="text-sm text-gray-400 font-normal">({filteredRecords.length} รายการ)</span></h2>
@@ -261,41 +262,43 @@ export default function GasInspection() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
               <tr>
-                <th className="px-3 py-3 text-left">#</th>
-                <th className="px-3 py-3 text-left">วันที่</th>
-                <th className="px-3 py-3 text-left">เครื่อง</th>
-                <th className="px-3 py-3 text-center">ก่อน</th>
-                <th className="px-3 py-3 text-center">หลัง</th>
-                <th className="px-3 py-3 text-center">ขั้วแบต</th>
-                <th className="px-3 py-3 text-center">น้ำกลั่น</th>
-                <th className="px-3 py-3 text-center">หม้อน้ำ</th>
-                <th className="px-3 py-3 text-center">น้ำมันเครื่อง</th>
-                <th className="px-3 py-3 text-center">ไฟควบคุม</th>
-                <th className="px-3 py-3 text-left">ผู้ตรวจ</th>
-                <th className="px-3 py-3 text-center">สถานะ</th>
+                <th className="px-3 py-3 text-left whitespace-nowrap">#</th>
+                <th className="px-3 py-3 text-left whitespace-nowrap">วันที่</th>
+                <th className="px-3 py-3 text-left whitespace-nowrap">เครื่อง</th>
+                <th className="px-3 py-3 text-center whitespace-nowrap">น้ำมันก่อน</th>
+                <th className="px-3 py-3 text-center whitespace-nowrap">น้ำมันหลัง</th>
+                <th className="px-3 py-3 text-center whitespace-nowrap">ขั้วแบต</th>
+                <th className="px-3 py-3 text-center whitespace-nowrap">น้ำกลั่น</th>
+                <th className="px-3 py-3 text-center whitespace-nowrap">หม้อน้ำ</th>
+                <th className="px-3 py-3 text-center whitespace-nowrap">น้ำมันเครื่อง</th>
+                <th className="px-3 py-3 text-center whitespace-nowrap">ไฟควบคุม</th>
+                <th className="px-3 py-3 text-left whitespace-nowrap">ผู้ตรวจ</th>
+                <th className="px-3 py-3 text-center whitespace-nowrap">สถานะ</th>
+                <th className="px-3 py-3 text-left whitespace-nowrap">ผู้อนุมัติ</th>
               </tr>
             </thead>
             <tbody>
               {filteredRecords.length === 0 ? (
-                <tr><td colSpan="12" className="text-center py-12 text-gray-400">ไม่มีข้อมูล</td></tr>
+                <tr><td colSpan="13" className="text-center py-12 text-gray-400">ไม่มีข้อมูล</td></tr>
               ) : (
                 filteredRecords.map((r, i) => (
                   <tr key={i} className="border-t border-gray-50 hover:bg-blue-50 transition">
                     <td className="px-3 py-3 text-gray-400 text-xs">{i + 1}</td>
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-3 whitespace-nowrap">
                       <div className="font-semibold text-gray-700">{r.date || "—"}</div>
                       <div className="text-xs text-gray-400">{r.timestamp || ""}</div>
                     </td>
-                    <td className="px-3 py-3"><span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-bold">{r.machine || "—"}</span></td>
-                    <td className="px-3 py-3 text-center font-bold text-slate-600">{r.fuel_level_be4 ?? "—"} L</td>
-                    <td className="px-3 py-3 text-center font-bold text-green-600">{r.fuel_level_aft ?? "—"} L</td>
-                    <td className="px-3 py-3 text-center"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.battery_pole)}`}>{r.battery_pole || "—"}</span></td>
-                    <td className="px-3 py-3 text-center"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.battery_water)}`}>{r.battery_water || "—"}</span></td>
-                    <td className="px-3 py-3 text-center"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.radiator_water)}`}>{r.radiator_water || "—"}</span></td>
-                    <td className="px-3 py-3 text-center"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.engine_oil)}`}>{r.engine_oil || "—"}</span></td>
-                    <td className="px-3 py-3 text-center"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.control_light)}`}>{r.control_light || "—"}</span></td>
-                    <td className="px-3 py-3 text-gray-700">{r.tech_name || "—"}</td>
-                    <td className="px-3 py-3 text-center"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.status)}`}>{r.status || "—"}</span></td>
+                    <td className="px-3 py-3 whitespace-nowrap"><span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-bold">{r.machine || "—"}</span></td>
+                    <td className="px-3 py-3 text-center font-bold text-slate-600 whitespace-nowrap">{r.fuel_level_be4 ?? "—"} L</td>
+                    <td className="px-3 py-3 text-center font-bold text-green-600 whitespace-nowrap">{r.fuel_level_aft ?? "—"} L</td>
+                    <td className="px-3 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.battery_pole)}`}>{r.battery_pole || "—"}</span></td>
+                    <td className="px-3 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.battery_water)}`}>{r.battery_water || "—"}</span></td>
+                    <td className="px-3 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.radiator_water)}`}>{r.radiator_water || "—"}</span></td>
+                    <td className="px-3 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.engine_oil)}`}>{r.engine_oil || "—"}</span></td>
+                    <td className="px-3 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.control_light)}`}>{r.control_light || "—"}</span></td>
+                    <td className="px-3 py-3 text-gray-700 whitespace-nowrap">{r.tech_name || "—"}</td>
+                    <td className="px-3 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.status)}`}>{r.status || "—"}</span></td>
+                    <td className="px-3 py-3 text-gray-500 whitespace-nowrap">{r.app_name || "—"}</td>
                   </tr>
                 ))
               )}
