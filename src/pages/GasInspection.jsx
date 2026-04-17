@@ -21,6 +21,7 @@ export default function GasInspection() {
   const [statusText, setStatusText] = useState("Connecting...");
   const [statusColor, setStatusColor] = useState("bg-gray-100 text-gray-500");
   const [lastUpdated, setLastUpdated] = useState("รอข้อมูล...");
+  const [currentTime, setCurrentTime] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const chartRef = useRef(null);
   const canvasRef = useRef(null);
@@ -60,6 +61,19 @@ export default function GasInspection() {
       console.error(err);
     }
   };
+
+  // อัปเดตเวลาปัจจุบัน (Clock) เหมือนหน้า Summary
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const options = {
+        year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      };
+      setCurrentTime(now.toLocaleString('th-TH', options));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     loadHistory();
@@ -168,8 +182,10 @@ export default function GasInspection() {
           <button onClick={handleRefresh} disabled={isRefreshing} className={`p-1.5 border border-gray-200 text-gray-500 rounded-lg transition ${isRefreshing ? 'opacity-50' : 'hover:bg-gray-50'}`}>
             <FontAwesomeIcon icon={faRotateRight} className={`inline-block ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
-          <span className="text-xs text-gray-400">{lastUpdated}</span>
-          <span className={`text-[10px] px-3 py-1 rounded-full uppercase font-semibold ${statusColor}`}>{statusText}</span>
+          <div className="flex items-center gap-3 whitespace-nowrap">
+            <p className="text-gray-600 font-semibold text-sm">{currentTime}</p>
+          </div>
+            <span className={`text-[10px] px-3 py-1 rounded-full uppercase font-semibold ${statusColor}`}>{statusText}</span>
         </div>
       </div>
 

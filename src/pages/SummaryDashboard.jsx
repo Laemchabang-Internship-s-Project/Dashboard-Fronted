@@ -288,11 +288,10 @@ export default function OPDDashboard() {
               className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isFilterMode ? 'hidden' : ''}`}>ล้าง</button>
           </div>
 
-          <div className="text-right w-[220px]">
-            <p className="text-gray-600 font-semibold text-sm whitespace-nowrap">{currentTime}</p>
-            <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>
-              {status.text}
-            </span>
+          <div className="flex items-center gap-3 whitespace-nowrap whitespace-nowrap">
+            <p className="text-gray-600 font-semibold text-sm">{currentTime}</p>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>{status.text}</span>
+
           </div>
         </div>
 
