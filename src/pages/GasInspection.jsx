@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Chart from 'chart.js/auto';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faRotateRight, faChartSimple, faCalendarDays, faUser, faChartLine, faCircleCheck, faCircleXmark, faClock } from '@fortawesome/free-solid-svg-icons';
 
 const API_URL = "http://localhost:8000";
 
@@ -164,7 +166,7 @@ export default function GasInspection() {
         </div>
         <div className="flex items-center gap-3 mt-2 md:mt-0">
           <button onClick={handleRefresh} disabled={isRefreshing} className={`p-1.5 border border-gray-200 text-gray-500 rounded-lg transition ${isRefreshing ? 'opacity-50' : 'hover:bg-gray-50'}`}>
-            <span className={`inline-block ${isRefreshing ? 'animate-spin' : ''}`}>🔄</span>
+            <FontAwesomeIcon icon={faRotateRight} className={`inline-block ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
           <span className="text-xs text-gray-400">{lastUpdated}</span>
           <span className={`text-[10px] px-3 py-1 rounded-full uppercase font-semibold ${statusColor}`}>{statusText}</span>
@@ -172,7 +174,7 @@ export default function GasInspection() {
       </div>
 
       <div>
-        <h2 className="font-bold text-gray-700 text-base mb-3">📊 สรุปล่าสุดแต่ละเครื่อง</h2>
+        <h2 className="font-bold text-gray-700 text-base mb-3"><FontAwesomeIcon icon={faChartSimple} className="text-blue-600 mr-2" />สรุปล่าสุดแต่ละเครื่อง</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {knownMachines.map(m => {
             const r = allRecords.find(rec => rec.machine === m);
@@ -202,8 +204,9 @@ export default function GasInspection() {
               <div key={m} onClick={() => setActiveFilter(m)} className={`bg-white rounded-xl p-3 border-2 cursor-pointer transition ${activeFilter === m ? 'border-blue-800 shadow-md' : 'border-gray-100 hover:-translate-y-1'}`}>
                 <div className="flex justify-between items-start mb-2">
                   <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-bold">{m}</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isRejected ? 'bg-red-100 text-red-800' : isApproved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                    {isRejected ? '✗ ไม่อนุมัติ' : isApproved ? '✓ อนุมัติแล้ว' : '⏳ รออนุมัติ'}
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold flex items-center gap-1 ${isRejected ? 'bg-red-100 text-red-800' : isApproved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                    <FontAwesomeIcon icon={isRejected ? faCircleXmark : isApproved ? faCircleCheck : faClock} />
+                    {isRejected ? 'ไม่อนุมัติ' : isApproved ? 'อนุมัติแล้ว' : 'รออนุมัติ'}
                   </span>
                 </div>
                 
@@ -231,6 +234,8 @@ export default function GasInspection() {
                     <p className={`text-sm font-bold ${didRefuel ? 'text-green-600' : 'text-gray-400'}`}>{fuelAft !== "—" ? fuelAft + " L" : "—"}</p>
                   </div>
                 </div>
+                <p className="text-[10px] text-gray-400 truncate mt-2 mb-0"><FontAwesomeIcon icon={faCalendarDays} className="mr-1 opacity-70" /> {hasData ? (r.date || "—") : "—"}</p>
+                <p className="text-[10px] text-gray-400 truncate m-0"><FontAwesomeIcon icon={faUser} className="mr-1 opacity-70" /> {hasData ? (r.tech_name || "—") : "—"}</p>
               </div>
             );
           })}
@@ -239,7 +244,7 @@ export default function GasInspection() {
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 mb-6">
         <div className="flex justify-between items-end mb-4">
-          <h2 className="font-bold text-gray-700 text-base">📊 แนวโน้มระดับน้ำมัน: <span className="text-blue-600">{activeFilter === 'all' ? 'ทั้งหมด' : activeFilter}</span></h2>
+          <h2 className="font-bold text-gray-700 text-base"><FontAwesomeIcon icon={faChartLine} className="text-blue-600 mr-2" />แนวโน้มระดับน้ำมัน: <span className="text-blue-600">{activeFilter === 'all' ? 'ทั้งหมด' : activeFilter}</span></h2>
           <span className="text-[10px] text-gray-400">15 รายการล่าสุด</span>
         </div>
         <div className="relative w-full h-[250px]">
