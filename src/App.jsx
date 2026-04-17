@@ -1,121 +1,56 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React from 'react';
+import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import SummaryDashboard from './pages/SummaryDashboard';
+import GasInspection from './pages/GasInspection';
 
-function App() {
-  const [count, setCount] = useState(0)
+const Sidebar = () => {
+  const location = useLocation();
+  const path = location.pathname;
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+    <aside className="w-64 bg-[#1e40af] text-white flex-shrink-0 hidden md:flex flex-col min-h-screen">
+      <div className="p-6 font-bold text-xl border-b border-blue-800">
+        LCBH Dashboard
+      </div>
+      <nav className="flex-1 p-4 space-y-2">
+        <Link
+          to="/"
+          className={`block px-4 py-2 rounded-lg transition ${
+            path === '/' ? 'bg-blue-800' : 'hover:bg-blue-700'
+          }`}
         >
-          Count is {count}
-        </button>
-      </section>
+          🏠 แดชบอร์ดสรุป
+        </Link>
+        <Link
+          to="/gas-inspection"
+          className={`block px-4 py-2 rounded-lg transition ${
+            path === '/gas-inspection' ? 'bg-blue-800' : 'hover:bg-blue-700'
+          }`}
+        >
+          ⛽ ตรวจเช็คน้ำมัน/แก๊ส
+        </Link>
+      </nav>
+      <div className="p-4 text-xs text-blue-300 border-t border-blue-800">
+        ระบบอัปเดตอัตโนมัติ (Real-time)
+      </div>
+    </aside>
+  );
+};
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+function App() {
+  return (
+    <BrowserRouter basename="/lcbh/dashboard">
+      <div className="flex min-h-screen bg-slate-50 font-sans">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto h-screen">
+          <Routes>
+            <Route path="/" element={<SummaryDashboard />} />
+            <Route path="/gas-inspection" element={<GasInspection />} />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
