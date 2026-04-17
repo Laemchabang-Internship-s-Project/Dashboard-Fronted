@@ -95,7 +95,8 @@ export default function OPDDashboard() {
     }, []);
 
     const updateDashboardData = (data) => {
-        if (!data?.opd_clinics) return;
+        // ป้องกันข้อมูล Real-time มาเขียนทับข้อมูล Filter
+        if (!data?.opd_clinics || isFilterMode) return;
 
         const h = data.opd_clinics.header;
         const s = data.system;
@@ -131,9 +132,10 @@ export default function OPDDashboard() {
     // จัดการ SSE และ Snapshot
     useEffect(() => {
         let es = null;
+        let isCancelled = false; // สำหรับเช็คว่า Effect นี้ยัง Valid อยู่หรือไม่
 
         const connectSSE = () => {
-            if (isFilterMode) return;
+            if (isFilterMode || isCancelled) return;
             console.log("📡 [2/2] Connecting to SSE Stream...");
 
             let url = `${API_URL}/api/dashboard/stream`;
@@ -142,11 +144,13 @@ export default function OPDDashboard() {
             es = new EventSource(url);
 
             es.onopen = () => {
+                if (isCancelled) { es.close(); return; }
                 console.log("🟢 SSE Connection Established");
                 setStatus({ text: "LIVE", color: "bg-green-100 text-green-700 font-bold" });
             };
 
             es.onmessage = (event) => {
+                if (isCancelled || isFilterMode) return;
                 try {
                     const data = JSON.parse(event.data);
                     updateDashboardData(data);
@@ -156,7 +160,7 @@ export default function OPDDashboard() {
             };
 
             es.onerror = () => {
-                if (isFilterMode || !es) return;
+                if (isFilterMode || isCancelled || !es) return;
                 console.error("🔴 SSE Connection Lost");
                 setStatus({ text: "RECONNECTING", color: "bg-orange-100 text-orange-700" });
 
@@ -164,7 +168,7 @@ export default function OPDDashboard() {
                 es = null;
 
                 setTimeout(() => {
-                    if (!isFilterMode) connectSSE();
+                    if (!isFilterMode && !isCancelled) connectSSE();
                 }, 3000);
             };
         };
@@ -177,12 +181,15 @@ export default function OPDDashboard() {
                     headers: API_KEY ? { "x-api-key": API_KEY } : {}
                 });
                 const data = await res.json();
+                
+                if (isCancelled) return; // ถ้าเปลี่ยนโหมดไปแล้ว ไม่ต้องทำต่อ
+
                 console.log("✅ Snapshot Loaded Successfully");
                 updateDashboardData(data);
                 connectSSE();
             } catch (err) {
                 console.error("❌ Snapshot error:", err);
-                connectSSE();
+                if (!isCancelled) connectSSE();
             }
         };
 
@@ -191,6 +198,7 @@ export default function OPDDashboard() {
         }
 
         return () => {
+            isCancelled = true;
             if (es) {
                 es.close();
                 es = null;
