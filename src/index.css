@@ -1,114 +1,117 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: 'Sarabun', system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: 'Sarabun', system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
-  
+/* Gas Inspection Specific Styles */
+.card {
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+}
+
+.badge-ok {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge-warn {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.badge-bad {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-na {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+@keyframes flashRow {
+  0% {
+      background: #d1fae5
   }
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+  100% {
+      background: transparent
   }
 }
 
-body {
-  margin: 0;
+.row-new {
+  animation: flashRow 3s ease forwards;
 }
 
-#root {
-  width: 100%; /* เปลี่ยนจาก 1126px เป็น 100% เพื่อให้เต็มจอ */
-  margin: 0;
-  text-align: left; /* เปลี่ยนจาก center เป็น left เพื่อให้ข้อความอ่านง่ายขึ้น */
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+/* machine card active state */
+.machine-card.active {
+  border-color: #1e3a8a;
+  box-shadow: 0 0 0 2px #1e3a8a33;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+.filter-btn {
+  transition: all 0.15s;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
+.filter-btn.active {
+  background: #1e3a8a;
+  color: white;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+/* ── Gauge Chart ── */
+.gauge-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  border-radius: 9999px 9999px 0 0;
+  overflow: hidden;
+  background: #e2e8f0;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+.gauge-fill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: conic-gradient(from 270deg at 50% 100%, var(--gauge-color) 0deg, var(--gauge-color) var(--gauge-deg), transparent var(--gauge-deg));
+  transition: all 0.6s cubic-bezier(.4, 0, .2, 1);
+}
+
+.gauge-needle {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform-origin: bottom center;
+  width: 3px;
+  height: 44%;
+  background: #334155;
+  border-radius: 99px;
+  transform: translateX(-50%) rotate(var(--needle-deg));
+  transition: transform 0.6s cubic-bezier(.4, 0, .2, 1);
+}
+
+.gauge-center {
+  position: absolute;
+  bottom: -14%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid #e2e8f0;
+  z-index: 2;
+}
+
+.gauge-inner {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 68%;
+  aspect-ratio: 2/1;
+  border-radius: 9999px 9999px 0 0;
+  background: white;
+  z-index: 1;
 }

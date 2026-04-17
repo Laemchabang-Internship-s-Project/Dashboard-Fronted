@@ -78,7 +78,7 @@ export default function GasInspection() {
           if (prev.length > 0 && prev[0].timestamp === fuel.timestamp) return prev;
           return [fuel, ...prev];
         });
-      } catch (e) {}
+      } catch (e) { }
     };
     es.onerror = () => {
       setStatusText("RECONNECTING");
@@ -101,7 +101,7 @@ export default function GasInspection() {
   useEffect(() => {
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext('2d');
-    
+
     if (chartRef.current) {
       chartRef.current.destroy();
     }
@@ -179,17 +179,17 @@ export default function GasInspection() {
           {knownMachines.map(m => {
             const r = allRecords.find(rec => rec.machine === m);
             if (!r) return null;
-            
+
             const maxCap = getMachineCapacity(m);
             const rawBe4 = r.fuel_level_be4;
             const rawAft = r.fuel_level_aft;
             const aftNum = parseFloat(rawAft);
             const didRefuel = !isNaN(aftNum) && aftNum > 0;
-            
+
             const fuelBe4 = (rawBe4 != null && rawBe4 !== "") ? rawBe4 : "—";
             const fuelAft = didRefuel ? aftNum : "—";
             const gaugeVal = didRefuel ? rawAft : rawBe4;
-            
+
             const numVal = parseFloat(gaugeVal);
             const isValid = !isNaN(numVal) && numVal >= 0;
             const pct = isValid ? Math.min(Math.max(numVal / maxCap, 0), 1) : 0;
@@ -209,7 +209,7 @@ export default function GasInspection() {
                     {isRejected ? 'ไม่อนุมัติ' : isApproved ? 'อนุมัติแล้ว' : 'รออนุมัติ'}
                   </span>
                 </div>
-                
+
                 <div className="mt-2 mb-1 px-1">
                   <div className="relative w-full aspect-[2/1] rounded-t-full overflow-hidden bg-slate-200" style={{ '--gauge-color': color, '--gauge-deg': sweepDeg + 'deg', '--needle-deg': needleDeg + 'deg' }}>
                     <div className="absolute inset-0 w-full h-full" style={{ background: `conic-gradient(from 270deg at 50% 100%, var(--gauge-color) 0deg, var(--gauge-color) var(--gauge-deg), transparent var(--gauge-deg))` }}></div>
@@ -234,8 +234,8 @@ export default function GasInspection() {
                     <p className={`text-sm font-bold ${didRefuel ? 'text-green-600' : 'text-gray-400'}`}>{fuelAft !== "—" ? fuelAft + " L" : "—"}</p>
                   </div>
                 </div>
-                <p className="text-[10px] text-gray-400 truncate mt-2 mb-0"><FontAwesomeIcon icon={faCalendarDays} className="mr-1 opacity-70" /> {hasData ? (r.date || "—") : "—"}</p>
-                <p className="text-[10px] text-gray-400 truncate m-0"><FontAwesomeIcon icon={faUser} className="mr-1 opacity-70" /> {hasData ? (r.tech_name || "—") : "—"}</p>
+                <p className="text-[10px] text-gray-400 truncate mt-2 mb-0"><FontAwesomeIcon icon={faCalendarDays} className="mr-1 opacity-70" /> {r.date || "—"}</p>
+                <p className="text-[10px] text-gray-400 truncate m-0"><FontAwesomeIcon icon={faUser} className="mr-1 opacity-70" /> {r.tech_name || "—"}</p>
               </div>
             );
           })}
