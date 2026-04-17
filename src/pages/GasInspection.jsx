@@ -118,7 +118,7 @@ export default function GasInspection() {
   };
 
   const filteredRecords = activeFilter === "all" ? allRecords : allRecords.filter(r => r.machine === activeFilter);
-  const knownMachines = [...new Set(allRecords.map(r => r.machine).filter(Boolean))];
+  const knownMachines = [...new Set(allRecords.map(r => r.machine).filter(Boolean))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -144,7 +144,7 @@ export default function GasInspection() {
       // 1. หาวันที่ที่มีข้อมูลทั้งหมด และเรียงลำดับจากเก่าไปใหม่
       const allUniqueDates = [...new Set(allRecords.map(r => r.date).filter(Boolean))]
         .sort((a, b) => parseDate(a) - parseDate(b));
-      
+
       // 2. เลือก 15 วันล่าสุด
       const recentDates = allUniqueDates.slice(-15);
       labels = recentDates.map(d => {
@@ -184,7 +184,7 @@ export default function GasInspection() {
       const chartData = [...filteredRecords]
         .sort((a, b) => parseDate(a.date) - parseDate(b.date))
         .slice(-15);
-      
+
       const dataPoints = [];
       const backgroundColors = [];
       const machineColor = MACHINE_COLORS[activeFilter] || MACHINE_COLORS.default;
