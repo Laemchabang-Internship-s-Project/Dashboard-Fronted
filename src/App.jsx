@@ -19,7 +19,7 @@ const Sidebar = () => {
             path === '/' ? 'bg-blue-800' : 'hover:bg-blue-700'
           }`}
         >
-          🏠 แดชบอร์ดสรุป
+        Dashboard
         </Link>
         <Link
           to="/gas-inspection"
@@ -27,7 +27,7 @@ const Sidebar = () => {
             path === '/gas-inspection' ? 'bg-blue-800' : 'hover:bg-blue-700'
           }`}
         >
-          ⛽ ตรวจเช็คน้ำมัน/แก๊ส
+        Gas Inspection
         </Link>
       </nav>
       <div className="p-4 text-xs text-blue-300 border-t border-blue-800">
