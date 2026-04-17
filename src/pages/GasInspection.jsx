@@ -56,7 +56,7 @@ export default function GasInspection() {
       const res = await fetch(`${API_URL}/api/fuel/history?limit=100`);
       const data = await res.json();
       setAllRecords(data.records || []);
-      setLastUpdated("ข้อมูลอัปเดต: " + new Date().toLocaleTimeString("th-TH"));
+      setLastUpdated("อัปเดตข้อมูลล่าสุด: " + new Date().toLocaleTimeString("th-TH"));
     } catch (err) {
       console.error(err);
     }
