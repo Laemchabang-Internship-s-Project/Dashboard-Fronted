@@ -1,33 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers, faWalking, faLaptopMedical, faTruckMedical, faCircleCheck, faCircleXmark, faClock, faCalendarDays, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faUsers, faWalking, faLaptopMedical, faTruckMedical } from '@fortawesome/free-solid-svg-icons';
 import { Helmet } from "react-helmet-async";
 import { apiGet, createEventSource } from "../services/api";
 
-
-const MACHINE_CAPACITY = {
-  "เครื่องที่ 1": 655, "1": 655,
-  "เครื่องที่ 2": 636, "2": 636,
-  "เครื่องที่ 3": 650, "3": 650
-};
-
-const getMachineCapacity = (m) => {
-  if (!m) return 1000;
-  const str = String(m).trim();
-  if (MACHINE_CAPACITY[str]) return MACHINE_CAPACITY[str];
-  if (str.includes("1")) return 655;
-  if (str.includes("2")) return 636;
-  if (str.includes("3")) return 650;
-  return 1000;
-};
-
-const getFuelColor = (pct) => {
-  if (pct >= 0.5) return '#22c55e';
-  if (pct >= 0.25) return '#f59e0b';
-  return '#ef4444';
-};
-
-const STATUS_BAD = ["ผิดปกติ", "bad", "เสีย", "ไม่ปกติ", "error", "หมด", "ไม่อนุมัติ"];
 
 function formatWaitTime(minutes) {
   if (minutes == null || isNaN(minutes)) return "-";
@@ -89,75 +65,6 @@ const AnimatedStat = ({ value, Component = "h2", className = "" }) => {
   return <Component ref={ref} className={className}>{displayValue}</Component>;
 };
 
-const FuelGaugeCard = ({ machineName, records }) => {
-  const r = records.find(rec => rec.machine === machineName);
-  if (!r) return null;
-
-  const maxCap = getMachineCapacity(machineName);
-  const rawBe4 = r.fuel_level_be4;
-  const rawAft = r.fuel_level_aft;
-  const aftNum = parseFloat(rawAft);
-  const didRefuel = !isNaN(aftNum) && aftNum > 0;
-
-  const fuelBe4 = (rawBe4 != null && rawBe4 !== "") ? rawBe4 : "—";
-  const fuelAft = didRefuel ? aftNum : "—";
-  const gaugeVal = didRefuel ? rawAft : rawBe4;
-
-  const numVal = parseFloat(gaugeVal);
-  const isValid = !isNaN(numVal) && numVal >= 0;
-  const pct = isValid ? Math.min(Math.max(numVal / maxCap, 0), 1) : 0;
-  const color = isValid ? getFuelColor(pct) : '#cbd5e1';
-  const sweepDegree = Math.round(pct * 180 * 10) / 10;
-  const needleDegree = Math.round((pct * 180 - 90) * 10) / 10;
-
-  const isApproved = r.app_name && r.app_name.trim() !== "" && r.app_name !== "—";
-  const isRejected = STATUS_BAD.some(k => (r.status || "").toLowerCase().includes(k));
-
-  return (
-    <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm transition hover:-translate-y-1 flex flex-col items-center justify-center min-h-[160px]">
-      <div className="flex flex-col items-center mb-3 w-full gap-1">
-        <span className="bg-blue-100 text-blue-700 text-[10px] rounded-full px-2.5 py-0.5 font-bold">{machineName}</span>
-        <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold flex items-center gap-1 ${isRejected ? 'bg-red-100 text-red-800' : isApproved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-          <FontAwesomeIcon icon={isRejected ? faCircleXmark : isApproved ? faCircleCheck : faClock} />
-          {isRejected ? 'ไม่อนุมัติ' : isApproved ? 'อนุมัติแล้ว' : 'รอ'}
-        </span>
-      </div>
-
-      <div className="mb-2 px-2 w-full max-w-[160px]">
-        <div className="relative w-full aspect-[2/1] rounded-t-full overflow-hidden bg-slate-200 mx-auto" style={{ '--gauge-color': color, '--gauge-deg': sweepDegree + 'deg', '--needle-deg': needleDegree + 'deg' }}>
-          <div className="absolute inset-0 w-full h-full" style={{ background: `conic-gradient(from 270deg at 50% 100%, var(--gauge-color) 0deg, var(--gauge-color) var(--gauge-deg), transparent var(--gauge-deg))` }}></div>
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[68%] aspect-[2/1] rounded-t-full bg-white z-10"></div>
-          <div className="absolute bottom-0 left-1/2 origin-bottom-center w-[3px] h-[44%] bg-slate-700 rounded-full z-20" style={{ transform: `translateX(-50%) rotate(var(--needle-deg))` }}></div>
-          <div className="absolute -bottom-[14%] left-1/2 -translate-x-1/2 w-[28%] aspect-square rounded-full bg-white border-[3px] border-slate-200 z-30"></div>
-        </div>
-        <div className="flex justify-center items-baseline gap-1 mt-1 text-center">
-          <span style={{ color: isValid ? color : '#94a3b8' }} className="text-sm font-black">{isValid ? numVal : '—'}</span>
-          <span className="text-[10px] text-gray-400">/ {maxCap} L</span>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3 mt-1 justify-center w-full">
-        <div className="text-center">
-          <p className="text-[8px] text-gray-400 uppercase tracking-tighter">ก่อน</p>
-          <p className="text-xs font-bold text-slate-600">{fuelBe4 !== "—" ? fuelBe4 + " L" : "—"}</p>
-        </div>
-        <span className="text-gray-300 text-[10px]">→</span>
-        <div className="text-center">
-          <p className="text-[8px] text-gray-400 uppercase tracking-tighter">หลัง</p>
-          <p className={`text-xs font-bold ${didRefuel ? 'text-green-600' : 'text-gray-400'}`}>{fuelAft !== "—" ? fuelAft + " L" : "—"}</p>
-        </div>
-      </div>
-
-      <div className="mt-3 pt-2 border-t border-gray-50 w-full text-center">
-        <p className="text-[9px] text-gray-400">
-          <FontAwesomeIcon icon={faCalendarDays} className="mr-1 opacity-70" />
-          {r.date || "—"} {r.timestamp ? `(${r.timestamp.split(' ')[1] || ''})` : ''}
-        </p>
-      </div>
-    </div>
-  );
-};
-
 export default function OPDDashboard() {
   const [currentTime, setCurrentTime] = useState("");
   const [status, setStatus] = useState({ text: "Connecting...", color: "bg-gray-200 text-gray-800" });
@@ -175,7 +82,6 @@ export default function OPDDashboard() {
     waitingPharmacy: "-", waitingFinance: "-", goHome: "-",
     avgWaitScreening: "-", avgWaitExamTotal: "-", avgWaitPharmacy: "-", avgWaitAll: "-"
   });
-  const [fuelRecords, setFuelRecords] = useState([]);
 
   // อัปเดตเวลาปัจจุบัน
   useEffect(() => {
@@ -247,19 +153,6 @@ export default function OPDDashboard() {
         try {
           const data = JSON.parse(event.data);
           updateDashboardData(data);
-
-          // อัพเดทข้อมูลน้ำมันแบบ Real-time
-          const fuel = data?.car?.fuel_latest;
-          if (fuel) {
-            setFuelRecords(prev => {
-              if (prev.length > 0 && prev[0].timestamp === fuel.timestamp) return prev;
-              const idx = prev.findIndex(r => r.machine === fuel.machine);
-              if (idx === -1) return [fuel, ...prev];
-              const newRecords = [...prev];
-              newRecords[idx] = fuel;
-              return newRecords;
-            });
-          }
         } catch (e) {
           console.error("❌ JSON parse error:", e);
         }
@@ -289,13 +182,6 @@ export default function OPDDashboard() {
 
         console.log("✅ Snapshot Loaded Successfully");
         updateDashboardData(data);
-
-        // ดักโหลดข้อมูลน้ำมันรอบแรก
-        try {
-          const fuelData = await apiGet("/api/fuel/history?limit=10");
-          setFuelRecords(fuelData.records || []);
-        } catch (e) { }
-
         connectSSE();
       } catch (err) {
         console.error("❌ Snapshot error:", err);
@@ -363,7 +249,7 @@ export default function OPDDashboard() {
   return (
     <>
       <Helmet>
-        <title>Dashboard Summary - LCBH</title>
+        <title>OPD Summary - LCBH</title>
       </Helmet>
       <div className="p-6 min-h-screen" style={{ fontFamily: "'Sarabun', sans-serif", background: "linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)" }}>
         <style>{`
@@ -381,7 +267,7 @@ export default function OPDDashboard() {
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-6 glass p-5 rounded-2xl soft-shadow border border-white/40">
             <div>
-              <h1 className="text-2xl font-bold text-gray-800 tracking-tight">แดชบอร์ดสรุป </h1>
+              <h1 className="text-2xl font-bold text-gray-800 tracking-tight">แดชบอร์ดสรุป OPD </h1>
               <p className="text-gray-400 text-sm mt-1">การให้บริการต่าง ๆ</p>
             </div>
 
@@ -411,7 +297,7 @@ export default function OPDDashboard() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                 </svg>
-                <span className="text-base">รวมผู้รับบริการทั้งหมด (OPD Total)</span>
+                <span className="text-base">รวมผู้รับบริการทั้งหมด </span>
               </div>
               <AnimatedStat value={stats.opdTotal} Component="h2" className="text-[2.8rem] font-bold mt-auto" />
             </div>
@@ -497,16 +383,28 @@ export default function OPDDashboard() {
                 </div>
               </div>
 
-              {/* ฝั่งขวา: แสดง Gauge เครื่องจักรทุกเครื่อง + จำนวนกลับบ้าน */}
-              <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <FuelGaugeCard machineName="เครื่องที่ 1" records={fuelRecords} />
-                <FuelGaugeCard machineName="เครื่องที่ 2" records={fuelRecords} />
-                <FuelGaugeCard machineName="เครื่องที่ 3" records={fuelRecords} />
+              {/* ฝั่งขวา: การ์ด 3 ใบสุดท้าย */}
+              <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[
+                  { label: "จำนวน รอรับยา", val: stats.waitingPharmacy, bg: "bg-[#51abbd]" },
+                  { label: "จำนวน รอจ่ายเงิน", val: stats.waitingFinance, bg: "bg-[#51abbd]" },
+                  { label: "จำนวน กลับบ้าน", val: stats.goHome, bg: "bg-[#30c978]" }
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    className={`${item.bg} text-white p-3 rounded-2xl shadow-lg flex flex-col items-center justify-center min-h-[110px] text-center`}
+                  >
+                    <p className="text-lg font-light mb-1">
+                      {item.label}
+                    </p>
 
-                <div className="bg-[#30c978] text-white p-3 rounded-2xl shadow-lg flex flex-col items-center justify-center min-h-[110px] text-center">
-                  <p className="text-base font-light mb-1">จำนวน กลับบ้าน</p>
-                  <AnimatedStat value={stats.goHome} Component="h3" className="text-[3rem] font-bold" />
-                </div>
+                    <AnimatedStat
+                      value={item.val}
+                      Component="h3"
+                      className="text-[3rem] font-bold"
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           </div>
