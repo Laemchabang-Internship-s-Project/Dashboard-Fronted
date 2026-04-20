@@ -8,7 +8,7 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const menuItems = [
-    { path: '/', name: 'OPD Real-time', icon: faNotesMedical },
+    { path: '/dashboard', name: 'OPD Real-time', icon: faNotesMedical },
     { path: '/gas', name: 'Gas & Oil', icon: faGasPump }
   ];
 
