@@ -115,3 +115,27 @@
   background: white;
   z-index: 1;
 }
+
+/* Sidebar Glass Effect & Shadow */
+aside {
+  backdrop-filter: blur(10px);
+}
+
+/* ปรับปรุงการ Link transition */
+nav a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* เพิ่ม Glow เล็กๆ ให้กับเมนูที่ Active */
+nav a.active svg {
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5));
+}
+
+/* ปรับปรุง Gauge ให้ดู Soft ขึ้น */
+.gauge-wrap {
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.gauge-fill {
+  filter: saturate(1.2);
+}
