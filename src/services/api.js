@@ -1,3 +1,4 @@
+import { EventSourcePolyfill } from 'event-source-polyfill';
 const API_URL = import.meta.env.VITE_API_URL;
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -41,11 +42,10 @@ export const apiGet = async (path) => {
 
 // ===== SSE =====
 export const createEventSource = (path) => {
-  let url = `${API_URL}${path}`;
-
-  if (API_KEY) {
-    url += `?api_key=${API_KEY}`;
-  }
-
-  return new EventSource(url);
+  return new EventSourcePolyfill(`${API_URL}${path}`, {
+    headers: {
+      "x-api-key": API_KEY
+    },
+    heartbeatTimeout: 60000
+  });
 };

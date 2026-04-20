@@ -15,6 +15,7 @@
     "@fortawesome/react-fontawesome": "^3.3.0",
     "@tailwindcss/vite": "^4.2.2",
     "chart.js": "^4.5.1",
+    "event-source-polyfill": "^1.0.31",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-helmet-async": "^3.0.0",
