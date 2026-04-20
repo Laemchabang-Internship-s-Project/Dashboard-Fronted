@@ -259,7 +259,7 @@ export default function OPDDashboard() {
   return (
     <>
       <Helmet>
-        <title>Summary - LCBH</title>
+        <title>OPD Summary - LCBH</title>
       </Helmet>
       <div className="p-6 min-h-screen" style={{ fontFamily: "'Sarabun', sans-serif", background: "linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)" }}>
         <style>{`
