@@ -5,7 +5,7 @@ import { HelmetProvider } from 'react-helmet-async'
 import App from './App.jsx'
 import './index.css'
 
-const base = '/lcbh';
+const base = '/lcbh/dashboard';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

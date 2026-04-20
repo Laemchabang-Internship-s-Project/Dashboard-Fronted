@@ -2,9 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUsers, faWalking, faLaptopMedical, faTruckMedical } from '@fortawesome/free-solid-svg-icons';
 import { Helmet } from "react-helmet-async";
+import { apiGet, createEventSource } from "../services/api";
 
-const API_URL = "http://localhost:8000";
-const API_KEY = "";
 
 function formatWaitTime(minutes) {
   if (minutes == null || isNaN(minutes)) return "-";
@@ -141,10 +140,7 @@ export default function OPDDashboard() {
       if (isFilterMode || isCancelled) return;
       console.log("📡 [2/2] Connecting to SSE Stream...");
 
-      let url = `${API_URL}/api/dashboard/stream`;
-      if (API_KEY) url += `?api_key=${API_KEY}`;
-
-      es = new EventSource(url);
+      es = createEventSource("/api/dashboard/stream");
 
       es.onopen = () => {
         if (isCancelled) { es.close(); return; }
@@ -180,10 +176,7 @@ export default function OPDDashboard() {
       if (isFilterMode) return;
       console.log("📦 [1/2] Loading Snapshot data...");
       try {
-        const res = await fetch(`${API_URL}/api/dashboard/snapshot`, {
-          headers: API_KEY ? { "x-api-key": API_KEY } : {}
-        });
-        const data = await res.json();
+        const data = await apiGet("/api/dashboard/snapshot");
 
         if (isCancelled) return; // ถ้าเปลี่ยนโหมดไปแล้ว ไม่ต้องทำต่อ
 
@@ -220,10 +213,7 @@ export default function OPDDashboard() {
     setStatus({ text: "FILTERED (HISTORY)", color: "bg-purple-100 text-purple-700 font-bold" });
 
     try {
-      const res = await fetch(`${API_URL}/api/dashboard/summary-range?start_date=${startDate}&end_date=${endDate}`, {
-        headers: API_KEY ? { "x-api-key": API_KEY } : {}
-      });
-      const responseData = await res.json();
+      const responseData = await apiGet(`/api/dashboard/summary-range?start_date=${startDate}&end_date=${endDate}`);
       const data = responseData.data;
 
       setStats(prev => ({

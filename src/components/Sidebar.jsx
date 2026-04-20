@@ -8,7 +8,7 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const menuItems = [
-    { path: '/dashboard', name: 'OPD Real-time', icon: faNotesMedical },
+    { path: '/opd', name: 'OPD Real-time', icon: faNotesMedical },
     { path: '/gas', name: 'Gas & Oil', icon: faGasPump }
   ];
 
@@ -27,7 +27,7 @@ export default function Sidebar() {
       </div>
       <div className="flex-1 py-4 flex flex-col gap-2">
         {menuItems.map(item => {
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname.endsWith(item.path);
           return (
             <Link 
               key={item.path}

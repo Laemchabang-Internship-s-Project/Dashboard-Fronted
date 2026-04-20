@@ -1,4 +1,5 @@
 import { Routes, Route, Outlet } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 import Sidebar from './components/Sidebar';
 import SummaryDashboard from './pages/SummaryDashboard';
@@ -20,7 +21,8 @@ function App() {
   return (
     <Routes>
       <Route element={<MainLayout />}>
-        <Route path="/dashboard" element={<SummaryDashboard />} />
+        <Route path="/" element={<Navigate to="/opd" replace />} />
+        <Route path="/opd" element={<SummaryDashboard />} />
         <Route path="/gas" element={<GasInspection />} />
       </Route>
       {/* <Route path="*" element={<NotFound />} /> */}

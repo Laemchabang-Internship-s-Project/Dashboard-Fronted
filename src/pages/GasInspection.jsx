@@ -3,8 +3,7 @@ import Chart from 'chart.js/auto';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRotateRight, faChartSimple, faCalendarDays, faUser, faChartLine, faCircleCheck, faCircleXmark, faClock } from '@fortawesome/free-solid-svg-icons';
 import { Helmet } from "react-helmet-async";
-
-const API_URL = "http://localhost:8000";
+import { apiGet, createEventSource } from "../services/api";
 
 const STATUS_OK = ["ปกติ", "ok", "ดี", "good", "normal", "เต็ม", "พอเพียง", "อนุมัติแล้ว", "ผ่าน"];
 const STATUS_WARN = ["ต่ำ", "low", "น้อย", "ต่ำกว่ามาตรฐาน", "เกือบหมด", "รอ"];
@@ -61,8 +60,7 @@ export default function GasInspection() {
 
   const loadHistory = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/fuel/history?limit=100`);
-      const data = await res.json();
+      const data = await apiGet("/api/fuel/history?limit=100");
       setAllRecords(data.records || []);
       setLastUpdated("อัปเดตข้อมูลล่าสุด: " + new Date().toLocaleTimeString("th-TH"));
     } catch (err) {
@@ -86,7 +84,7 @@ export default function GasInspection() {
   useEffect(() => {
     loadHistory();
 
-    const es = new EventSource(`${API_URL}/api/dashboard/stream`);
+    const es = createEventSource("/api/dashboard/stream");
     es.onopen = () => {
       setStatusText("LIVE");
       setStatusColor("bg-green-100 text-green-700");
