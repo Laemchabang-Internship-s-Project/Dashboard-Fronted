@@ -425,8 +425,8 @@ export default function OPDDashboard() {
               <div className="flex flex-wrap justify-between items-start gap-3 mb-6 glass p-4 md:p-5 rounded-2xl soft-shadow border border-white/40">
 
                 <div>
-                  <h1 className="text-xl md:text-3xl font-black text-slate-800 tracking-tight">OVERVIEW</h1>
-                  <p className="text-gray-400 text-sm mt-1 font-medium">ภาพรวมระบบ | อัปเดตอัตโนมัติ</p>
+                  <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-tight">Dashboard</h1>
+                  <p className="text-gray-400 text-sm mt-1">ภาพรวมระบบ</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
