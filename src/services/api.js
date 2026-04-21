@@ -52,11 +52,11 @@ export const createEventSource = (path) => {
 
 // ===== Network Check =====
 export const checkNetwork = async () => {
-  return true;
-  // try {
-  //   const data = await apiGet("/api/check-network"); 
-  //   return data.isInternal; 
-  // } catch (error) {
-  //   return false;
-  // }
+  // return true;
+  try {
+    const data = await apiGet("/api/check-network"); 
+    return data.isInternal; 
+  } catch (error) {
+    return false;
+  }
 };
