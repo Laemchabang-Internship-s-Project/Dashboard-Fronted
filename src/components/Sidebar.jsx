@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faNotesMedical, faGasPump, faBars, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
-
-// ... (import ส่วนเดิม)
+import { faNotesMedical, faGasPump, faBars, faChartPie, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const menuItems = [
+    { path: '/dashboard', name: 'Dashboard รวม', icon: faChartPie },
     { path: '/opd', name: 'OPD Real-time', icon: faNotesMedical },
     { path: '/gas', name: 'Gas & Oil', icon: faGasPump }
   ];

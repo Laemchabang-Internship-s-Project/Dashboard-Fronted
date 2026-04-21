@@ -4,6 +4,7 @@ import { Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import SummaryDashboard from './pages/SummaryDashboard';
 import GasInspection from './pages/GasInspection';
+import SummarOPD from './pages/SummaryOPD';
 
 function MainLayout() {
   return (
@@ -22,8 +23,9 @@ function App() {
     <Routes>
       <Route element={<MainLayout />}>
         <Route path="/" element={<Navigate to="/opd" replace />} />
-        <Route path="/opd" element={<SummaryDashboard />} />
+        <Route path="/dashboard" element={<SummaryDashboard />} />
         <Route path="/gas" element={<GasInspection />} />
+        <Route path="/opd" element={<SummarOPD />} />
       </Route>
       {/* <Route path="*" element={<NotFound />} /> */}
     </Routes>

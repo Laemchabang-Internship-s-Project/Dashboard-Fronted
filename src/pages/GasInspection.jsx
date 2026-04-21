@@ -61,8 +61,16 @@ export default function GasInspection() {
   const loadHistory = async () => {
     try {
       const data = await apiGet("/api/fuel/history?limit=100");
-      setAllRecords(data.records || []);
-      setLastUpdated("อัปเดตข้อมูลล่าสุด: " + new Date().toLocaleTimeString("th-TH"));
+      const records = data.records || [];
+      setAllRecords(records);
+
+      if (records.length > 0 && records[0].timestamp) {
+        const ts = records[0].timestamp; // Expected: "19/04/2026 16:47:45"
+        const [d, t] = ts.split(' ');
+        setLastUpdated(`${d} (${t || ''})`);
+      } else {
+        setLastUpdated("ไม่พบข้อมูล");
+      }
     } catch (err) {
       console.error(err);
     }
@@ -96,6 +104,12 @@ export default function GasInspection() {
         if (!fuel) return;
         setAllRecords(prev => {
           if (prev.length > 0 && prev[0].timestamp === fuel.timestamp) return prev;
+
+          if (fuel.timestamp) {
+            const [d, t] = fuel.timestamp.split(' ');
+            setLastUpdated(`${d} (${t || ''})`);
+          }
+
           return [fuel, ...prev];
         });
       } catch (e) { }
@@ -245,32 +259,38 @@ export default function GasInspection() {
   }, [allRecords, filteredRecords, activeFilter]);
 
   return (
-    <div>
+    <div className="p-6 min-h-screen" style={{ fontFamily: "'Sarabun', sans-serif", background: "linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)" }}>
       <Helmet>
-        <title>Gas Inspection - LCBH</title>
+        <title>Gas Summary - LCBH</title>
         <meta name="description" content="ข้อมูลระดับน้ำมันและแก๊สของเครื่องจักรต่างๆ อัปเดตอัตโนมัติจาก Google Form" />
       </Helmet>
-      <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6 pb-20">
-        <div className="flex flex-wrap justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+
+      <div className="max-w-7xl mx-auto space-y-6 pb-20">
+        <div className="flex flex-wrap justify-between items-center glass p-5 rounded-2xl soft-shadow border border-white/40 mb-6">
           <div>
-            <h1 className="text-xl font-bold text-gray-800">ตรวจเช็คน้ำมัน / แก๊ส</h1>
-            <p className="text-gray-400 text-xs">ข้อมูลล่าสุดจาก Google Form | อัปเดตอัตโนมัติเมื่อมีการ Submit</p>
+            <h1 className="text-2xl font-bold text-gray-800 tracking-tight">แดชบอร์ดสรุป น้ำมัน</h1>
+            <p className="text-gray-400 text-sm mt-1">ข้อมูลล่าสุดจาก Google Form | อัปเดตอัตโนมัติ</p>
           </div>
           <div className="flex items-center gap-3 mt-2 md:mt-0">
-            <button onClick={handleRefresh} disabled={isRefreshing} className={`p-1.5 border border-gray-200 text-gray-500 rounded-lg transition ${isRefreshing ? 'opacity-50' : 'hover:bg-gray-50'}`}>
-              <FontAwesomeIcon icon={faRotateRight} className={`inline-block ${isRefreshing ? 'animate-spin' : ''}`} />
+            <button onClick={handleRefresh} disabled={isRefreshing} className={`p-2 bg-white/50 border border-gray-200 text-gray-500 rounded-xl transition hover:bg-white shadow-sm ${isRefreshing ? 'opacity-50' : ''}`}>
+              <FontAwesomeIcon icon={faRotateRight} className={`${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
             <div className="flex flex-col items-end whitespace-nowrap">
               <p className="text-gray-600 font-semibold text-sm leading-tight">{currentTime}</p>
               <span className="text-[10px] text-gray-400 leading-tight">{lastUpdated}</span>
             </div>
-            <span className={`text-[10px] px-3 py-1 rounded-full uppercase font-semibold ${statusColor}`}>{statusText}</span>
+            <span className={`text-[10px] px-3 py-1 rounded-full uppercase font-bold tracking-wider ${statusColor}`}>{statusText}</span>
           </div>
         </div>
 
+        <style>{`
+          .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
+          .soft-shadow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
+        `}</style>
+
         <div>
           <h2 className="font-bold text-gray-700 text-base mb-3"><FontAwesomeIcon icon={faChartSimple} className="text-blue-600 mr-2" />สรุปล่าสุดแต่ละเครื่อง</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="flex flex-wrap justify-center gap-4">
             {knownMachines.map(m => {
               const r = allRecords.find(rec => rec.machine === m);
               if (!r) return null;
@@ -296,41 +316,48 @@ export default function GasInspection() {
               const isRejected = STATUS_BAD.some(k => (r.status || "").toLowerCase().includes(k));
 
               return (
-                <div key={m} onClick={() => setActiveFilter(m)} className={`bg-white rounded-xl p-3 border-2 cursor-pointer transition ${activeFilter === m ? 'border-blue-800 shadow-md' : 'border-gray-100 hover:-translate-y-1'}`}>
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-bold">{m}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold flex items-center gap-1 ${isRejected ? 'bg-red-100 text-red-800' : isApproved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                <div key={m} onClick={() => setActiveFilter(m)} className={`bg-white rounded-2xl p-4 border-2 cursor-pointer transition flex flex-col items-center justify-center w-full sm:w-[240px] ${activeFilter === m ? 'border-blue-800 shadow-md' : 'border-gray-100 hover:-translate-y-1'}`}>
+                  <div className="flex flex-col items-center mb-3 w-full gap-1">
+                    <span className="bg-blue-100 text-blue-700 text-xs px-2.5 py-0.5 rounded-full font-bold">{m}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold flex items-center gap-1 ${isRejected ? 'bg-red-100 text-red-800' : isApproved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                       <FontAwesomeIcon icon={isRejected ? faCircleXmark : isApproved ? faCircleCheck : faClock} />
                       {isRejected ? 'ไม่อนุมัติ' : isApproved ? 'อนุมัติแล้ว' : 'รออนุมัติ'}
                     </span>
                   </div>
 
-                  <div className="mt-2 mb-1 px-1">
-                    <div className="relative w-full aspect-[2/1] rounded-t-full overflow-hidden bg-slate-200" style={{ '--gauge-color': color, '--gauge-deg': sweepDeg + 'deg', '--needle-deg': needleDeg + 'deg' }}>
+                  <div className="mb-2 px-2 w-full max-w-[160px]">
+                    <div className="relative w-full aspect-[2/1] rounded-t-full overflow-hidden bg-slate-200 mx-auto" style={{ '--gauge-color': color, '--gauge-deg': sweepDeg + 'deg', '--needle-deg': needleDeg + 'deg' }}>
                       <div className="absolute inset-0 w-full h-full" style={{ background: `conic-gradient(from 270deg at 50% 100%, var(--gauge-color) 0deg, var(--gauge-color) var(--gauge-deg), transparent var(--gauge-deg))` }}></div>
                       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[68%] aspect-[2/1] rounded-t-full bg-white z-10"></div>
                       <div className="absolute bottom-0 left-1/2 origin-bottom-center w-[3px] h-[44%] bg-slate-700 rounded-full z-20" style={{ transform: `translateX(-50%) rotate(var(--needle-deg))` }}></div>
                       <div className="absolute -bottom-[14%] left-1/2 -translate-x-1/2 w-[28%] aspect-square rounded-full bg-white border-[3px] border-slate-200 z-30"></div>
                     </div>
-                    <div className="flex justify-center items-baseline gap-1 mt-1">
+                    <div className="flex justify-center items-baseline gap-1 mt-1 text-center">
                       <span style={{ color: isValid ? color : '#94a3b8' }} className="text-base font-black">{isValid ? numVal : '—'}</span>
                       <span className="text-[10px] text-gray-400">/ {maxCap} L</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5 mt-2 justify-center">
+                  <div className="flex items-center gap-3 mt-1 justify-center w-full">
                     <div className="text-center">
-                      <p className="text-[9px] text-gray-400">ก่อน</p>
+                      <p className="text-[9px] text-gray-400 uppercase tracking-tighter">ก่อน</p>
                       <p className="text-sm font-bold text-slate-600">{fuelBe4 !== "—" ? fuelBe4 + " L" : "—"}</p>
                     </div>
                     <span className="text-gray-300 text-xs">→</span>
                     <div className="text-center">
-                      <p className="text-[9px] text-gray-400">หลัง</p>
+                      <p className="text-[9px] text-gray-400 uppercase tracking-tighter">หลัง</p>
                       <p className={`text-sm font-bold ${didRefuel ? 'text-green-600' : 'text-gray-400'}`}>{fuelAft !== "—" ? fuelAft + " L" : "—"}</p>
                     </div>
                   </div>
-                  <p className="text-[10px] text-gray-400 truncate mt-2 mb-0"><FontAwesomeIcon icon={faCalendarDays} className="mr-1 opacity-70" /> {r.date || "—"}</p>
-                  <p className="text-[10px] text-gray-400 truncate m-0"><FontAwesomeIcon icon={faUser} className="mr-1 opacity-70" /> {r.tech_name || "—"}</p>
+                  <div className="mt-3 pt-2 border-t border-gray-50 w-full text-center">
+                    <p className="text-[10px] text-gray-500 font-medium whitespace-nowrap">
+                      <FontAwesomeIcon icon={faCalendarDays} className="mr-1 opacity-70" />
+                      {r.date || "—"} {r.timestamp?.split(' ')[1] ? `(${r.timestamp.split(' ')[1]})` : ""}
+                    </p>
+                    <p className="text-[10px] text-gray-400 truncate mt-0.5">
+                      <FontAwesomeIcon icon={faUser} className="mr-1 opacity-70" /> {r.tech_name || "—"}
+                    </p>
+                  </div>
                 </div>
               );
             })}
@@ -407,6 +434,6 @@ export default function GasInspection() {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
