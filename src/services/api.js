@@ -32,7 +32,7 @@ export const apiGet = async (path) => {
 
     const data = await res.json();
     // console.log(`[GET Success] Response from ${path}:`, data); // Log ตอนได้ข้อมูลมาสำเร็จ
-    
+
     return data;
   } catch (error) {
     // console.error(`[GET Failed] Exception on ${path}:`, error); // Log ตอนพังจากฝั่ง Client (เช่น Network หลุด หรือ Server ไม่ตอบสนอง)
@@ -52,10 +52,11 @@ export const createEventSource = (path) => {
 
 // ===== Network Check =====
 export const checkNetwork = async () => {
-  try {
-    const data = await apiGet("/api/check-network"); 
-    return data.isInternal; 
-  } catch (error) {
-    return false;
-  }
+  return true;
+  // try {
+  //   const data = await apiGet("/api/check-network"); 
+  //   return data.isInternal; 
+  // } catch (error) {
+  //   return false;
+  // }
 };

@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Chart from 'chart.js/auto';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRotateRight, faChartSimple, faCalendarDays, faUser, faChartLine, faCircleCheck, faCircleXmark, faClock } from '@fortawesome/free-solid-svg-icons';
+import { faRotateRight, faChartSimple, faChartLine } from '@fortawesome/free-solid-svg-icons';
+import FuelSummaryCard from '../components/FuelSummaryCard';
 import { Helmet } from "react-helmet-async";
 import { apiGet, createEventSource } from "../services/api";
+import { FuelCardSkeleton, ChartSkeleton, TableSkeleton, HeaderSkeleton } from '../components/Skeleton';
 
 const STATUS_OK = ["ปกติ", "ok", "ดี", "good", "normal", "เต็ม", "พอเพียง", "อนุมัติแล้ว", "ผ่าน"];
 const STATUS_WARN = ["ต่ำ", "low", "น้อย", "ต่ำกว่ามาตรฐาน", "เกือบหมด", "รอ"];
@@ -23,6 +25,7 @@ const MACHINE_COLORS = {
 };
 
 export default function GasInspection() {
+  const [isLoading, setIsLoading] = useState(true);
   const [allRecords, setAllRecords] = useState([]);
   const [activeFilter, setActiveFilter] = useState("all");
   const [statusText, setStatusText] = useState("Connecting...");
@@ -63,9 +66,10 @@ export default function GasInspection() {
       const data = await apiGet("/api/fuel/history?limit=100");
       const records = data.records || [];
       setAllRecords(records);
+      setIsLoading(false);
 
       if (records.length > 0 && records[0].timestamp) {
-        const ts = records[0].timestamp; // Expected: "19/04/2026 16:47:45"
+        const ts = records[0].timestamp;
         const [d, t] = ts.split(' ');
         setLastUpdated(`${d} (${t || ''})`);
       } else {
@@ -73,6 +77,7 @@ export default function GasInspection() {
       }
     } catch (err) {
       console.error(err);
+      setIsLoading(false);
     }
   };
 
@@ -259,13 +264,29 @@ export default function GasInspection() {
   }, [allRecords, filteredRecords, activeFilter]);
 
   return (
-    <div className="p-6 min-h-screen" style={{ fontFamily: "'Sarabun', sans-serif", background: "linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)" }}>
+    <div className="p-3 md:p-6 min-h-screen" style={{ fontFamily: "'Sarabun', sans-serif", background: "linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)" }}>
       <Helmet>
         <title>Gas Summary - LCBH</title>
         <meta name="description" content="ข้อมูลระดับน้ำมันและแก๊สของเครื่องจักรต่างๆ อัปเดตอัตโนมัติจาก Google Form" />
       </Helmet>
 
       <div className="max-w-7xl mx-auto space-y-6 pb-20">
+        <style>{`
+          .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
+          .soft-shadow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
+        `}</style>
+
+        {/* ===== SKELETON LOADING ===== */}
+        {isLoading ? (
+          <div className="space-y-6">
+            <HeaderSkeleton />
+            <FuelCardSkeleton count={3} />
+            <ChartSkeleton height={250} />
+            <TableSkeleton rows={6} cols={13} />
+          </div>
+        ) : (
+          <>
+
         <div className="flex flex-wrap justify-between items-center glass p-5 rounded-2xl soft-shadow border border-white/40 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-800 tracking-tight">แดชบอร์ดสรุป น้ำมัน</h1>
@@ -283,82 +304,20 @@ export default function GasInspection() {
           </div>
         </div>
 
-        <style>{`
-          .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
-          .soft-shadow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
-        `}</style>
-
         <div>
           <h2 className="font-bold text-gray-700 text-base mb-3"><FontAwesomeIcon icon={faChartSimple} className="text-blue-600 mr-2" />สรุปล่าสุดแต่ละเครื่อง</h2>
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pb-6">
             {knownMachines.map(m => {
               const r = allRecords.find(rec => rec.machine === m);
               if (!r) return null;
-
-              const maxCap = getMachineCapacity(m);
-              const rawBe4 = r.fuel_level_be4;
-              const rawAft = r.fuel_level_aft;
-              const aftNum = parseFloat(rawAft);
-              const didRefuel = !isNaN(aftNum) && aftNum > 0;
-
-              const fuelBe4 = (rawBe4 != null && rawBe4 !== "") ? rawBe4 : "—";
-              const fuelAft = didRefuel ? aftNum : "—";
-              const gaugeVal = didRefuel ? rawAft : rawBe4;
-
-              const numVal = parseFloat(gaugeVal);
-              const isValid = !isNaN(numVal) && numVal >= 0;
-              const pct = isValid ? Math.min(Math.max(numVal / maxCap, 0), 1) : 0;
-              const color = isValid ? getFuelColor(pct) : '#cbd5e1';
-              const sweepDeg = Math.round(pct * 180 * 10) / 10;
-              const needleDeg = Math.round((pct * 180 - 90) * 10) / 10;
-
-              const isApproved = r.app_name && r.app_name.trim() !== "" && r.app_name !== "—";
-              const isRejected = STATUS_BAD.some(k => (r.status || "").toLowerCase().includes(k));
-
               return (
-                <div key={m} onClick={() => setActiveFilter(m)} className={`bg-white rounded-2xl p-4 border-2 cursor-pointer transition flex flex-col items-center justify-center w-full sm:w-[240px] ${activeFilter === m ? 'border-blue-800 shadow-md' : 'border-gray-100 hover:-translate-y-1'}`}>
-                  <div className="flex flex-col items-center mb-3 w-full gap-1">
-                    <span className="bg-blue-100 text-blue-700 text-xs px-2.5 py-0.5 rounded-full font-bold">{m}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold flex items-center gap-1 ${isRejected ? 'bg-red-100 text-red-800' : isApproved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                      <FontAwesomeIcon icon={isRejected ? faCircleXmark : isApproved ? faCircleCheck : faClock} />
-                      {isRejected ? 'ไม่อนุมัติ' : isApproved ? 'อนุมัติแล้ว' : 'รออนุมัติ'}
-                    </span>
-                  </div>
-
-                  <div className="mb-2 px-2 w-full max-w-[160px]">
-                    <div className="relative w-full aspect-[2/1] rounded-t-full overflow-hidden bg-slate-200 mx-auto" style={{ '--gauge-color': color, '--gauge-deg': sweepDeg + 'deg', '--needle-deg': needleDeg + 'deg' }}>
-                      <div className="absolute inset-0 w-full h-full" style={{ background: `conic-gradient(from 270deg at 50% 100%, var(--gauge-color) 0deg, var(--gauge-color) var(--gauge-deg), transparent var(--gauge-deg))` }}></div>
-                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[68%] aspect-[2/1] rounded-t-full bg-white z-10"></div>
-                      <div className="absolute bottom-0 left-1/2 origin-bottom-center w-[3px] h-[44%] bg-slate-700 rounded-full z-20" style={{ transform: `translateX(-50%) rotate(var(--needle-deg))` }}></div>
-                      <div className="absolute -bottom-[14%] left-1/2 -translate-x-1/2 w-[28%] aspect-square rounded-full bg-white border-[3px] border-slate-200 z-30"></div>
-                    </div>
-                    <div className="flex justify-center items-baseline gap-1 mt-1 text-center">
-                      <span style={{ color: isValid ? color : '#94a3b8' }} className="text-base font-black">{isValid ? numVal : '—'}</span>
-                      <span className="text-[10px] text-gray-400">/ {maxCap} L</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 mt-1 justify-center w-full">
-                    <div className="text-center">
-                      <p className="text-[9px] text-gray-400 uppercase tracking-tighter">ก่อน</p>
-                      <p className="text-sm font-bold text-slate-600">{fuelBe4 !== "—" ? fuelBe4 + " L" : "—"}</p>
-                    </div>
-                    <span className="text-gray-300 text-xs">→</span>
-                    <div className="text-center">
-                      <p className="text-[9px] text-gray-400 uppercase tracking-tighter">หลัง</p>
-                      <p className={`text-sm font-bold ${didRefuel ? 'text-green-600' : 'text-gray-400'}`}>{fuelAft !== "—" ? fuelAft + " L" : "—"}</p>
-                    </div>
-                  </div>
-                  <div className="mt-3 pt-2 border-t border-gray-50 w-full text-center">
-                    <p className="text-[10px] text-gray-500 font-medium whitespace-nowrap">
-                      <FontAwesomeIcon icon={faCalendarDays} className="mr-1 opacity-70" />
-                      {r.date || "—"} {r.timestamp?.split(' ')[1] ? `(${r.timestamp.split(' ')[1]})` : ""}
-                    </p>
-                    <p className="text-[10px] text-gray-400 truncate mt-0.5">
-                      <FontAwesomeIcon icon={faUser} className="mr-1 opacity-70" /> {r.tech_name || "—"}
-                    </p>
-                  </div>
-                </div>
+                <FuelSummaryCard
+                  key={m}
+                  machine={m}
+                  record={r}
+                  isActive={activeFilter === m}
+                  onClick={() => setActiveFilter(m)}
+                />
               );
             })}
           </div>
@@ -433,6 +392,8 @@ export default function GasInspection() {
             </table>
           </div>
         </div>
+      </>
+        )}
       </div>
     </div >
   );

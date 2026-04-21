@@ -1,5 +1,34 @@
 @import "tailwindcss";
 
+/* ──────── Skeleton Shimmer ──────── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    #e2e8f0 25%,
+    #edf2f7 50%,
+    #e2e8f0 75%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* Safe area for iOS (bottom notch) */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Prevent content from going under bottom nav on mobile */
+@media (max-width: 767px) {
+  body {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
 /* Gas Inspection Specific Styles */
 .card {
   transition: transform 0.2s, box-shadow 0.2s;

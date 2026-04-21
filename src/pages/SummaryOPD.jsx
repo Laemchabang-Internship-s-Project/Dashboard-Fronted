@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUsers, faWalking, faLaptopMedical, faTruckMedical } from '@fortawesome/free-solid-svg-icons';
 import { Helmet } from "react-helmet-async";
 import { apiGet, createEventSource } from "../services/api";
+import { HeaderSkeleton, StatCardSkeleton, WaitTimeSkeleton } from '../components/Skeleton';
 
 
 function formatWaitTime(minutes) {
@@ -66,6 +67,7 @@ const AnimatedStat = ({ value, Component = "h2", className = "" }) => {
 };
 
 export default function OPDDashboard() {
+  const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState("");
   const [status, setStatus] = useState({ text: "Connecting...", color: "bg-gray-200 text-gray-800" });
 
@@ -182,9 +184,11 @@ export default function OPDDashboard() {
 
         console.log("✅ Snapshot Loaded Successfully");
         updateDashboardData(data);
+        setIsLoading(false);
         connectSSE();
       } catch (err) {
         console.error("❌ Snapshot error:", err);
+        setIsLoading(false);
         if (!isCancelled) connectSSE();
       }
     };
@@ -251,7 +255,7 @@ export default function OPDDashboard() {
       <Helmet>
         <title>OPD Summary - LCBH</title>
       </Helmet>
-      <div className="p-6 min-h-screen" style={{ fontFamily: "'Sarabun', sans-serif", background: "linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)" }}>
+      <div className="p-3 md:p-6 min-h-screen" style={{ fontFamily: "'Sarabun', sans-serif", background: "linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)"}}>
         <style>{`
                 .stat-card { transition: all 0.25s ease; }
                 .stat-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); }
@@ -265,34 +269,45 @@ export default function OPDDashboard() {
             `}</style>
 
         <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-6 glass p-5 rounded-2xl soft-shadow border border-white/40">
+
+          {/* ===== SKELETON LOADING ===== */}
+          {isLoading ? (
+            <div className="space-y-6">
+              <HeaderSkeleton />
+              <StatCardSkeleton count={4} />
+              <StatCardSkeleton count={5} />
+              <WaitTimeSkeleton />
+            </div>
+          ) : (
+            <>
+
+          <div className="flex flex-wrap justify-between items-center gap-3 mb-6 glass p-4 md:p-5 rounded-2xl soft-shadow border border-white/40">
             <div>
-              <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Dashboard</h1>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-tight">Dashboard</h1>
               <p className="text-gray-500 text-sm mt-1">การให้บริการต่าง ๆ</p>
             </div>
 
-            <div className="flex items-center gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm">
+            <div className="flex flex-wrap items-center gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
               <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
-                className="text-sm px-2 py-1 rounded border border-gray-300 bg-white text-gray-900 focus:outline-none focus:border-[#1e40af]" />
+                className="text-sm px-2 py-1 rounded border border-gray-300 bg-white text-gray-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-0" />
               <span className="text-gray-500 text-sm">-</span>
               <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
-                className="text-sm px-2 py-1 rounded border border-gray-300 bg-white text-gray-900 focus:outline-none focus:border-[#1e40af]" />
+                className="text-sm px-2 py-1 rounded border border-gray-300 bg-white text-gray-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-0" />
               <button onClick={applyDateFilter}
-                className="bg-[#c2c1ea] hover:bg-[#a6a5d4] text-[#1e293b] text-sm px-4 py-1.5 rounded transition shadow-sm font-medium">ค้นหา</button>
+                className="bg-[#c2c1ea] hover:bg-[#a6a5d4] text-[#1e293b] text-sm px-4 py-1.5 rounded transition shadow-sm font-medium whitespace-nowrap">ค้นหา</button>
               <button onClick={clearDateFilter}
                 className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isFilterMode ? 'hidden' : ''}`}>ล้าง</button>
             </div>
 
-            <div className="flex items-center gap-3 whitespace-nowrap">
-              <p className="text-gray-600 font-semibold text-sm">{currentTime}</p>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>{status.text}
-              </span>
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <p className="text-gray-600 font-semibold text-sm hidden sm:block">{currentTime}</p>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>{status.text}</span>
             </div>
           </div>
 
           {/* กรอบสีดำล้อมรอบการ์ดแถวบน */}
-          <div className="border border-black rounded-[20px] p-[6px] mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-[6px]">
+          <div className="rounded-[20px] p-[6px] mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-[6px]">
               {/* Card 1 */}
               <div className="stat-card bg-[#cbf4f9] text-[#1e293b] p-5 rounded-[14px] shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[140px]">
                 <div className="flex items-center gap-3 opacity-90 mb-2">
@@ -301,7 +316,7 @@ export default function OPDDashboard() {
                   </svg>
                   <span className="text-sm font-medium">ผู้รับบริการทั้งหมด (OPD Total)</span>
                 </div>
-                <AnimatedStat value={stats.opdTotal} Component="h2" className="text-[2.8rem] font-bold mt-auto" />
+                <AnimatedStat value={stats.opdTotal} Component="h2" className="text-[1.8rem] md:text-[2.8rem] font-bold mt-auto" />
               </div>
 
               {/* Card 2 */}
@@ -312,7 +327,7 @@ export default function OPDDashboard() {
                   </svg>
                   <span className="text-sm font-medium">Walk-in</span>
                 </div>
-                <AnimatedStat value={stats.walkIn} Component="h2" className="text-[2.8rem] font-bold mt-auto" />
+                <AnimatedStat value={stats.walkIn} Component="h2" className="text-[1.8rem] md:text-[2.8rem] font-bold mt-auto" />
               </div>
 
               {/* Card 3 */}
@@ -323,7 +338,7 @@ export default function OPDDashboard() {
                   </svg>
                   <span className="text-sm font-medium">Telemedicine</span>
                 </div>
-                <AnimatedStat value={stats.telemed} Component="h2" className="text-[2.8rem] font-bold mt-auto" />
+                <AnimatedStat value={stats.telemed} Component="h2" className="text-[1.8rem] md:text-[2.8rem] font-bold mt-auto" />
               </div>
 
               {/* Card 4 */}
@@ -334,14 +349,14 @@ export default function OPDDashboard() {
                   </svg>
                   <span className="text-sm font-medium">บริการส่งยา (Drug Delivery)</span>
                 </div>
-                <AnimatedStat value={stats.drugDelivery} Component="h2" className="text-[2.8rem] font-bold mt-auto" />
+                <AnimatedStat value={stats.drugDelivery} Component="h2" className="text-[1.8rem] md:text-[2.8rem] font-bold mt-auto" />
               </div>
             </div>
           </div>
 
           <div className={secondaryClasses}>
             {/* --- แถวที่ 1: การ์ด 5 ใบ --- */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 mb-6">
               {[
                 { label: <>ผู้รับบริการ OPD<br /><span className="text-xs"></span></>, val: stats.customOpdTotal, bg: "bg-[#a6e3e9]" },
                 { label: <>ซักประวัติ</>, val: stats.waitingScreening, bg: "bg-[#fbcad4]" },
@@ -354,7 +369,7 @@ export default function OPDDashboard() {
                     <p className="text-[13px] font-medium leading-tight">{item.label}</p>
                   </div>
                   <div className="mt-auto">
-                    <AnimatedStat value={item.val} Component="h3" className="text-[2.5rem] font-bold" />
+                    <AnimatedStat value={item.val} Component="h3" className="text-[1.6rem] md:text-[2.5rem] font-bold" />
                   </div>
                 </div>
               ))}
@@ -374,7 +389,7 @@ export default function OPDDashboard() {
                   {[
                     { label: "ระยะเวลารอคอย เฉลี่ยรวม", val: stats.avgWaitAll, icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
                     { label: "ระยะเวลา รอซักประวัติ", val: stats.avgWaitScreening, icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
-                    { label: "ระยะเวลา รอพบแพทย์",  val: stats.avgWaitExamTotal, icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
+                    { label: "ระยะเวลา รอพบแพทย์", val: stats.avgWaitExamTotal, icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
                     { label: "ระยะเวลา รอรับยา", val: stats.avgWaitPharmacy, icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" }
                   ].map((item, idx) => (
                     <div key={idx} className="flex flex-col items-center justify-center p-2 min-h-[100px] text-center z-10">
@@ -423,6 +438,8 @@ export default function OPDDashboard() {
               </div>
             </div>
           </div>
+          </>
+          )}
         </div>
       </div >
     </>

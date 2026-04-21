@@ -3,7 +3,7 @@ import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { checkNetwork } from './services/api';
 
 import Sidebar from './components/Sidebar';
-import SummaryDashboard from './pages/SummaryDashboard';
+import Overview from './pages/Overview';
 import GasInspection from './pages/GasInspection';
 import SummarOPD from './pages/SummaryOPD';
 
@@ -17,7 +17,7 @@ function MainLayout() {
   return (
     <div className="flex bg-[#f1f5f9] font-['Sarabun'] min-h-screen">
       <Sidebar />
-      <main className="flex-1 pl-16 transition-all duration-300 overflow-x-hidden overflow-y-auto pb-1">
+      <main className="flex-1 md:pl-16 transition-all duration-300 overflow-x-hidden overflow-y-auto pb-16 md:pb-0">
         <Outlet />
       </main>
     </div>
@@ -36,9 +36,9 @@ function App() {
       <Route element={<MainLayout />}>
         {/* หน้าแรก: ถ้าเป็นคนในไป /opd ถ้าคนนอกไป /dashboard */}
         <Route path="/" element={<Navigate to={isInternal ? "/opd" : "/dashboard"} replace />} />
-        
+
         {/* หน้าที่ใครๆ ก็ดูได้ */}
-        <Route path="/dashboard" element={<SummaryDashboard />} />
+        <Route path="/dashboard" element={<Overview />} />
 
         {/* หน้าที่ต้องเป็นคนในโรงพยาบาลเท่านั้น */}
         <Route path="/gas" element={
