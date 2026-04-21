@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Helmet } from "react-helmet-async";
 import { apiGet, createEventSource } from "../services/api";
-import { HeaderSkeleton, StatCardSkeleton } from '../components/Skeleton';
+import { HeaderSkeleton, StatCardSkeleton, DepartmentBlockSkeleton } from '../components/Skeleton';
 
 // --- Helper: แปลงนาทีเป็น ชม./นาที ---
 function formatWaitTime(minutes) {
@@ -298,35 +298,44 @@ export default function OPDDashboard() {
 
       <div className="max-w-7xl mx-auto">
         
-        {/* ===== HEADER ===== */}
-        <div className="flex flex-wrap justify-between items-start gap-3 mb-6 glass p-4 md:p-5 rounded-2xl soft-shadow border border-white/40">
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-tight">Dashboard</h1>
-            <p className="text-gray-400 text-sm mt-1">ภาพรวมระบบ</p>
-          </div>
 
-          <div className="flex flex-wrap items-center gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
-              className="text-sm px-2 py-1 rounded border border-gray-300 bg-white text-gray-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-0" />
-            <span className="text-gray-500 text-sm">-</span>
-            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
-              className="text-sm px-2 py-1 rounded border border-gray-300 bg-white text-gray-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-0" />
-            <button onClick={applyDateFilter}
-              className="bg-[#1e40af] hover:bg-blue-800 text-white text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap">ค้นหา</button>
-            <button onClick={clearDateFilter}
-              className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isFilterMode ? 'hidden' : ''}`}>ล้าง</button>
-          </div>
-
-          <div className="flex items-center gap-2 whitespace-nowrap">
-            <p className="text-gray-600 font-semibold text-sm hidden sm:block">{currentTime}</p>
-            <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>{status.text}</span>
-          </div>
-        </div>
 
         {isLoading ? (
-          <div className="space-y-6"><HeaderSkeleton /><StatCardSkeleton count={4} /></div>
+          <div className="space-y-6">
+            <HeaderSkeleton />
+            <StatCardSkeleton count={4} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <DepartmentBlockSkeleton />
+              <DepartmentBlockSkeleton />
+            </div>
+          </div>
         ) : (
           <>
+            {/* ===== HEADER ===== */}
+            <div className="flex flex-wrap justify-between items-start gap-3 mb-6 glass p-4 md:p-5 rounded-2xl soft-shadow border border-white/40">
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-tight">Dashboard</h1>
+                <p className="text-gray-400 text-sm mt-1">ภาพรวมระบบ</p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
+                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
+                  className="text-sm px-2 py-1 rounded border border-gray-300 bg-white text-gray-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-0" />
+                <span className="text-gray-500 text-sm">-</span>
+                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
+                  className="text-sm px-2 py-1 rounded border border-gray-300 bg-white text-gray-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-0" />
+                <button onClick={applyDateFilter}
+                  className="bg-[#1e40af] hover:bg-blue-800 text-white text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap">ค้นหา</button>
+                <button onClick={clearDateFilter}
+                  className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isFilterMode ? 'hidden' : ''}`}>ล้าง</button>
+              </div>
+
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <p className="text-gray-600 font-semibold text-sm hidden sm:block">{currentTime}</p>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>{status.text}</span>
+              </div>
+            </div>
+
             {/* Top 4 Global Cards */}
             <div className="rounded-[20px] p-[6px] mb-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-[6px]">

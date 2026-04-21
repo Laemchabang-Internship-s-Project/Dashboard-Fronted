@@ -289,7 +289,7 @@ export default function GasInspection() {
 
             <div className="flex flex-wrap justify-between items-center glass p-5 rounded-2xl soft-shadow border border-white/40 mb-6">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800 tracking-tight">แดชบอร์ดสรุป น้ำมัน</h1>
+                <h1 className="text-2xl font-bold text-gray-800 tracking-tight"> Fuel Management Dashboard</h1>
                 <p className="text-gray-400 text-sm mt-1">ข้อมูลล่าสุดจาก Google Form | อัปเดตอัตโนมัติ</p>
               </div>
               <div className="flex items-center gap-3 mt-2 md:mt-0">

@@ -130,28 +130,43 @@ export function TableSkeleton({ rows = 6, cols = 13 }) {
 }
 
 /* ──────────────────────────────────────────────────────────
-   Wait-time Grid Skeleton  (ใช้ใน SummaryOPD แถว 2)
+   Department Block Skeleton (ใช้ใน SummaryOPD รูปแบบใหม่ 010/062)
    ────────────────────────────────────────────────────────── */
-export function WaitTimeSkeleton() {
+export function DepartmentBlockSkeleton() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-6">
-      {/* gradient box */}
-      <div className="lg:col-span-5 bg-gradient-to-br from-gray-100 to-gray-200 p-6 rounded-2xl">
-        <div className="grid grid-cols-2 gap-y-6 h-full">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="flex flex-col items-center justify-center gap-3 min-h-[100px]">
-              <SkeletonBox className="h-3 w-24 rounded-full" />
-              <SkeletonBox className="h-8 w-16 rounded-lg" />
-            </div>
-          ))}
-        </div>
+    <div className="p-5 rounded-[28px] shadow-sm border border-gray-100 mb-6 bg-white/50 relative overflow-hidden">
+      {/* Title */}
+      <div className="flex items-center gap-3 mb-6">
+        <SkeletonBox className="w-2.5 h-7 rounded-full" />
+        <SkeletonBox className="h-6 w-48" />
       </div>
-      {/* right cards */}
-      <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+      {/* Row 1: 5 Small Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+        {[1, 2, 3, 4, 5].map(i => (
+          <div key={i} className="bg-white/40 p-4 rounded-2xl flex flex-col items-center gap-2 border border-white/40">
+            <SkeletonBox className="h-3 w-16" />
+            <SkeletonBox className="h-8 w-12" />
+          </div>
+        ))}
+      </div>
+
+      {/* Row 2: 4 Medium Boxes */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="bg-white/20 p-4 rounded-2xl flex flex-col items-center justify-center min-h-[90px] gap-2 border border-white/20">
+            <SkeletonBox className="h-3 w-24" />
+            <SkeletonBox className="h-6 w-20" />
+          </div>
+        ))}
+      </div>
+
+      {/* Row 3: 3 Larger Boxes */}
+      <div className="grid grid-cols-3 gap-3">
         {[1, 2, 3].map(i => (
-          <div key={i} className="bg-gray-100 rounded-2xl p-4 flex flex-col items-center justify-center min-h-[140px] gap-3">
-            <SkeletonBox className="h-4 w-20 rounded-full" />
-            <SkeletonBox className="h-14 w-24 rounded-xl" />
+          <div key={i} className="bg-white/40 p-4 rounded-2xl flex flex-col items-center gap-2 border border-white/40">
+            <SkeletonBox className="h-4 w-16" />
+            <SkeletonBox className="h-10 w-20" />
           </div>
         ))}
       </div>
