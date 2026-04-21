@@ -97,7 +97,7 @@ export default function GasInspection() {
   useEffect(() => {
     loadHistory();
 
-    const es = createEventSource("/api/dashboard/stream");
+    const es = createEventSource("/api/dashboard/internal/stream");
     es.onopen = () => {
       setStatusText("LIVE");
       setStatusColor("bg-green-100 text-green-700");
@@ -287,112 +287,112 @@ export default function GasInspection() {
         ) : (
           <>
 
-        <div className="flex flex-wrap justify-between items-center glass p-5 rounded-2xl soft-shadow border border-white/40 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800 tracking-tight">แดชบอร์ดสรุป น้ำมัน</h1>
-            <p className="text-gray-400 text-sm mt-1">ข้อมูลล่าสุดจาก Google Form | อัปเดตอัตโนมัติ</p>
-          </div>
-          <div className="flex items-center gap-3 mt-2 md:mt-0">
-            <button onClick={handleRefresh} disabled={isRefreshing} className={`p-2 bg-white/50 border border-gray-200 text-gray-500 rounded-xl transition hover:bg-white shadow-sm ${isRefreshing ? 'opacity-50' : ''}`}>
-              <FontAwesomeIcon icon={faRotateRight} className={`${isRefreshing ? 'animate-spin' : ''}`} />
-            </button>
-            <div className="flex flex-col items-end whitespace-nowrap">
-              <p className="text-gray-600 font-semibold text-sm leading-tight">{currentTime}</p>
-              <span className="text-[10px] text-gray-400 leading-tight">{lastUpdated}</span>
+            <div className="flex flex-wrap justify-between items-center glass p-5 rounded-2xl soft-shadow border border-white/40 mb-6">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800 tracking-tight">แดชบอร์ดสรุป น้ำมัน</h1>
+                <p className="text-gray-400 text-sm mt-1">ข้อมูลล่าสุดจาก Google Form | อัปเดตอัตโนมัติ</p>
+              </div>
+              <div className="flex items-center gap-3 mt-2 md:mt-0">
+                <button onClick={handleRefresh} disabled={isRefreshing} className={`p-2 bg-white/50 border border-gray-200 text-gray-500 rounded-xl transition hover:bg-white shadow-sm ${isRefreshing ? 'opacity-50' : ''}`}>
+                  <FontAwesomeIcon icon={faRotateRight} className={`${isRefreshing ? 'animate-spin' : ''}`} />
+                </button>
+                <div className="flex flex-col items-end whitespace-nowrap">
+                  <p className="text-gray-600 font-semibold text-sm leading-tight">{currentTime}</p>
+                  <span className="text-[10px] text-gray-400 leading-tight">{lastUpdated}</span>
+                </div>
+                <span className={`text-[10px] px-3 py-1 rounded-full uppercase font-bold tracking-wider ${statusColor}`}>{statusText}</span>
+              </div>
             </div>
-            <span className={`text-[10px] px-3 py-1 rounded-full uppercase font-bold tracking-wider ${statusColor}`}>{statusText}</span>
-          </div>
-        </div>
 
-        <div>
-          <h2 className="font-bold text-gray-700 text-base mb-3"><FontAwesomeIcon icon={faChartSimple} className="text-blue-600 mr-2" />สรุปล่าสุดแต่ละเครื่อง</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pb-6">
-            {knownMachines.map(m => {
-              const r = allRecords.find(rec => rec.machine === m);
-              if (!r) return null;
-              return (
-                <FuelSummaryCard
-                  key={m}
-                  machine={m}
-                  record={r}
-                  isActive={activeFilter === m}
-                  onClick={() => setActiveFilter(m)}
-                />
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 mb-6">
-          <div className="flex justify-between items-end mb-4">
-            <h2 className="font-bold text-gray-700 text-base"><FontAwesomeIcon icon={faChartLine} className="text-blue-600 mr-2" />แนวโน้มระดับน้ำมัน: <span className="text-blue-600">{activeFilter === 'all' ? 'ทั้งหมด' : activeFilter}</span></h2>
-            <span className="text-[10px] text-gray-400">15 รายการล่าสุด</span>
-          </div>
-          <div className="relative w-full h-[250px]">
-            <canvas ref={canvasRef}></canvas>
-          </div>
-        </div>
-
-        <p className="text-gray-400 text-xs text-right m-0 pb-1">*หลัง Redis restart หรือเมื่อข้อมูลใน Redis ไม่ตรงกับ Sheet ให้run backfillHistory ใน apps script</p>
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 flex flex-wrap gap-3 justify-between items-center">
-            <h2 className="font-bold text-gray-700">ประวัติการตรวจเช็ค <span className="text-sm text-gray-400 font-normal">({filteredRecords.length} รายการ)</span></h2>
-            <div className="flex flex-wrap gap-2">
-              <button onClick={() => setActiveFilter("all")} className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition ${activeFilter === "all" ? "bg-blue-800 text-white" : "bg-gray-100 text-gray-600"}`}>ทั้งหมด</button>
-              {knownMachines.map(m => (
-                <button key={m} onClick={() => setActiveFilter(m)} className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition ${activeFilter === m ? "bg-blue-800 text-white" : "bg-gray-100 text-gray-600"}`}>{m}</button>
-              ))}
+            <div>
+              <h2 className="font-bold text-gray-700 text-base mb-3"><FontAwesomeIcon icon={faChartSimple} className="text-blue-600 mr-2" />สรุปล่าสุดแต่ละเครื่อง</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pb-6">
+                {knownMachines.map(m => {
+                  const r = allRecords.find(rec => rec.machine === m);
+                  if (!r) return null;
+                  return (
+                    <FuelSummaryCard
+                      key={m}
+                      machine={m}
+                      record={r}
+                      isActive={activeFilter === m}
+                      onClick={() => setActiveFilter(m)}
+                    />
+                  );
+                })}
+              </div>
             </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                <tr>
-                  <th className="px-3 py-3 text-left whitespace-nowrap">#</th>
-                  <th className="px-3 py-3 text-left whitespace-nowrap">วันที่</th>
-                  <th className="px-3 py-3 text-left whitespace-nowrap">เครื่อง</th>
-                  <th className="px-3 py-3 text-center whitespace-nowrap">น้ำมันก่อน</th>
-                  <th className="px-3 py-3 text-center whitespace-nowrap">น้ำมันหลัง</th>
-                  <th className="px-3 py-3 text-center whitespace-nowrap">ขั้วแบต</th>
-                  <th className="px-3 py-3 text-center whitespace-nowrap">น้ำกลั่น</th>
-                  <th className="px-3 py-3 text-center whitespace-nowrap">หม้อน้ำ</th>
-                  <th className="px-3 py-3 text-center whitespace-nowrap">น้ำมันเครื่อง</th>
-                  <th className="px-3 py-3 text-center whitespace-nowrap">ไฟควบคุม</th>
-                  <th className="px-3 py-3 text-left whitespace-nowrap">ผู้ตรวจ</th>
-                  <th className="px-3 py-3 text-center whitespace-nowrap">สถานะ</th>
-                  <th className="px-3 py-3 text-left whitespace-nowrap">ผู้อนุมัติ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRecords.length === 0 ? (
-                  <tr><td colSpan="13" className="text-center py-12 text-gray-400">ไม่มีข้อมูล</td></tr>
-                ) : (
-                  filteredRecords.map((r, i) => (
-                    <tr key={i} className="border-t border-gray-50 hover:bg-blue-50 transition">
-                      <td className="px-2 py-3 text-gray-400 text-xs">{i + 1}</td>
-                      <td className="px-2 py-3 whitespace-nowrap">
-                        <div className="font-semibold text-gray-700">{r.date || "—"}</div>
-                        <div className="text-xs text-gray-400">{r.timestamp || ""}</div>
-                      </td>
-                      <td className="px-2 py-3 whitespace-nowrap"><span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-bold">{r.machine || "—"}</span></td>
-                      <td className="px-2 py-3 text-center font-bold text-slate-600 whitespace-nowrap">{r.fuel_level_be4 ?? "—"} L</td>
-                      <td className="px-2 py-3 text-center font-bold text-green-600 whitespace-nowrap">{r.fuel_level_aft ?? "—"} L</td>
-                      <td className="px-2 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.battery_pole)}`}>{r.battery_pole || "—"}</span></td>
-                      <td className="px-2 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.battery_water)}`}>{r.battery_water || "—"}</span></td>
-                      <td className="px-2 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.radiator_water)}`}>{r.radiator_water || "—"}</span></td>
-                      <td className="px-2 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.engine_oil)}`}>{r.engine_oil || "—"}</span></td>
-                      <td className="px-2 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.control_light)}`}>{r.control_light || "—"}</span></td>
-                      <td className="px-2 py-3 text-gray-700 whitespace-nowrap">{r.tech_name || "—"}</td>
-                      <td className="px-2 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.status)}`}>{r.status || "—"}</span></td>
-                      <td className="px-2 py-3 text-gray-500 whitespace-nowrap">{r.app_name || "—"}</td>
+
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 mb-6">
+              <div className="flex justify-between items-end mb-4">
+                <h2 className="font-bold text-gray-700 text-base"><FontAwesomeIcon icon={faChartLine} className="text-blue-600 mr-2" />แนวโน้มระดับน้ำมัน: <span className="text-blue-600">{activeFilter === 'all' ? 'ทั้งหมด' : activeFilter}</span></h2>
+                <span className="text-[10px] text-gray-400">15 รายการล่าสุด</span>
+              </div>
+              <div className="relative w-full h-[250px]">
+                <canvas ref={canvasRef}></canvas>
+              </div>
+            </div>
+
+            <p className="text-gray-400 text-xs text-right m-0 pb-1">*หลัง Redis restart หรือเมื่อข้อมูลใน Redis ไม่ตรงกับ Sheet ให้run backfillHistory ใน apps script</p>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100 flex flex-wrap gap-3 justify-between items-center">
+                <h2 className="font-bold text-gray-700">ประวัติการตรวจเช็ค <span className="text-sm text-gray-400 font-normal">({filteredRecords.length} รายการ)</span></h2>
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={() => setActiveFilter("all")} className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition ${activeFilter === "all" ? "bg-blue-800 text-white" : "bg-gray-100 text-gray-600"}`}>ทั้งหมด</button>
+                  {knownMachines.map(m => (
+                    <button key={m} onClick={() => setActiveFilter(m)} className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition ${activeFilter === m ? "bg-blue-800 text-white" : "bg-gray-100 text-gray-600"}`}>{m}</button>
+                  ))}
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                    <tr>
+                      <th className="px-3 py-3 text-left whitespace-nowrap">#</th>
+                      <th className="px-3 py-3 text-left whitespace-nowrap">วันที่</th>
+                      <th className="px-3 py-3 text-left whitespace-nowrap">เครื่อง</th>
+                      <th className="px-3 py-3 text-center whitespace-nowrap">น้ำมันก่อน</th>
+                      <th className="px-3 py-3 text-center whitespace-nowrap">น้ำมันหลัง</th>
+                      <th className="px-3 py-3 text-center whitespace-nowrap">ขั้วแบต</th>
+                      <th className="px-3 py-3 text-center whitespace-nowrap">น้ำกลั่น</th>
+                      <th className="px-3 py-3 text-center whitespace-nowrap">หม้อน้ำ</th>
+                      <th className="px-3 py-3 text-center whitespace-nowrap">น้ำมันเครื่อง</th>
+                      <th className="px-3 py-3 text-center whitespace-nowrap">ไฟควบคุม</th>
+                      <th className="px-3 py-3 text-left whitespace-nowrap">ผู้ตรวจ</th>
+                      <th className="px-3 py-3 text-center whitespace-nowrap">สถานะ</th>
+                      <th className="px-3 py-3 text-left whitespace-nowrap">ผู้อนุมัติ</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </>
+                  </thead>
+                  <tbody>
+                    {filteredRecords.length === 0 ? (
+                      <tr><td colSpan="13" className="text-center py-12 text-gray-400">ไม่มีข้อมูล</td></tr>
+                    ) : (
+                      filteredRecords.map((r, i) => (
+                        <tr key={i} className="border-t border-gray-50 hover:bg-blue-50 transition">
+                          <td className="px-2 py-3 text-gray-400 text-xs">{i + 1}</td>
+                          <td className="px-2 py-3 whitespace-nowrap">
+                            <div className="font-semibold text-gray-700">{r.date || "—"}</div>
+                            <div className="text-xs text-gray-400">{r.timestamp || ""}</div>
+                          </td>
+                          <td className="px-2 py-3 whitespace-nowrap"><span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-bold">{r.machine || "—"}</span></td>
+                          <td className="px-2 py-3 text-center font-bold text-slate-600 whitespace-nowrap">{r.fuel_level_be4 ?? "—"} L</td>
+                          <td className="px-2 py-3 text-center font-bold text-green-600 whitespace-nowrap">{r.fuel_level_aft ?? "—"} L</td>
+                          <td className="px-2 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.battery_pole)}`}>{r.battery_pole || "—"}</span></td>
+                          <td className="px-2 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.battery_water)}`}>{r.battery_water || "—"}</span></td>
+                          <td className="px-2 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.radiator_water)}`}>{r.radiator_water || "—"}</span></td>
+                          <td className="px-2 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.engine_oil)}`}>{r.engine_oil || "—"}</span></td>
+                          <td className="px-2 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.control_light)}`}>{r.control_light || "—"}</span></td>
+                          <td className="px-2 py-3 text-gray-700 whitespace-nowrap">{r.tech_name || "—"}</td>
+                          <td className="px-2 py-3 text-center whitespace-nowrap"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getBadgeClass(r.status)}`}>{r.status || "—"}</span></td>
+                          <td className="px-2 py-3 text-gray-500 whitespace-nowrap">{r.app_name || "—"}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div >

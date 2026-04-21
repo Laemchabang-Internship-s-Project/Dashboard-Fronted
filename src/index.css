@@ -17,6 +17,39 @@
   animation: shimmer 1.4s ease-in-out infinite;
 }
 
+.stat-card {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s ease;
+}
+
+.stat-card:hover { 
+  transform: translateY(-6px) scale(1.01); 
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); 
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+.text-dark-card {
+  color: #1e293b !important;
+  text-shadow: none !important;
+}
+
+/* Global Font & Outline */
+body {
+  font-family: 'Sarabun', sans-serif;
+  color: #1e293b;
+}
+
+.text-outline {
+  color: white !important;
+  text-shadow: 
+    -1px -1px 0 #000,  
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000,
+     0px  2px 4px rgba(0,0,0,0.3);
+}
+
 /* Safe area for iOS (bottom notch) */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);

@@ -63,16 +63,17 @@ export default function FuelSummaryCard({ machine, record: r, isActive, onClick 
   return (
     <div
       onClick={onClick}
-      className={`bg-white rounded-2xl p-4 border-2 cursor-pointer transition flex flex-col items-center justify-center w-full
-        ${isActive ? 'border-blue-800 shadow-md' : 'border-gray-100 hover:-translate-y-1'}`}
+      className={`rounded-2xl p-4 border-2 cursor-pointer transition flex flex-col items-center justify-center w-full
+        ${isActive ? 'border-blue-800 shadow-lg scale-[1.02]' : 'border-gray-100 hover:-translate-y-1'}`}
+      style={{ background: `linear-gradient(135deg, ${isActive ? '#f0f9ff' : '#ffffff'} 0%, #f8fafc 100%)` }}
     >
       {/* ชื่อเครื่อง + สถานะอนุมัติ */}
       <div className="flex flex-col items-center mb-3 w-full gap-1">
-        <span className="bg-blue-100 text-blue-700 text-xs px-2.5 py-0.5 rounded-full font-bold">
+        <span className="bg-blue-100 text-blue-700 text-sm px-3 py-0.5 rounded-full font-black">
           {machine}
         </span>
-        <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold flex items-center gap-1
-          ${isRejected ? 'bg-red-100 text-red-800' : isApproved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}
+        <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1
+          ${isRejected ? 'bg-red-100 text-red-700 border border-red-200' : isApproved ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-yellow-100 text-yellow-700 border border-yellow-200'}`}
         >
           <FontAwesomeIcon icon={isRejected ? faCircleXmark : isApproved ? faCircleCheck : faClock} />
           {isRejected ? 'ไม่อนุมัติ' : isApproved ? 'อนุมัติแล้ว' : 'รออนุมัติ'}
@@ -95,23 +96,23 @@ export default function FuelSummaryCard({ machine, record: r, isActive, onClick 
           <div className="absolute -bottom-[14%] left-1/2 -translate-x-1/2 w-[28%] aspect-square rounded-full bg-white border-[3px] border-slate-200 z-30" />
         </div>
         <div className="flex justify-center items-baseline gap-1 mt-1 text-center">
-          <span style={{ color: isValid ? color : '#94a3b8' }} className="text-base font-black">
+          <span className="text-3xl font-black text-slate-800">
             {isValid ? numVal : '—'}
           </span>
-          <span className="text-[10px] text-gray-400">/ {maxCap} L</span>
+          <span className="text-[10px] text-gray-500 font-bold">/ {maxCap} L</span>
         </div>
       </div>
 
       {/* ก่อน → หลัง */}
       <div className="flex items-center gap-3 mt-1 justify-center w-full">
         <div className="text-center">
-          <p className="text-[9px] text-gray-400 uppercase tracking-tighter">ก่อน</p>
-          <p className="text-sm font-bold text-slate-600">{fuelBe4 !== "—" ? fuelBe4 + " L" : "—"}</p>
+          <p className="text-[9px] text-gray-400 uppercase font-bold">ก่อน</p>
+          <p className="text-sm font-black text-slate-700">{fuelBe4 !== "—" ? fuelBe4 + " L" : "—"}</p>
         </div>
         <span className="text-gray-300 text-xs">→</span>
         <div className="text-center">
-          <p className="text-[9px] text-gray-400 uppercase tracking-tighter">หลัง</p>
-          <p className={`text-sm font-bold ${didRefuel ? 'text-green-600' : 'text-gray-400'}`}>
+          <p className="text-[9px] text-gray-400 uppercase font-bold">หลัง</p>
+          <p className={`text-sm font-black ${didRefuel ? 'text-green-600' : 'text-gray-400'}`}>
             {fuelAft !== "—" ? fuelAft + " L" : "—"}
           </p>
         </div>
@@ -119,7 +120,7 @@ export default function FuelSummaryCard({ machine, record: r, isActive, onClick 
 
       {/* วันที่ + ผู้ตรวจ */}
       <div className="mt-3 pt-2 border-t border-gray-50 w-full text-center">
-        <p className="text-[10px] text-gray-500 font-medium whitespace-nowrap">
+        <p className="text-[10px] text-gray-500 font-bold whitespace-nowrap">
           <FontAwesomeIcon icon={faCalendarDays} className="mr-1 opacity-70" />
           {r.date || "—"} {r.timestamp?.split(' ')[1] ? `(${r.timestamp.split(' ')[1]})` : ""}
         </p>
