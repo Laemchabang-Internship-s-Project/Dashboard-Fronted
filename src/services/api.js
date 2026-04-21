@@ -49,3 +49,13 @@ export const createEventSource = (path) => {
     heartbeatTimeout: 60000
   });
 };
+
+// ===== Network Check =====
+export const checkNetwork = async () => {
+  try {
+    const data = await apiGet("/api/check-network"); 
+    return data.isInternal; 
+  } catch (error) {
+    return false;
+  }
+};

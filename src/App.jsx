@@ -1,16 +1,22 @@
-import { Routes, Route, Outlet } from 'react-router-dom';
-import { Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
+import { checkNetwork } from './services/api';
 
 import Sidebar from './components/Sidebar';
 import SummaryDashboard from './pages/SummaryDashboard';
 import GasInspection from './pages/GasInspection';
 import SummarOPD from './pages/SummaryOPD';
 
+// ตัวเฝ้าประตู: เช็คว่าถ้าเข้าหน้าภายในแต่ไม่ใช่เน็ตโรงพยาบาล ให้เด้งไป Dashboard รวม
+function ProtectedRoute({ isInternal, children }) {
+  if (isInternal === null) return null; // รอโหลดสถานะ
+  return isInternal ? children : <Navigate to="/dashboard" replace />;
+}
+
 function MainLayout() {
   return (
     <div className="flex bg-[#f1f5f9] font-['Sarabun'] min-h-screen">
       <Sidebar />
-
       <main className="flex-1 pl-16 transition-all duration-300 overflow-x-hidden overflow-y-auto pb-1">
         <Outlet />
       </main>
@@ -19,15 +25,29 @@ function MainLayout() {
 }
 
 function App() {
+  const [isInternal, setIsInternal] = useState(null);
+
+  useEffect(() => {
+    checkNetwork().then(setIsInternal);
+  }, []);
+
   return (
     <Routes>
       <Route element={<MainLayout />}>
-        <Route path="/" element={<Navigate to="/opd" replace />} />
+        {/* หน้าแรก: ถ้าเป็นคนในไป /opd ถ้าคนนอกไป /dashboard */}
+        <Route path="/" element={<Navigate to={isInternal ? "/opd" : "/dashboard"} replace />} />
+        
+        {/* หน้าที่ใครๆ ก็ดูได้ */}
         <Route path="/dashboard" element={<SummaryDashboard />} />
-        <Route path="/gas" element={<GasInspection />} />
-        <Route path="/opd" element={<SummarOPD />} />
+
+        {/* หน้าที่ต้องเป็นคนในโรงพยาบาลเท่านั้น */}
+        <Route path="/gas" element={
+          <ProtectedRoute isInternal={isInternal}><GasInspection /></ProtectedRoute>
+        } />
+        <Route path="/opd" element={
+          <ProtectedRoute isInternal={isInternal}><SummarOPD /></ProtectedRoute>
+        } />
       </Route>
-      {/* <Route path="*" element={<NotFound />} /> */}
     </Routes>
   );
 }
