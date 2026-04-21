@@ -54,8 +54,8 @@ export const createEventSource = (path) => {
 export const checkNetwork = async () => {
   // return true;
   try {
-    const data = await apiGet("/api/check-network"); 
-    return data.isInternal; 
+    const data = await apiGet("/api/check-network");
+    return data.isInternal;
   } catch (error) {
     return false;
   }

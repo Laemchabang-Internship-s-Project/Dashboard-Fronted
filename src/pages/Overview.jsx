@@ -245,13 +245,10 @@ export default function OPDDashboard() {
 
     const connectSSE = () => {
       if (isFilterMode || isCancelled) return;
-      console.log("📡 [2/2] Connecting to SSE Stream...");
-
       es = createEventSource("/api/dashboard/public/stream");
 
       es.onopen = () => {
         if (isCancelled) { es.close(); return; }
-        console.log("🟢 SSE Connection Established");
         setStatus({ text: "LIVE", color: "bg-green-100 text-green-700 font-bold" });
       };
 
@@ -294,13 +291,11 @@ export default function OPDDashboard() {
 
     const loadSnapshot = async () => {
       if (isFilterMode) return;
-      console.log("📦 [1/2] Loading Snapshot data...");
       try {
         const data = await apiGet("/api/dashboard/public/snapshot");
 
         if (isCancelled) return; // ถ้าเปลี่ยนโหมดไปแล้ว ไม่ต้องทำต่อ
 
-        console.log("✅ Snapshot Loaded Successfully");
         updateDashboardData(data);
         setIsLoading(false);
 
