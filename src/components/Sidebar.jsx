@@ -15,7 +15,7 @@ export default function Sidebar() {
 
   return (
     <aside 
-      className={`fixed top-0 left-0 h-screen bg-[#0f172a] text-slate-300 shadow-2xl transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-50 flex flex-col ${isOpen ? 'w-72' : 'w-20'}`}
+      className={`fixed top-0 left-0 h-screen bg-[#0f172a] text-slate-300 shadow-2xl transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] z-50 flex flex-col overflow-hidden ${isOpen ? 'w-72' : 'w-20'}`}
     >
       {/* Header */}
       <div className="relative flex items-center h-20 px-6 border-b border-slate-800/50 mb-4">
@@ -36,7 +36,6 @@ export default function Sidebar() {
           <NavLink 
             key={item.path}
             to={item.path}
-            // เพิ่มบรรทัดนี้ เพื่อให้ปิด sidebar ทันทีที่คลิกเลือกเมนู
             onClick={() => setIsOpen(false)} 
             className={({ isActive }) => `
               group flex items-center h-12 px-4 rounded-xl transition-all duration-200
@@ -50,7 +49,7 @@ export default function Sidebar() {
                 <div className="w-6 flex justify-center items-center">
                   <FontAwesomeIcon icon={item.icon} className={`text-lg ${isActive ? 'text-blue-400' : 'text-slate-400'}`} />
                 </div>
-                <span className={`ml-4 whitespace-nowrap transition-all duration-500 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                <span className={`ml-4 whitespace-nowrap transition-all duration-200 overflow-hidden ${isOpen ? 'opacity-100' : 'opacity-0 w0 pointer-events-none'}`}>
                   {item.name}
                 </span>
               </>
