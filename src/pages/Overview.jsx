@@ -425,8 +425,8 @@ export default function OPDDashboard() {
               <div className="flex flex-wrap justify-between items-start gap-3 mb-6 glass p-4 md:p-5 rounded-2xl soft-shadow border border-white/40">
 
                 <div>
-                  <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-tight">Overview</h1>
-                  <p className="text-gray-400 text-sm mt-1">ภาพรวมระบบ | อัปเดตอัตโนมัติ</p>
+                  <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-tight">Dashboard</h1>
+                  <p className="text-gray-400 text-sm mt-1">ภาพรวมระบบ</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
@@ -455,7 +455,7 @@ export default function OPDDashboard() {
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                       </svg>
-                      <span className="text-xs md:text-sm font-medium">รวมผู้รับบริการทั้งหมด</span>
+                      <span className="text-xs md:text-sm font-medium">ผู้รับบริการทั้งหมด</span>
                     </div>
                     <AnimatedStat value={stats.opdTotal} Component="h2" className="text-[2rem] md:text-[2.8rem] font-bold mt-auto" />
                   </div>
@@ -466,7 +466,7 @@ export default function OPDDashboard() {
                       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                         <path fillRule="evenodd" clipRule="evenodd" d="M13 6C14.1046 6 15 5.10457 15 4C15 2.89543 14.1046 2 13 2C11.8955 2 11 2.89543 11 4C11 5.10457 11.8955 6 13 6ZM11.0528 6.60557C11.3841 6.43992 11.7799 6.47097 12.0813 6.68627L13.0813 7.40056C13.3994 7.6278 13.5559 8.01959 13.482 8.40348L12.4332 13.847L16.8321 20.4453C17.1384 20.9048 17.0143 21.5257 16.5547 21.8321C16.0952 22.1384 15.4743 22.0142 15.168 21.5547L10.5416 14.6152L9.72611 13.3919C9.58336 13.1778 9.52866 12.9169 9.57338 12.6634L10.1699 9.28309L8.38464 10.1757L7.81282 13.0334C7.70445 13.575 7.17759 13.9261 6.63604 13.8178C6.09449 13.7094 5.74333 13.1825 5.85169 12.641L6.51947 9.30379C6.58001 9.00123 6.77684 8.74356 7.05282 8.60557L11.0528 6.60557ZM16.6838 12.9487L13.8093 11.9905L14.1909 10.0096L17.3163 11.0513C17.8402 11.226 18.1234 11.7923 17.9487 12.3162C17.7741 12.8402 17.2078 13.1234 16.6838 12.9487ZM6.12844 20.5097L9.39637 14.7001L9.70958 15.1699L10.641 16.5669L7.87159 21.4903C7.60083 21.9716 6.99111 22.1423 6.50976 21.8716C6.0284 21.6008 5.85768 20.9911 6.12844 20.5097Z"></path>
                       </svg>
-                      <span className="text-xs md:text-sm font-medium">Walk-in (ผู้ป่วยเดินทางมาเอง)</span>
+                      <span className="text-xs md:text-sm font-medium">Walk-in</span>
                     </div>
                     <AnimatedStat value={stats.walkIn} Component="h2" className="text-[2rem] md:text-[2.8rem] font-bold mt-auto" />
                   </div>
@@ -477,7 +477,7 @@ export default function OPDDashboard() {
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                       </svg>
-                      <span className="text-xs md:text-sm font-medium">Telemedicine (รับบริการทางไกล)</span>
+                      <span className="text-xs md:text-sm font-medium">Telemedicine</span>
                     </div>
                     <AnimatedStat value={stats.telemed} Component="h2" className="text-[2rem] md:text-[2.8rem] font-bold mt-auto" />
                   </div>
