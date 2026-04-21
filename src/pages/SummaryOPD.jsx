@@ -140,7 +140,7 @@ export default function OPDDashboard() {
       if (isFilterMode || isCancelled) return;
       console.log("📡 [2/2] Connecting to SSE Stream...");
 
-      es = createEventSource("/api/dashboard/stream");
+      es = createEventSource("/api/dashboard/internal/stream");
 
       es.onopen = () => {
         if (isCancelled) { es.close(); return; }
@@ -176,7 +176,7 @@ export default function OPDDashboard() {
       if (isFilterMode) return;
       console.log("📦 [1/2] Loading Snapshot data...");
       try {
-        const data = await apiGet("/api/dashboard/snapshot");
+        const data = await apiGet("/api/dashboard/internal/snapshot");
 
         if (isCancelled) return; // ถ้าเปลี่ยนโหมดไปแล้ว ไม่ต้องทำต่อ
 
