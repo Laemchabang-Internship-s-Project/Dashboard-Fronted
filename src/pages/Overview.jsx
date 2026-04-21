@@ -193,14 +193,20 @@ export default function OPDDashboard() {
   }, []);
 
   const updateDashboardData = (data) => {
-    // ป้องกันข้อมูล Real-time มาเขียนทับข้อมูล Filter
-    if (!data?.opd_clinics || isFilterMode) return;
+    // 1. เปลี่ยนเงื่อนไขการเช็ค: 
+    // หน้า Public จะไม่มี opd_clinics ดังนั้นเราจะเช็คแค่ว่ามี data หรือ data.system หรือไม่
+    if (!data || isFilterMode) return;
 
-    const h = data.opd_clinics.header;
+    // 2. ดึงข้อมูลจากก้อน system
     const s = data.system;
-    const rooms = data.opd_clinics.rooms || [];
+
+    // 3. ข้อมูลส่วนอื่นๆ ที่ถูก Mask ไว้ (เช่นห้องตรวจ 010 หรือ technical_services)
+    // ในหน้า Public ค่าเหล่านี้จะเป็น undefined เราจะป้องกัน Error ด้วยการใส่ Optional Chaining
+    const h = data.opd_clinics?.header;
+    const rooms = data.opd_clinics?.rooms || [];
     const room010 = rooms.find(r => r.room_code === '010');
 
+    // คำนวณเวลารอ (ซึ่งในหน้า Public จะกลายเป็น 0 เพราะข้อมูลโดนกรองออก)
     const waitScreening = room010?.avg_wait_minutes || 0;
     const waitExam = data.summary?.avg_wait_examination || 0;
     const waitPharmacy = data?.technical_services?.pharmacy?.avg_wait_minutes || 0;
@@ -208,22 +214,27 @@ export default function OPDDashboard() {
 
     setStats(prev => ({
       ...prev,
-      opdTotal: s?.total_OPD ?? 0,
-      walkIn: s?.total_walkin ?? 0,
-      telemed: s?.hos_telemed ?? 0,
-      drugDelivery: s?.total_drug_delivery ?? 0,
-      customOpdTotal: h?.custom_opd_total ?? 0,
-      waitingScreening: h?.waiting_screening ?? 0,
-      waitingExam: h?.waiting_exam ?? 0,
-      waitingLab: data?.technical_services?.lab?.waiting ?? 0,
-      waitingXray: data?.technical_services?.xray?.waiting ?? 0,
-      waitingPharmacy: data?.technical_services?.pharmacy?.waiting ?? 0,
-      waitingFinance: data?.technical_services?.finance?.waiting ?? 0,
-      goHome: s?.hos_go_home ?? 0,
-      avgWaitScreening: formatWaitTime(waitScreening),
-      avgWaitExamTotal: formatWaitTime(waitExam),
-      avgWaitPharmacy: formatWaitTime(waitPharmacy),
-      avgWaitAll: formatWaitTime(totalAvgWait),
+      // 4. อัปเดต 4 ค่าหลักที่ Backend ส่งมาให้
+      opdTotal: s?.total_OPD ?? "-",
+      walkIn: s?.total_walkin ?? "-",
+      telemed: s?.hos_telemed ?? "-",
+      drugDelivery: s?.total_drug_delivery ?? "-",
+
+      // 5. ค่าที่เหลือ ถ้าไม่มีข้อมูล (undefined) จะกลายเป็น "-" ตามที่เราเซ็ต Default ไว้
+      customOpdTotal: h?.custom_opd_total ?? "-",
+      waitingScreening: h?.waiting_screening ?? "-",
+      waitingExam: h?.waiting_exam ?? "-",
+      waitingLab: data?.technical_services?.lab?.waiting ?? "-",
+      waitingXray: data?.technical_services?.xray?.waiting ?? "-",
+      waitingPharmacy: data?.technical_services?.pharmacy?.waiting ?? "-",
+      waitingFinance: data?.technical_services?.finance?.waiting ?? "-",
+      goHome: s?.hos_go_home ?? "-",
+
+      // ถ้าค่าเป็น 0 และเราอยู่โหมด Public ให้โชว์เป็น "-" เพื่อความสวยงาม
+      avgWaitScreening: waitScreening ? formatWaitTime(waitScreening) : "-",
+      avgWaitExamTotal: waitExam ? formatWaitTime(waitExam) : "-",
+      avgWaitPharmacy: waitPharmacy ? formatWaitTime(waitPharmacy) : "-",
+      avgWaitAll: totalAvgWait ? formatWaitTime(totalAvgWait) : "-",
     }));
   };
 
@@ -339,7 +350,21 @@ export default function OPDDashboard() {
         opdTotal: data.opd_total ?? 0,
         walkIn: data.walk_in ?? 0,
         telemed: data.telemed ?? 0,
-        drugDelivery: data.drug_delivery ?? 0
+        drugDelivery: data.drug_delivery ?? 0,
+
+
+        customOpdTotal: "-",
+        waitingScreening: "-",
+        waitingExam: "-",
+        waitingLab: "-",
+        waitingXray: "-",
+        waitingPharmacy: "-",
+        waitingFinance: "-",
+        goHome: "-",
+        avgWaitScreening: "-",
+        avgWaitExamTotal: "-",
+        avgWaitPharmacy: "-",
+        avgWaitAll: "-",
       }));
     } catch (err) {
       console.error("❌ Filter fetch error:", err);
