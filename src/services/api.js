@@ -50,12 +50,23 @@ export const createEventSource = (path) => {
   });
 };
 
-// ===== Network Check =====
+
 export const checkNetwork = async () => {
-  // return true;
   try {
-    const data = await apiGet("/api/check-network");
-    return data.isInternal;
+    const res = await fetch(`${API_URL}/api/check-network`, {
+      method: "GET",
+      headers: getHeaders(),
+    });
+
+    const body = await res.json(); // อ่านครั้งเดียว
+
+    if (!res.ok) {
+      console.warn("[checkNetwork] Denied:", body.detail);
+      return false;
+    }
+
+    console.log("[checkNetwork] Allowed, IP:", body.client_ip);
+    return body.isInternal;
   } catch (error) {
     return false;
   }
