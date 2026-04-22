@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { checkNetwork } from './services/api';
+import { Toaster } from 'react-hot-toast';
 
 import Sidebar from './components/Sidebar';
 import Overview from './pages/Overview';
@@ -14,8 +15,28 @@ function ProtectedRoute({ isInternal, children }) {
 }
 
 function MainLayout() {
+  // สร้าง State สำหรับเก็บตำแหน่งของ Toast โดยเช็คขนาดจอเริ่มต้น
+  const [toastPosition, setToastPosition] = useState(
+    window.innerWidth < 768 ? 'top-right' : 'bottom-right'
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      // ถ้าจอเล็กกว่า 768px (ขนาด md ของ Tailwind) ให้ไปอยู่ขวาบน
+      if (window.innerWidth < 768) {
+        setToastPosition('top-right');
+      } else {
+        setToastPosition('bottom-right');
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+
   return (
     <div className="flex bg-[#f1f5f9] font-['Sarabun'] min-h-screen">
+      <Toaster position={toastPosition} reverseOrder={false} />
       <Sidebar />
       <main className="flex-1 md:pl-16 transition-all duration-300 overflow-x-hidden overflow-y-auto pb-16 md:pb-0">
         <Outlet />

@@ -5,6 +5,7 @@ import { Helmet } from "react-helmet-async";
 import { apiGet, createEventSource } from "../services/api";
 import FuelSummaryCard from '../components/FuelSummaryCard';
 import { HeaderSkeleton, StatCardSkeleton, FuelCardSkeleton } from '../components/Skeleton';
+import toast from 'react-hot-toast';
 
 const MACHINE_CAPACITY = {
   "เครื่องที่ 1": 655, "1": 655,
@@ -241,7 +242,7 @@ export default function OPDDashboard() {
   // จัดการ SSE และ Snapshot
   useEffect(() => {
     let es = null;
-    let isCancelled = false; // สำหรับเช็คว่า Effect นี้ยัง Valid อยู่หรือไม่
+    let isCancelled = false;
 
     const connectSSE = () => {
       if (isFilterMode || isCancelled) return;
@@ -258,7 +259,6 @@ export default function OPDDashboard() {
           const data = JSON.parse(event.data);
           updateDashboardData(data);
 
-          // อัพเดทข้อมูลน้ำมันแบบ Real-time
           const fuel = data?.car?.fuel_latest;
           if (fuel) {
             setFuelRecords(prev => {
@@ -280,9 +280,11 @@ export default function OPDDashboard() {
         console.error("🔴 SSE Connection Lost");
         setStatus({ text: "RECONNECTING", color: "bg-orange-100 text-orange-700" });
 
+        // แจ้งเตือนเมื่อหลุดการเชื่อมต่อ Real-time
+        toast.error("การเชื่อมต่อขัดข้อง กำลังพยายามใหม่...", { id: 'sse-error' });
+
         es.close();
         es = null;
-
         setTimeout(() => {
           if (!isFilterMode && !isCancelled) connectSSE();
         }, 3000);
@@ -291,25 +293,38 @@ export default function OPDDashboard() {
 
     const loadSnapshot = async () => {
       if (isFilterMode) return;
-      try {
+
+      // สร้าง Promise รวมสำหรับการดึงข้อมูลเริ่มต้น
+      const fetchInitialData = async () => {
         const data = await apiGet("/api/dashboard/public/snapshot");
-
-        if (isCancelled) return; // ถ้าเปลี่ยนโหมดไปแล้ว ไม่ต้องทำต่อ
-
         updateDashboardData(data);
-        setIsLoading(false);
 
-        // ดักโหลดข้อมูลน้ำมันรอบแรก
         try {
           const fuelData = await apiGet("/api/fuel/history?limit=10");
           setFuelRecords(fuelData.records || []);
-        } catch (e) { }
+        } catch (e) {
+          // ถ้าน้ำมันโหลดไม่ได้แต่ snapshot ได้ ก็ให้ทำงานต่อ
+        }
+      };
 
-        connectSSE();
+      // ใช้ toast.promise จัดการสถานะการโหลดครั้งแรก
+      toast.promise(fetchInitialData(), {
+        loading: 'กำลังโหลดข้อมูลล่าสุด...',
+        success: 'อัปเดตข้อมูลสำเร็จ',
+        error: 'ไม่สามารถโหลดข้อมูลได้',
+      }, { id: 'load-snapshot' });
+
+      try {
+        await fetchInitialData();
+        if (!isCancelled) {
+          setIsLoading(false);
+          connectSSE();
+        }
       } catch (err) {
-        console.error("❌ Snapshot error:", err);
-        setIsLoading(false);
-        if (!isCancelled) connectSSE();
+        if (!isCancelled) {
+          setIsLoading(false);
+          connectSSE(); // พยายามต่อ SSE ต่อเผื่อกลับมาได้
+        }
       }
     };
 
@@ -328,7 +343,7 @@ export default function OPDDashboard() {
 
   const applyDateFilter = async () => {
     if (!startDate || !endDate) {
-      alert('กรุณาเลือกวันที่ให้ครบถ้วน');
+      toast.error('กรุณาเลือกวันที่ให้ครบถ้วน');
       return;
     }
 
@@ -336,18 +351,22 @@ export default function OPDDashboard() {
     setSecondaryState("filtered");
     setStatus({ text: "FILTERED (HISTORY)", color: "bg-purple-100 text-purple-700 font-bold" });
 
-    try {
-      const responseData = await apiGet(`/api/dashboard/summary-range?start_date=${startDate}&end_date=${endDate}`);
+    // ใช้ toast.promise สำหรับการค้นหาข้อมูลย้อนหลัง
+    toast.promise(
+      apiGet(`/api/dashboard/summary-range?start_date=${startDate}&end_date=${endDate}`),
+      {
+        loading: 'กำลังดึงข้อมูลย้อนหลัง...',
+        success: 'ดึงข้อมูลย้อนหลังสำเร็จ',
+        error: 'เกิดข้อผิดพลาดในการดึงข้อมูลย้อนหลัง',
+      }
+    ).then((responseData) => {
       const data = responseData.data;
-
       setStats(prev => ({
         ...prev,
         opdTotal: data.opd_total ?? 0,
         walkIn: data.walk_in ?? 0,
         telemed: data.telemed ?? 0,
         drugDelivery: data.drug_delivery ?? 0,
-
-
         customOpdTotal: "-",
         waitingScreening: "-",
         waitingExam: "-",
@@ -361,10 +380,9 @@ export default function OPDDashboard() {
         avgWaitPharmacy: "-",
         avgWaitAll: "-",
       }));
-    } catch (err) {
+    }).catch((err) => {
       console.error("❌ Filter fetch error:", err);
-      alert("เกิดข้อผิดพลาดในการดึงข้อมูลย้อนหลัง");
-    }
+    });
   };
 
   const clearDateFilter = () => {

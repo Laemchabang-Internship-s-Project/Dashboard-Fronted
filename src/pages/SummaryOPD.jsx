@@ -134,9 +134,9 @@ export default function OPDDashboard() {
   // --- Clock Effect ---
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentTime(new Date().toLocaleString('th-TH', { 
-        year: 'numeric', month: 'long', day: 'numeric', 
-        hour: '2-digit', minute: '2-digit', second: '2-digit' 
+      setCurrentTime(new Date().toLocaleString('th-TH', {
+        year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
       }));
     }, 1000);
     return () => clearInterval(interval);
@@ -145,7 +145,7 @@ export default function OPDDashboard() {
   // --- Main Data Process ---
   const processData = (data) => {
     // บล็อกข้อมูล Real-time ไม่ให้มาทับยอดถ้ากำลังอยู่ในโหมด Filter
-    if (!data || isFilterMode) return; 
+    if (!data || isFilterMode) return;
 
     const s = data.system;
     const rooms = data.opd_clinics?.rooms || [];
@@ -210,7 +210,7 @@ export default function OPDDashboard() {
     setTimeout(() => {
       setIsFilterMode(false);
       setSecondaryState("normal");
-      
+
     }, 200);
   };
 
@@ -240,7 +240,7 @@ export default function OPDDashboard() {
       es.onerror = () => {
         if (isFilterMode || isCancelled || !es) return;
         setStatus({ text: "RECONNECTING", color: "bg-orange-100 text-orange-700" });
-        
+
         es.close();
         es = null;
 
@@ -255,12 +255,12 @@ export default function OPDDashboard() {
       try {
         const data = await apiGet("/api/dashboard/internal/snapshot");
         if (isCancelled) return;
-        
+
         processData(data);
         setIsLoading(false);
         connectSSE();
-      } catch (err) { 
-        console.error(err); 
+      } catch (err) {
+        console.error(err);
         setIsLoading(false);
         if (!isCancelled) connectSSE();
       }
@@ -280,15 +280,14 @@ export default function OPDDashboard() {
   }, [isFilterMode]);
 
   // CSS สำหรับ Grayscale และความโปร่งใส
-  const secondaryClasses = `transition-all duration-300 ${
-    secondaryState === "filtered" ? "opacity-30 grayscale pointer-events-none" :
-    secondaryState === "hidden" ? "opacity-0" : "opacity-100"
-  }`;
+  const secondaryClasses = `transition-all duration-300 ${secondaryState === "filtered" ? "opacity-30 grayscale pointer-events-none" :
+      secondaryState === "hidden" ? "opacity-0" : "opacity-100"
+    }`;
 
   return (
     <div className="p-3 md:p-6 min-h-screen bg-[#f1f5f9]" style={{ fontFamily: "'Sarabun', sans-serif" }}>
       <Helmet><title>OPD Summary - LCBH</title></Helmet>
-      
+
       <style>{`
         .soft-shadow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
         .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
@@ -297,7 +296,7 @@ export default function OPDDashboard() {
       `}</style>
 
       <div className="max-w-7xl mx-auto">
-        
+
 
 
         {isLoading ? (
@@ -372,17 +371,20 @@ export default function OPDDashboard() {
 
             {/* Department Blocks - จะกลายเป็นสีเทาเมื่อ Filter */}
             <div className={secondaryClasses}>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <DepartmentBlock 
-                  title="010 ผู้รับบริการ OPD (ทั่วไป)" 
-                  stats={stats010} 
-                  theme="blue" 
+              {/*  (ไม่ให้มันยืดจนน่าเกลียด) mx-auto: จัดกึ่งกลางเมื่อมีพื้นที่เหลือ*/}
+              <div className="grid grid-cols-1 gap-6 w-full mx-auto">
+                <div className="w-250 mx-auto">
+                  <DepartmentBlock
+                  title="010 ผู้รับบริการ OPD (ทั่วไป)"
+                  stats={stats010}
+                  theme="blue"
                 />
-                <DepartmentBlock 
-                  title="062 ผู้รับบริการ OPD (นัด)" 
-                  stats={stats062} 
-                  theme="emerald" 
+                <DepartmentBlock
+                  title="062 ผู้รับบริการ OPD (นัด)"
+                  stats={stats062}
+                  theme="emerald"
                 />
+                </div>
               </div>
             </div>
           </>
