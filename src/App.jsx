@@ -7,6 +7,7 @@ import Sidebar from './components/Sidebar';
 import Overview from './pages/Overview';
 import GasInspection from './pages/GasInspection';
 import SummarOPD from './pages/SummaryOPD';
+import NotFound from './pages/NotFound';
 
 // ตัวเฝ้าประตู: เช็คว่าถ้าเข้าหน้าภายในแต่ไม่ใช่เน็ตโรงพยาบาล ให้เด้งไป Dashboard รวม
 function ProtectedRoute({ isInternal, children }) {
@@ -68,6 +69,7 @@ function App() {
         <Route path="/opd" element={
           <ProtectedRoute isInternal={isInternal}><SummarOPD /></ProtectedRoute>
         } />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );
