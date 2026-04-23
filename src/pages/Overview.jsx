@@ -452,39 +452,44 @@ export default function OPDDashboard() {
           ) : (
             <>
               {/* ===== HEADER ===== */}
-              <div className="flex flex-wrap justify-between items-start gap-3 mb-6 glass p-4 md:p-5 rounded-2xl soft-shadow border border-white/40">
-                <div>
+              <div className="flex flex-wrap md:flex-nowrap justify-between items-start md:items-center gap-3 mb-6 glass p-4 md:p-5 rounded-2xl soft-shadow border border-white/40">
+
+                {/* ส่วนที่ 1: หัวข้อ - ล็อกความกว้างขั้นต่ำไว้ */}
+                <div className="flex-shrink-0 md:w-[200px]">
                   <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-tight">Dashboard</h1>
                   <p className="text-gray-400 text-sm mt-1">ภาพรวมระบบ</p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
-                  <input
-                    type="date"
-                    value={startDate}
-                    placeholder="วว/ดด/ปปปป"
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[120px] appearance-none"
-                    style={{ colorScheme: 'light' }}
-                  />
-                  <span className="text-gray-500 text-sm">-</span>
-                  <input
-                    type="date"
-                    value={endDate}
-                    placeholder="วว/ดด/ปปปป"
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[120px] appearance-none"
-                    style={{ colorScheme: 'light' }}
-                  />
-                  <button onClick={applyDateFilter}
-                    className="bg-[#1e40af] hover:bg-blue-800 text-white text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap active:scale-95">ค้นหา</button>
-                  <button onClick={clearDateFilter}
-                    className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isFilterMode ? 'hidden' : ''}`}>ล้าง</button>
+                {/* ส่วนที่ 2: Filter - ให้อยู่กึ่งกลางเสมอ */}
+                <div className="flex-1 flex justify-center">
+                  <div className="flex flex-wrap items-center gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
+                    <input
+                      type="date"
+                      value={startDate}
+                      placeholder="วว/ดด/ปปปป"
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[120px] appearance-none"
+                      style={{ colorScheme: 'light' }}
+                    />
+                    <span className="text-gray-500 text-sm">-</span>
+                    <input
+                      type="date"
+                      value={endDate}
+                      placeholder="วว/ดด/ปปปป"
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[120px] appearance-none"
+                      style={{ colorScheme: 'light' }}
+                    />
+                    <button onClick={applyDateFilter}
+                      className="bg-[#1e40af] hover:bg-blue-800 text-white text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap active:scale-95">ค้นหา</button>
+                    <button onClick={clearDateFilter}
+                      className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isFilterMode ? 'hidden' : ''}`}>ล้าง</button>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2 whitespace-nowrap">
-                  {/* แสดงเวลาปัจจุบันบนมือถือด้วยขนาดตัวหนังสือที่เล็กลงหน่อย */}
-                  <p className="text-gray-600 font-semibold text-[11px] md:text-sm">{currentTime}</p>
+                {/* ส่วนที่ 3: เวลา - ล็อกความกว้างให้เท่ากับส่วนที่ 1 (200px) เพื่อให้ Center นิ่ง */}
+                <div className="flex items-center gap-2 whitespace-nowrap flex-shrink-0 md:w-[200px] justify-end">
+                  <p className="text-gray-600 font-semibold text-[11px] md:text-sm">{currentTime || "--:--:--"}</p>
                   <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>{status.text}</span>
                 </div>
               </div>
