@@ -452,17 +452,17 @@ export default function OPDDashboard() {
           ) : (
             <>
               {/* ===== HEADER ===== */}
-              <div className="flex flex-wrap md:flex-nowrap justify-between items-start md:items-center gap-3 mb-6 glass p-4 md:p-5 rounded-2xl soft-shadow border border-white/40">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 glass p-4 md:p-5 rounded-2xl soft-shadow border border-white/40">
 
-                {/* ส่วนที่ 1: หัวข้อ - ล็อกความกว้างขั้นต่ำไว้ */}
+                {/* ส่วนที่ 1: หัวข้อ - บนคอมล็อกกว้าง แต่บนมือถือปล่อยอิสระ */}
                 <div className="flex-shrink-0 md:w-[200px]">
                   <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-tight">Dashboard</h1>
                   <p className="text-gray-400 text-sm mt-1">ภาพรวมระบบ</p>
                 </div>
 
-                {/* ส่วนที่ 2: Filter - ให้อยู่กึ่งกลางเสมอ */}
-                <div className="flex-1 flex justify-center">
-                  <div className="flex flex-wrap items-center gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
+                {/* ส่วนที่ 2: Filter - บนมือถือให้เต็มความกว้าง บนคอมให้อยู่กลาง */}
+                <div className="flex-1 flex justify-center w-full md:w-auto">
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
                     <input
                       type="date"
                       value={startDate}
@@ -487,8 +487,8 @@ export default function OPDDashboard() {
                   </div>
                 </div>
 
-                {/* ส่วนที่ 3: เวลา - ล็อกความกว้างให้เท่ากับส่วนที่ 1 (200px) เพื่อให้ Center นิ่ง */}
-                <div className="flex items-center gap-2 whitespace-nowrap flex-shrink-0 md:w-[200px] justify-end">
+                {/* ส่วนที่ 3: เวลา - บนคอมล็อกกว้าง 200px ชิดขวา บนมือถือจัดชิดซ้าย/กลางตามความเหมาะสม */}
+                <div className="flex items-center gap-2 whitespace-nowrap flex-shrink-0 md:w-[200px] md:justify-end">
                   <p className="text-gray-600 font-semibold text-[11px] md:text-sm">{currentTime || "--:--:--"}</p>
                   <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>{status.text}</span>
                 </div>
