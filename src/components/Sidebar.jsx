@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faNotesMedical, faGasPump, faBars, faChartPie, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { faNotesMedical, faGasPump, faBars, faChartPie, faChevronLeft, faArrowRightFromBracket } from '@fortawesome/free-solid-svg-icons';
 
-export default function Sidebar() {
+export default function Sidebar({ isAuthenticated, onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const menuItems = [
@@ -54,6 +54,23 @@ export default function Sidebar() {
             </NavLink>
           ))}
         </nav>
+        
+        {/* Logout Button (Desktop) */}
+        {isAuthenticated && (
+          <div className="p-2 border-t border-slate-800/50">
+            <button
+              onClick={onLogout}
+              className="w-full group flex items-center h-11 px-3 rounded-xl transition-all duration-200 hover:bg-red-500/10 hover:text-red-400 text-slate-400"
+            >
+              <div className="w-5 flex justify-center items-center shrink-0">
+                <FontAwesomeIcon icon={faArrowRightFromBracket} className="text-base group-hover:text-red-400" />
+              </div>
+              <span className={`ml-3 text-sm transition-all duration-200 whitespace-nowrap ${isOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
+                ออกจากระบบ
+              </span>
+            </button>
+          </div>
+        )}
       </aside>
 
       {/* ======= Mobile Bottom Nav (< md) ======= */}
@@ -75,6 +92,16 @@ export default function Sidebar() {
             )}
           </NavLink>
         ))}
+        {/* Logout Button (Mobile) */}
+        {isAuthenticated && (
+          <button
+            onClick={onLogout}
+            className="flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-xl transition-all duration-200 min-w-[60px] text-slate-400 hover:text-red-400"
+          >
+            <FontAwesomeIcon icon={faArrowRightFromBracket} className="text-xl" />
+            <span className="text-[10px] font-medium">ออกระบบ</span>
+          </button>
+        )}
       </nav>
     </>
   );

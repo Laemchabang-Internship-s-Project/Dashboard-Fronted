@@ -22,7 +22,7 @@ function PasswordPrompt({ onAuthenticate }) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full flex-1 pt-16 md:pt-32 pb-8 px-4">
+    <div className="flex flex-col items-center justify-center w-full min-h-screen px-4 pb-20 md:pb-0">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm border border-slate-100">
         <div className="mb-8 text-center">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -64,7 +64,7 @@ function ProtectedRoute({ isAuthenticated, onAuthenticate, children }) {
   return children;
 }
 
-function MainLayout() {
+function MainLayout({ isAuthenticated, onLogout }) {
   const [toastPosition, setToastPosition] = useState(
     window.innerWidth < 768 ? 'top-right' : 'bottom-right'
   );
@@ -84,7 +84,7 @@ function MainLayout() {
   return (
     <div className="flex w-full bg-[#f1f5f9] font-['Sarabun'] min-h-screen">
       <Toaster position={toastPosition} reverseOrder={false} />
-      <Sidebar />
+      <Sidebar isAuthenticated={isAuthenticated} onLogout={onLogout} />
       <main className="flex-1 w-full md:pl-16 transition-all duration-300 overflow-x-hidden overflow-y-auto pb-16 md:pb-0">
         <Outlet />
       </main>
@@ -102,9 +102,14 @@ function App() {
     setIsAuthenticated(true);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('dashboard_auth_EA');
+    setIsAuthenticated(false);
+  };
+
   return (
     <Routes>
-      <Route element={<MainLayout />}>
+      <Route element={<MainLayout isAuthenticated={isAuthenticated} onLogout={handleLogout} />}>
         {/* หน้าแรก: ไป /dashboard (เปิดให้ดู Overview ฟรีโดยไม่ต้องล๊อกอิน) หรือไป /opd ได้เลย */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
