@@ -441,21 +441,45 @@ export default function OPDDashboard() {
                   <p className="text-gray-400 text-sm mt-1">ภาพรวมระบบ</p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
-                  <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
-                    className="text-sm px-2 py-1 rounded border border-gray-300 bg-white text-gray-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-0" />
+                {/* ส่วนที่แก้ไข: เพิ่ม text-slate-900 และปรับ padding/font-size ให้ชัดขึ้นบน iPhone */}
+                <div className="flex flex-wrap items-center gap-2 bg-white/80 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[110px]"
+                  />
                   <span className="text-gray-500 text-sm">-</span>
-                  <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
-                    className="text-sm px-2 py-1 rounded border border-gray-300 bg-white text-gray-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-0" />
-                  <button onClick={applyDateFilter}
-                    className="bg-[#1e40af] hover:bg-blue-800 text-white text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap">ค้นหา</button>
-                  <button onClick={clearDateFilter}
-                    className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isFilterMode ? 'hidden' : ''}`}>ล้าง</button>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[110px]"
+                  />
+                  <button
+                    onClick={applyDateFilter}
+                    className="bg-[#1e40af] hover:bg-blue-800 text-white text-xs md:text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap active:scale-95"
+                  >
+                    ค้นหา
+                  </button>
+                  {isFilterMode && (
+                    <button
+                      onClick={clearDateFilter}
+                      className="bg-gray-400 hover:bg-gray-500 text-white text-xs md:text-sm px-3 py-1.5 rounded transition"
+                    >
+                      ล้าง
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2 whitespace-nowrap">
-                  <p className="text-gray-600 font-semibold text-sm hidden sm:block">{currentTime}</p>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>{status.text}</span>
+                  {/* แก้ไข: เอา hidden sm:block ออก และปรับขนาด text ให้ยืดหยุ่น */}
+                  <p className="text-gray-600 font-semibold text-[11px] md:text-sm">
+                    {currentTime}
+                  </p>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>
+                    {status.text}
+                  </span>
                 </div>
               </div>
 
