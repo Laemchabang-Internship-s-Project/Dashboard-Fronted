@@ -421,7 +421,24 @@ export default function OPDDashboard() {
                     0% { background-color: transparent; }
                     100% { background-color: transparent; }
                 }
-            `}</style>
+                    input[type="date"] {
+                    position: relative;
+                    min-height: 38px;
+                    }
+                    input[type="date"]::before {
+                    content: attr(placeholder);
+                    position: absolute;
+                    color: #94a3b8;
+                    width: 100%;
+                    left: 8px;
+                    }
+                    input[type="date"]:focus::before,
+                    input[type="date"]:valid::before,
+                    input[type="date"]:not([value=""])::before {
+                        display: none;
+                        content: "";
+                    }
+        `}</style>
 
         <div className="max-w-7xl mx-auto">
 
@@ -441,45 +458,34 @@ export default function OPDDashboard() {
                   <p className="text-gray-400 text-sm mt-1">ภาพรวมระบบ</p>
                 </div>
 
-                {/* ส่วนที่แก้ไข: เพิ่ม text-slate-900 และปรับ padding/font-size ให้ชัดขึ้นบน iPhone */}
-                <div className="flex flex-wrap items-center gap-2 bg-white/80 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
+                <div className="flex flex-wrap items-center gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
                   <input
                     type="date"
                     value={startDate}
+                    placeholder="วว/ดด/ปปปป"
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[110px]"
+                    className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[120px] appearance-none"
+                    style={{ colorScheme: 'light' }}
                   />
                   <span className="text-gray-500 text-sm">-</span>
                   <input
                     type="date"
                     value={endDate}
+                    placeholder="วว/ดด/ปปปป"
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[110px]"
+                    className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[120px] appearance-none"
+                    style={{ colorScheme: 'light' }}
                   />
-                  <button
-                    onClick={applyDateFilter}
-                    className="bg-[#1e40af] hover:bg-blue-800 text-white text-xs md:text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap active:scale-95"
-                  >
-                    ค้นหา
-                  </button>
-                  {isFilterMode && (
-                    <button
-                      onClick={clearDateFilter}
-                      className="bg-gray-400 hover:bg-gray-500 text-white text-xs md:text-sm px-3 py-1.5 rounded transition"
-                    >
-                      ล้าง
-                    </button>
-                  )}
+                  <button onClick={applyDateFilter}
+                    className="bg-[#1e40af] hover:bg-blue-800 text-white text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap active:scale-95">ค้นหา</button>
+                  <button onClick={clearDateFilter}
+                    className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isFilterMode ? 'hidden' : ''}`}>ล้าง</button>
                 </div>
 
                 <div className="flex items-center gap-2 whitespace-nowrap">
-                  {/* แก้ไข: เอา hidden sm:block ออก และปรับขนาด text ให้ยืดหยุ่น */}
-                  <p className="text-gray-600 font-semibold text-[11px] md:text-sm">
-                    {currentTime}
-                  </p>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>
-                    {status.text}
-                  </span>
+                  {/* แสดงเวลาปัจจุบันบนมือถือด้วยขนาดตัวหนังสือที่เล็กลงหน่อย */}
+                  <p className="text-gray-600 font-semibold text-[11px] md:text-sm">{currentTime}</p>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>{status.text}</span>
                 </div>
               </div>
 
