@@ -1,16 +1,10 @@
-import React, { useState, useEffect } from 'react'; // เพิ่ม useEffect
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faNotesMedical, faGasPump, faBars, faChartPie, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
-import { checkNetwork } from '../services/api'; // Import ฟังก์ชันเช็คเน็ต
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isInternal, setIsInternal] = useState(false); // State เก็บสถานะคนใน/คนนอก
-
-  useEffect(() => {
-    checkNetwork().then(setIsInternal);
-  }, []);
 
   const menuItems = [
     { path: '/dashboard', name: 'Overview', icon: faChartPie, public: true },
@@ -18,8 +12,8 @@ export default function Sidebar() {
     { path: '/gas', name: 'Gas & Oil', icon: faGasPump, public: false }
   ];
 
-  // กรองเมนู: ถ้าไม่ใช่คนใน ให้เห็นเฉพาะรายการที่ public: true
-  const filteredMenu = menuItems.filter(item => isInternal || item.public);
+  // แสดงเมนูทั้งหมด (การจำกัดสิทธิ์จะไปทำที่ App.jsx)
+  const filteredMenu = menuItems;
 
   return (
     <>
