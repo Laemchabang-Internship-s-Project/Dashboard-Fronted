@@ -49,4 +49,4 @@ export const createEventSource = (path) => {
     heartbeatTimeout: 60000
   });
 };
-
+
