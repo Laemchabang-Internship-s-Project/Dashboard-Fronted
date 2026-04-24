@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
@@ -7,17 +7,38 @@ import Overview from './pages/Overview';
 import GasInspection from './pages/GasInspection';
 import SummarOPD from './pages/SummaryOPD';
 import NotFound from './pages/NotFound';
+import { authLogin, authVerify } from './services/api';
 
+// ─── Token Helpers ───────────────────────────────────────────────────────────
+const TOKEN_KEY = 'dashboard_token';
+const getToken = () => sessionStorage.getItem(TOKEN_KEY);
+const setToken = (t) => sessionStorage.setItem(TOKEN_KEY, t);
+const clearToken = () => sessionStorage.removeItem(TOKEN_KEY);
+
+// ─── PasswordPrompt Component ─────────────────────────────────────────────────
 function PasswordPrompt({ onAuthenticate }) {
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (password === 'EA0010823') {
+    setError('');
+    setLoading(true);
+
+    try {
+      // ✅ ส่ง password ไป Backend ให้ตรวจ — ไม่มีรหัสผ่านใน Frontend เลย
+      const data = await authLogin(password);
+      setToken(data.access_token);
       onAuthenticate();
-    } else {
-      setError(true);
+    } catch (err) {
+      if (err.status === 401) {
+        setError('รหัสผ่านไม่ถูกต้อง');
+      } else {
+        setError('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -38,18 +59,20 @@ function PasswordPrompt({ onAuthenticate }) {
             <input
               type="password"
               value={password}
-              onChange={(e) => { setPassword(e.target.value); setError(false); }}
+              onChange={(e) => { setPassword(e.target.value); setError(''); }}
               placeholder="รหัสผ่าน"
               className={`w-full px-4 py-3 border rounded-xl font-['Sarabun'] transition-all duration-200 outline-none ${error ? 'border-red-500 bg-red-50 focus:ring-2 focus:ring-red-200' : 'border-gray-300 bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200'}`}
               autoFocus
+              disabled={loading}
             />
-            {error && <p className="text-red-500 text-sm mt-2 font-['Sarabun'] text-center">รหัสผ่านไม่ถูกต้อง</p>}
+            {error && <p className="text-red-500 text-sm mt-2 font-['Sarabun'] text-center">{error}</p>}
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white font-['Sarabun'] font-medium py-3 rounded-xl hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-md hover:shadow-lg"
+            disabled={loading || !password}
+            className="w-full bg-blue-600 text-white font-['Sarabun'] font-medium py-3 rounded-xl hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            ยืนยัน
+            {loading ? 'กำลังตรวจสอบ...' : 'ยืนยัน'}
           </button>
         </form>
       </div>
@@ -57,6 +80,7 @@ function PasswordPrompt({ onAuthenticate }) {
   );
 }
 
+// ─── ProtectedRoute Component ─────────────────────────────────────────────────
 function ProtectedRoute({ isAuthenticated, onAuthenticate, children }) {
   if (!isAuthenticated) {
     return <PasswordPrompt onAuthenticate={onAuthenticate} />;
@@ -64,6 +88,7 @@ function ProtectedRoute({ isAuthenticated, onAuthenticate, children }) {
   return children;
 }
 
+// ─── MainLayout Component ─────────────────────────────────────────────────────
 function MainLayout({ isAuthenticated, onLogout }) {
   const [toastPosition, setToastPosition] = useState(
     window.innerWidth < 768 ? 'top-right' : 'bottom-right'
@@ -92,25 +117,49 @@ function MainLayout({ isAuthenticated, onLogout }) {
   );
 }
 
+// ─── App Component ─────────────────────────────────────────────────────────────
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('dashboard_auth_EA') === 'true';
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true); // ตรวจ token ตอน mount
 
-  const handleAuthenticate = () => {
-    localStorage.setItem('dashboard_auth_EA', 'true');
+  // ตอน reload หน้า — ตรวจว่า token ที่เก็บไว้ยังใช้ได้อยู่หรือเปล่า
+  useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      setIsVerifying(false);
+      return;
+    }
+    // เรียก Backend เพื่อตรวจสอบ token
+    authVerify()
+      .then(() => setIsAuthenticated(true))
+      .catch(() => {
+        clearToken(); // token หมดอายุหรือไม่ถูกต้อง — ล้างทิ้ง
+        setIsAuthenticated(false);
+      })
+      .finally(() => setIsVerifying(false));
+  }, []);
+
+  const handleAuthenticate = useCallback(() => {
     setIsAuthenticated(true);
-  };
+  }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('dashboard_auth_EA');
+  const handleLogout = useCallback(() => {
+    clearToken();
     setIsAuthenticated(false);
-  };
+  }, []);
+
+  // แสดง loading ระหว่างตรวจ token (กัน flash หน้า login ก่อน verify เสร็จ)
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#f1f5f9]">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <Routes>
       <Route element={<MainLayout isAuthenticated={isAuthenticated} onLogout={handleLogout} />}>
-        {/* หน้าแรก: ไป /dashboard (เปิดให้ดู Overview ฟรีโดยไม่ต้องล๊อกอิน) หรือไป /opd ได้เลย */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
         {/* หน้าที่ใครๆ ก็ดูได้ */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Helmet } from "react-helmet-async";
-import { apiGet, createEventSource } from "../services/api";
+import { apiGet, apiGetInternal, createInternalEventSource } from "../services/api";
 import { HeaderSkeleton, StatCardSkeleton, DepartmentBlockSkeleton } from '../components/Skeleton';
 
 // --- Helper: แปลงนาทีเป็น ชม./นาที ---
@@ -221,7 +221,7 @@ export default function OPDDashboard() {
     const connectSSE = () => {
       if (isFilterMode || isCancelled) return;
 
-      es = createEventSource("/api/dashboard/internal/stream");
+      es = createInternalEventSource("/api/dashboard/internal/stream");
 
       es.onopen = () => {
         if (isCancelled) { es.close(); return; }
@@ -253,7 +253,7 @@ export default function OPDDashboard() {
     const loadInit = async () => {
       if (isFilterMode) return;
       try {
-        const data = await apiGet("/api/dashboard/internal/snapshot");
+        const data = await apiGetInternal("/api/dashboard/internal/snapshot");
         if (isCancelled) return;
 
         processData(data);
@@ -281,7 +281,7 @@ export default function OPDDashboard() {
 
   // CSS สำหรับ Grayscale และความโปร่งใส
   const secondaryClasses = `transition-all duration-300 ${secondaryState === "filtered" ? "opacity-30 grayscale pointer-events-none" :
-      secondaryState === "hidden" ? "opacity-0" : "opacity-100"
+    secondaryState === "hidden" ? "opacity-0" : "opacity-100"
     }`;
 
   return (
@@ -375,15 +375,15 @@ export default function OPDDashboard() {
               <div className="grid grid-cols-1 gap-6 w-full mx-auto">
                 <div className="w-250 mx-auto">
                   <DepartmentBlock
-                  title="010 ผู้รับบริการ OPD (ทั่วไป)"
-                  stats={stats010}
-                  theme="blue"
-                />
-                <DepartmentBlock
-                  title="062 ผู้รับบริการ OPD (นัด)"
-                  stats={stats062}
-                  theme="emerald"
-                />
+                    title="010 ผู้รับบริการ OPD (ทั่วไป)"
+                    stats={stats010}
+                    theme="blue"
+                  />
+                  <DepartmentBlock
+                    title="062 ผู้รับบริการ OPD (นัด)"
+                    stats={stats062}
+                    theme="emerald"
+                  />
                 </div>
               </div>
             </div>

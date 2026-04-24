@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRotateRight, faChartSimple, faChartLine } from '@fortawesome/free-solid-svg-icons';
 import FuelSummaryCard from '../components/FuelSummaryCard';
 import { Helmet } from "react-helmet-async";
-import { apiGet, createEventSource } from "../services/api";
+import { apiGet, createInternalEventSource } from "../services/api";
 import { FuelCardSkeleton, ChartSkeleton, TableSkeleton, HeaderSkeleton } from '../components/Skeleton';
 
 const STATUS_OK = ["ปกติ", "ok", "ดี", "good", "normal", "เต็ม", "พอเพียง", "อนุมัติแล้ว", "ผ่าน"];
@@ -97,7 +97,7 @@ export default function GasInspection() {
   useEffect(() => {
     loadHistory();
 
-    const es = createEventSource("/api/dashboard/internal/stream");
+    const es = createInternalEventSource("/api/dashboard/internal/stream");
     es.onopen = () => {
       setStatusText("LIVE");
       setStatusColor("bg-green-100 text-green-700");
