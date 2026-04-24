@@ -34,6 +34,8 @@ function PasswordPrompt({ onAuthenticate }) {
     } catch (err) {
       if (err.status === 401) {
         setError('รหัสผ่านไม่ถูกต้อง');
+      } else if (err.status === 429) {
+        setError(' กรุณารอ 1 นาที');
       } else {
         setError('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
       }
