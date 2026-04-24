@@ -421,7 +421,7 @@ export default function OPDDashboard() {
     */}
                 <div className="w-full md:max-w-[1000px] mx-auto px-2 md:px-0">
                   <DepartmentBlock
-                    title="010 ผู้รับบริการ OPD (ทั่วไป)"
+                    title="ผู้รับบริการ OPD (ทั่วไป)"
                     stats={stats010}
                     theme="blue"
                   />
@@ -429,7 +429,7 @@ export default function OPDDashboard() {
                   {/* เพิ่ม margin top เล็กน้อยเพื่อให้ห่างกันในมือถือ */}
                   <div className="mt-4 md:mt-6">
                     <DepartmentBlock
-                      title="062 ผู้รับบริการ OPD (นัด)"
+                      title="ผู้รับบริการ OPD (นัด)"
                       stats={stats062}
                       theme="emerald"
                     />
