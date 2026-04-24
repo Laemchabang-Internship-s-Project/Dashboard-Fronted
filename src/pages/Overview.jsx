@@ -40,6 +40,15 @@ function formatWaitTime(minutes) {
   return `${hrs} ชม. ${mins}`;
 }
 
+// ฟังก์ชันสำหรับดึงวันที่ปัจจุบัน (YYYY-MM-DD)
+const getToday = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 // คอมโพเนนต์นี้ทำหน้าที่แทนฟังก์ชัน animateValue() และเอฟเฟกต์ flash ในโค้ดเดิม
 const AnimatedStat = ({ value, Component = "h2", className = "" }) => {
   const [displayValue, setDisplayValue] = useState("-");
@@ -167,8 +176,8 @@ export default function OPDDashboard() {
 
   // Filter states
   const [isFilterMode, setIsFilterMode] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(getToday());
+  const [endDate, setEndDate] = useState(getToday());
   const [secondaryState, setSecondaryState] = useState("normal"); // normal, filtered, hidden
 
   // Data states
@@ -386,8 +395,8 @@ export default function OPDDashboard() {
   };
 
   const clearDateFilter = () => {
-    setStartDate('');
-    setEndDate('');
+    setStartDate(getToday());
+    setEndDate(getToday());
     setSecondaryState("hidden");
     setStatus({ text: "Connecting...", color: "bg-gray-200 text-gray-800" });
 

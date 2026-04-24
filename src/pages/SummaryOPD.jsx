@@ -47,6 +47,15 @@ const AnimatedStat = ({ value, Component = "h2", className = "" }) => {
   return <Component ref={ref} className={className}>{displayValue}</Component>;
 };
 
+// ฟังก์ชันสำหรับดึงวันที่ปัจจุบัน (YYYY-MM-DD)
+const getToday = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 // --- คอมโพเนนต์รายแผนก (010, 062) ---
 const DepartmentBlock = ({ title, stats, theme }) => {
   const isBlue = theme === 'blue';
@@ -116,8 +125,8 @@ export default function OPDDashboard() {
 
   // Filter States
   const [isFilterMode, setIsFilterMode] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(getToday());
+  const [endDate, setEndDate] = useState(getToday());
   const [secondaryState, setSecondaryState] = useState("normal"); // normal, filtered, hidden
 
   const [systemStats, setSystemStats] = useState({
@@ -205,8 +214,8 @@ export default function OPDDashboard() {
   };
 
   const clearDateFilter = () => {
-    setStartDate("");
-    setEndDate("");
+    setStartDate(getToday());
+    setEndDate(getToday());
     setSecondaryState("hidden");
     setTimeout(() => {
       setIsFilterMode(false);
