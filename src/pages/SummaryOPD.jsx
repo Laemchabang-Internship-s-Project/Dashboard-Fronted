@@ -5,8 +5,9 @@ import { HeaderSkeleton, StatCardSkeleton, DepartmentBlockSkeleton } from '../co
 
 // --- Helper: แปลงนาทีเป็น ชม./นาที ---
 function formatWaitTime(minutes) {
-  if (minutes == null || isNaN(minutes) || minutes === 0) return "0 น.";
-  if (minutes < 60) return `${Number(minutes).toFixed(1)} น.`;
+  if (minutes == null || isNaN(minutes)) return "-";
+  if (minutes < 60) return `${Math.round(minutes)} นาที`; // ใช้ Math.round เพื่อปัดเศษตามหลักสากล
+
   const hrs = Math.floor(minutes / 60);
   const mins = Math.round(minutes % 60);
   return `${hrs} ชม. ${mins} น.`;
