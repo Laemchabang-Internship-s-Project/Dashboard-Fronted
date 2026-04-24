@@ -61,6 +61,7 @@ function PasswordPrompt({ onAuthenticate }) {
             <input
               type="password"
               value={password}
+              maxLength={128}
               onChange={(e) => { setPassword(e.target.value); setError(''); }}
               placeholder="รหัสผ่าน"
               className={`w-full px-4 py-3 border rounded-xl font-['Sarabun'] transition-all duration-200 outline-none ${error ? 'border-red-500 bg-red-50 focus:ring-2 focus:ring-red-200' : 'border-gray-300 bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200'}`}
