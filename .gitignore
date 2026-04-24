@@ -33,3 +33,5 @@ dist-ssr/
 
 # Vite specific
 .vite/
+
+dist.zip
