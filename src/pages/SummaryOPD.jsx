@@ -290,11 +290,33 @@ export default function OPDDashboard() {
       <Helmet><title>OPD Summary - LCBH</title></Helmet>
 
       <style>{`
-        .soft-shadow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
-        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
-        .stat-card { transition: all 0.25s ease; }
-        .stat-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); }
-      `}</style>
+                .stat-card { transition: all 0.25s ease; }
+                .stat-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); }
+                .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
+                .soft-shadow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
+                .flash { animation: flash 0.4s ease; }
+                @keyframes flash {
+                    0% { background-color: transparent; }
+                    100% { background-color: transparent; }
+                }
+                    input[type="date"] {
+                    position: relative;
+                    min-height: 38px;
+                    }
+                    input[type="date"]::before {
+                    content: attr(placeholder);
+                    position: absolute;
+                    color: #94a3b8;
+                    width: 100%;
+                    left: 8px;
+                    }
+                    input[type="date"]:focus::before,
+                    input[type="date"]:valid::before,
+                    input[type="date"]:not([value=""])::before {
+                        display: none;
+                        content: "";
+                    }
+        `}</style>
 
       <div className="max-w-7xl mx-auto">
 
