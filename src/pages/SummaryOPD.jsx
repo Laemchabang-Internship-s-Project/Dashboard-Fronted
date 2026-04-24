@@ -334,47 +334,47 @@ export default function OPDDashboard() {
         ) : (
           <>
             {/* ===== HEADER ===== */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 glass p-4 md:p-5 rounded-2xl soft-shadow border border-white/40">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 glass p-4 md:p-5 rounded-2xl soft-shadow border border-white/40">
 
-                {/* ส่วนที่ 1: หัวข้อ - บนคอมล็อกกว้าง แต่บนมือถือปล่อยอิสระ */}
-                <div className="flex-shrink-0 md:w-[200px]">
-                  <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-tight">Dashboard</h1>
-                  <p className="text-gray-400 text-sm mt-1">ภาพรวมระบบ</p>
-                </div>
+              {/* ส่วนที่ 1: หัวข้อ - บนคอมล็อกกว้าง แต่บนมือถือปล่อยอิสระ */}
+              <div className="flex-shrink-0 md:w-[200px]">
+                <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-tight">Dashboard</h1>
+                <p className="text-gray-400 text-sm mt-1">ภาพรวมระบบ</p>
+              </div>
 
-                {/* ส่วนที่ 2: Filter - บนมือถือให้เต็มความกว้าง บนคอมให้อยู่กลาง */}
-                <div className="flex-1 flex justify-center w-full md:w-auto">
-                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
-                    <input
-                      type="date"
-                      value={startDate}
-                      placeholder="วว/ดด/ปปปป"
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[120px] appearance-none"
-                      style={{ colorScheme: 'light' }}
-                    />
-                    <span className="text-gray-500 text-sm">-</span>
-                    <input
-                      type="date"
-                      value={endDate}
-                      placeholder="วว/ดด/ปปปป"
-                      onChange={(e) => setEndDate(e.target.value)}
-                      className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[120px] appearance-none"
-                      style={{ colorScheme: 'light' }}
-                    />
-                    <button onClick={applyDateFilter}
-                      className="bg-[#1e40af] hover:bg-blue-800 text-white text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap active:scale-95">ค้นหา</button>
-                    <button onClick={clearDateFilter}
-                      className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isFilterMode ? 'hidden' : ''}`}>ล้าง</button>
-                  </div>
-                </div>
-
-                {/* ส่วนที่ 3: เวลา - บนคอมล็อกกว้าง 200px ชิดขวา บนมือถือจัดชิดซ้าย/กลางตามความเหมาะสม */}
-                <div className="flex items-center gap-2 whitespace-nowrap flex-shrink-0 md:w-[200px] md:justify-end">
-                  <p className="text-gray-600 font-semibold text-[11px] md:text-sm">{currentTime || "--:--:--"}</p>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>{status.text}</span>
+              {/* ส่วนที่ 2: Filter - บนมือถือให้เต็มความกว้าง บนคอมให้อยู่กลาง */}
+              <div className="flex-1 flex justify-center w-full md:w-auto">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
+                  <input
+                    type="date"
+                    value={startDate}
+                    placeholder="วว/ดด/ปปปป"
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[120px] appearance-none"
+                    style={{ colorScheme: 'light' }}
+                  />
+                  <span className="text-gray-500 text-sm">-</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    placeholder="วว/ดด/ปปปป"
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[120px] appearance-none"
+                    style={{ colorScheme: 'light' }}
+                  />
+                  <button onClick={applyDateFilter}
+                    className="bg-[#1e40af] hover:bg-blue-800 text-white text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap active:scale-95">ค้นหา</button>
+                  <button onClick={clearDateFilter}
+                    className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isFilterMode ? 'hidden' : ''}`}>ล้าง</button>
                 </div>
               </div>
+
+              {/* ส่วนที่ 3: เวลา - บนคอมล็อกกว้าง 200px ชิดขวา บนมือถือจัดชิดซ้าย/กลางตามความเหมาะสม */}
+              <div className="flex items-center gap-2 whitespace-nowrap flex-shrink-0 md:w-[200px] md:justify-end">
+                <p className="text-gray-600 font-semibold text-[11px] md:text-sm">{currentTime || "--:--:--"}</p>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>{status.text}</span>
+              </div>
+            </div>
 
             {/* Top 4 Global Cards */}
             <div className="rounded-[20px] p-[6px] mb-4">
@@ -412,20 +412,30 @@ export default function OPDDashboard() {
 
             {/* Department Blocks - จะกลายเป็นสีเทาเมื่อ Filter */}
             <div className={secondaryClasses}>
-              {/*  (ไม่ให้มันยืดจนน่าเกลียด) mx-auto: จัดกึ่งกลางเมื่อมีพื้นที่เหลือ*/}
-              <div className="grid grid-cols-1 gap-6 w-full mx-auto">
-                <div className="w-250 mx-auto">
+              {/* grid-cols-1: ให้เรียงลงมาเป็นแถวเดียวเสมอตามโครงสร้างเดิม */}
+              <div className="grid grid-cols-1 gap-4 md:gap-6 w-full mx-auto">
+
+                {/* w-full: เต็มจอในมือถือ 
+       md:max-w-[1000px]: ขนาดกว้างสูงสุดเมื่ออยู่บนจอคอม (ปรับตัวเลขตามความเหมาะสมของ 250 เดิมคุณ)
+       mx-auto: จัดกึ่งกลาง
+    */}
+                <div className="w-full md:max-w-[1000px] mx-auto px-2 md:px-0">
                   <DepartmentBlock
                     title="010 ผู้รับบริการ OPD (ทั่วไป)"
                     stats={stats010}
                     theme="blue"
                   />
-                  <DepartmentBlock
-                    title="062 ผู้รับบริการ OPD (นัด)"
-                    stats={stats062}
-                    theme="emerald"
-                  />
+
+                  {/* เพิ่ม margin top เล็กน้อยเพื่อให้ห่างกันในมือถือ */}
+                  <div className="mt-4 md:mt-6">
+                    <DepartmentBlock
+                      title="062 ผู้รับบริการ OPD (นัด)"
+                      stats={stats062}
+                      theme="emerald"
+                    />
+                  </div>
                 </div>
+
               </div>
             </div>
           </>
