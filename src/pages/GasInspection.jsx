@@ -305,7 +305,7 @@ export default function GasInspection() {
             </div>
 
             <div>
-              <h2 className="font-bold text-gray-700 text-base mb-3"><FontAwesomeIcon icon={faChartSimple} className="text-blue-600 mr-2" />สรุปล่าสุดแต่ละเครื่อง</h2>
+              <h2 className="font-bold text-gray-700 text-base mb-3"><FontAwesomeIcon icon={faChartSimple} className="text-blue-600 mr-2" />สรุปนํ้ามันเครื่องกำเนิดไฟฟ้า</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pb-6">
                 {knownMachines.map(m => {
                   const r = allRecords.find(rec => rec.machine === m);

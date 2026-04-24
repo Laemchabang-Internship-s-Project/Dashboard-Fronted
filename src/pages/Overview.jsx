@@ -540,7 +540,7 @@ export default function OPDDashboard() {
               <div className={secondaryClasses}>
                 <h2 className="font-black text-slate-700 text-base mb-3 mt-4 uppercase tracking-wide">
                   <FontAwesomeIcon icon={faGasPump} className="text-blue-600 mr-2" />
-                  สรุปน้ำมันล่าสุดแต่ละเครื่อง
+                  สรุปนํ้ามันเครื่องกำเนิดไฟฟ้า
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pb-6">
                   {isLoading ? (
