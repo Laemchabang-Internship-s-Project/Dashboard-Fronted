@@ -8,6 +8,7 @@ import Overview from './pages/Overview';
 import GasInspection from './pages/GasInspection';
 import SummarOPD from './pages/SummaryOPD';
 import Graph from './pages/Graph';
+import DentalGraph from './pages/DentalGraph';
 import BedDashboard from './pages/Bed';
 import NotFound from './pages/NotFound';
 import { authLogin, authVerify } from './services/api';
@@ -206,6 +207,11 @@ function App() {
         <Route path="/graph" element={
           <ProtectedRoute isAuthenticated={isAuthenticated} onAuthenticate={handleAuthenticate}>
             <Graph />
+          </ProtectedRoute>
+        } />
+        <Route path="/dental" element={
+          <ProtectedRoute isAuthenticated={isAuthenticated} onAuthenticate={handleAuthenticate}>
+            <DentalGraph />
           </ProtectedRoute>
         } />
         <Route path="*" element={<NotFound />} />

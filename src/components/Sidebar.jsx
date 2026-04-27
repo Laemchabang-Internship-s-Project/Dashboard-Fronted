@@ -9,18 +9,20 @@ import {
   faChevronLeft, 
   faArrowRightFromBracket, 
   faChartLine, 
-  faBed 
+  faBed,
+  faTooth
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function Sidebar({ isAuthenticated, onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const menuItems = [
-    { path: '/dashboard', name: 'Overview', icon: faChartPie, public: true },
-    { path: '/opd', name: 'OPD Real-time', icon: faNotesMedical, public: false },
-    { path: '/gas', name: 'Gas & Oil', icon: faGasPump, public: false },
-    { path: '/graph', name: 'Graph', icon: faChartLine, public: false },
-    { path: '/beds', name: 'Beds', icon: faBed, public: false }
+    { path: '/dashboard', name: 'Overview',    icon: faChartPie,  public: true  },
+    { path: '/opd',       name: 'OPD Real-time',icon: faNotesMedical, public: false },
+    { path: '/gas',       name: 'Gas & Oil',    icon: faGasPump,   public: false },
+    { path: '/graph',     name: 'Doctor Ops',   icon: faChartLine, public: false },
+    { path: '/dental',    name: 'Dental',       icon: faTooth,     public: false },
+    { path: '/beds',      name: 'Beds',         icon: faBed,       public: false }
   ];
 
   // แสดงเมนูทั้งหมด (การจำกัดสิทธิ์จะไปทำที่ App.jsx)
