@@ -96,14 +96,18 @@ const ChartCanvas = ({ id, type, data, options }) => {
   return (
     <div className="flex flex-col h-full w-full">
       {/* Custom Modern Legend */}
-      <div className="grid grid-cols-10 gap-2 flex-wrap items-center justify-end gap-2 mb-4">
+      <div 
+        className="flex md:grid md:grid-cols-6 lg:grid-cols-10 items-center justify-start gap-2 mb-4 md:mb-8 overflow-x-auto md:overflow-visible pb-2 md:pb-0 w-full" 
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+      >
+        <style>{`div::-webkit-scrollbar { display: none; }`}</style>
         {data?.datasets?.map((ds, idx) => {
           const isHidden = hiddenDatasets[idx];
           return (
             <button
               key={idx}
               onClick={() => toggleDataset(idx)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold transition-all duration-200
+              className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold transition-all duration-200
                 ${isHidden ? 'bg-gray-50 border-gray-200 text-gray-400 opacity-60' : 'bg-white border-gray-200 text-gray-700 shadow-sm hover:shadow hover:-translate-y-0.5'}`}
             >
               <span
