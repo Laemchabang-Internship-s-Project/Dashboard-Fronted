@@ -108,7 +108,7 @@ const ChartCanvas = ({ id, type, data, options }) => {
             >
               <span
                 className={`w-3 h-3 rounded-full ${isHidden ? 'bg-gray-300' : ''}`}
-                style={{ backgroundColor: isHidden ? undefined : (ds.backgroundColor || ds.borderColor) }}
+                style={{ backgroundColor: isHidden ? undefined : (ds.legendColor || (Array.isArray(ds.backgroundColor) ? ds.backgroundColor[0] : ds.backgroundColor) || ds.borderColor) }}
               ></span>
               {ds.label}
             </button>
@@ -210,6 +210,24 @@ export default function Graph() {
   const mNamesShort = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
   const monthKeys = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
 
+  const distinctColors = [
+    '#3b82f6', // 1 Blue
+    '#ef4444', // 2 Red
+    '#10b981', // 3 Emerald
+    '#f59e0b', // 4 Amber
+    '#8b5cf6', // 5 Violet
+    '#ec4899', // 6 Pink
+    '#06b6d4', // 7 Cyan
+    '#f97316', // 8 Orange
+    '#84cc16', // 9 Lime
+    '#6366f1', // 10 Indigo
+    '#14b8a6', // 11 Teal
+    '#eab308', // 12 Yellow
+    '#d946ef', // 13 Fuchsia
+    '#0ea5e9', // 14 Sky
+    '#f43f5e', // 15 Rose
+  ];
+
   // 1. Daily Trend (Bar Chart) - Filtered by selected month
   const filteredDailyData = selectedDailyMonth
     ? rawData.filter(d => d.op_date.startsWith(selectedDailyMonth))
@@ -225,8 +243,9 @@ export default function Graph() {
         type: 'bar',
         label: 'จำนวนผ่าตัดรายวัน',
         data: filteredDailyData.map(d => d.total_operations),
-        backgroundColor: '#3b82f6', // Solid Blue 500
-        hoverBackgroundColor: '#2563eb', // Blue 600
+        backgroundColor: filteredDailyData.map((_, i) => distinctColors[i % distinctColors.length]),
+        hoverBackgroundColor: filteredDailyData.map((_, i) => distinctColors[i % distinctColors.length]),
+        legendColor: '#3b82f6', // Solid Blue 500 for the legend pill
         borderRadius: { topLeft: 4, topRight: 4 }
       }
     ]
@@ -247,8 +266,9 @@ export default function Graph() {
       {
         label: `ปี ${selectedMonthlyYear}`,
         data: monthKeys.map(m => monthlyAgg[m] || 0), // If no data, use 0
-        backgroundColor: '#8b5cf6', // Violet 500
-        hoverBackgroundColor: '#7c3aed', // Violet 600
+        backgroundColor: distinctColors.slice(0, 12),
+        hoverBackgroundColor: distinctColors.slice(0, 12),
+        legendColor: '#8b5cf6', // Violet 500 for the legend pill
         borderRadius: 8,
         barPercentage: 0.5,
         borderSkipped: false
@@ -268,7 +288,6 @@ export default function Graph() {
   const years = Object.keys(yoyAgg).sort();
 
   // Distinct colors for different years
-  const yoyColors = ['#94a3b8', '#38bdf8', '#fbbf24', '#f43f5e', '#a855f7', '#10b981'];
   const yoyDatasets = years.map((year, index) => {
     const isLatestYear = index === years.length - 1; // Highlight the latest year
 
@@ -284,8 +303,8 @@ export default function Graph() {
         if (mNum > maxMonth) return null; // เดือนในอนาคตปล่อยเป็น null เพื่อให้เส้นกราฟหยุด
         return yoyAgg[year][m] || 0; // เดือนที่ขาดหายไปตรงกลาง ให้แสดงเป็น 0
       }),
-      borderColor: yoyColors[index % yoyColors.length],
-      backgroundColor: yoyColors[index % yoyColors.length],
+      borderColor: distinctColors[index % distinctColors.length],
+      backgroundColor: distinctColors[index % distinctColors.length],
       borderWidth: isLatestYear ? 4 : 2, // Thicker line for the latest year
       pointRadius: isLatestYear ? 4 : 2,
       pointHoverRadius: 7,
