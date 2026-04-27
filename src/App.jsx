@@ -7,11 +7,8 @@ import Sidebar from './components/Sidebar';
 import Overview from './pages/Overview';
 import GasInspection from './pages/GasInspection';
 import SummarOPD from './pages/SummaryOPD';
-<<<<<<< HEAD
 import Graph from './pages/Graph';
-=======
 import BedDashboard from './pages/Bed';
->>>>>>> ca18e98 (add Beds)
 import NotFound from './pages/NotFound';
 import { authLogin, authVerify } from './services/api';
 
