@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+<<<<<<< HEAD
 import { faNotesMedical, faGasPump, faBars, faChartPie, faChevronLeft, faArrowRightFromBracket, faChartLine } from '@fortawesome/free-solid-svg-icons';
+=======
+import { faNotesMedical, faGasPump, faBars, faChartPie, faChevronLeft, faArrowRightFromBracket,faBed } from '@fortawesome/free-solid-svg-icons';
+>>>>>>> ca18e98 (add Beds)
 
 export default function Sidebar({ isAuthenticated, onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,7 +14,11 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
     { path: '/dashboard', name: 'Overview', icon: faChartPie, public: true },
     { path: '/opd', name: 'OPD Real-time', icon: faNotesMedical, public: false },
     { path: '/gas', name: 'Gas & Oil', icon: faGasPump, public: false },
+<<<<<<< HEAD
     { path: '/graph', name: 'Graph', icon: faChartLine, public: false }
+=======
+    { path: '/beds', name: 'Beds', icon: faBed, public: false }
+>>>>>>> ca18e98 (add Beds)
   ];
 
   // แสดงเมนูทั้งหมด (การจำกัดสิทธิ์จะไปทำที่ App.jsx)
