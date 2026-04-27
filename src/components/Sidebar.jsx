@@ -20,9 +20,9 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
     <>
       {/* ======= Desktop Sidebar (md ขึ้นไป) ======= */}
       <aside
-        className={`hidden md:flex fixed top-0 left-0 h-screen bg-[#0f172a] text-slate-300 shadow-2xl transition-all duration-200 z-50 flex-col overflow-hidden ${isOpen ? 'w-64' : 'w-16'}`}
+        className={`hidden md:flex fixed top-0 left-0 h-screen bg-[#0f172a] text-slate-300 shadow-2xl transition-all duration-200 z-50 flex-col overflow-hidden font-['Sarabun'] ${isOpen ? 'w-64' : 'w-16'}`}
       >
-        <div className="relative flex items-center h-16 px-4 border-b border-slate-800/50 mb-2">
+        <div className="relative flex items-center h-16 px-4.5 border-b border-slate-800/50 mb-2">
           <div className="cursor-pointer hover:text-white transition-colors duration-200" onClick={() => setIsOpen(!isOpen)}>
             <FontAwesomeIcon icon={isOpen ? faChevronLeft : faBars} className="text-xl" />
           </div>
@@ -31,23 +31,23 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
           </div>
         </div>
 
-        <nav className="flex-1 px-2 space-y-1">
+        <nav className="flex-1 px-1 space-y-2">
           {filteredMenu.map(item => (
             <NavLink
               key={item.path}
               to={item.path}
               onClick={() => setIsOpen(false)}
               className={({ isActive }) => `
-                group flex items-center h-11 px-3 rounded-xl transition-all duration-200
+                group flex items-center h-13 px-4 rounded-xl transition-all duration-200
                 ${isActive ? 'bg-blue-600/10 text-blue-400 font-semibold' : 'hover:bg-slate-800/50 hover:text-slate-100'}
               `}
             >
               {({ isActive }) => (
                 <>
                   <div className="w-5 flex justify-center items-center shrink-0">
-                    <FontAwesomeIcon icon={item.icon} className={`text-base ${isActive ? 'text-blue-400' : 'text-slate-400'}`} />
+                    <FontAwesomeIcon icon={item.icon} className={`text-xl ${isActive ? 'text-blue-400' : 'text-slate-400'}`} />
                   </div>
-                  <span className={`ml-3 text-sm transition-all duration-200 whitespace-nowrap ${isOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
+                  <span className={`ml-3 text-base transition-all duration-200 whitespace-nowrap ${isOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
                     {item.name}
                   </span>
                 </>
@@ -55,7 +55,7 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
             </NavLink>
           ))}
         </nav>
-        
+
         {/* Logout Button (Desktop) */}
         {isAuthenticated && (
           <div className="p-2 border-t border-slate-800/50">
@@ -66,7 +66,7 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
               <div className="w-5 flex justify-center items-center shrink-0">
                 <FontAwesomeIcon icon={faArrowRightFromBracket} className="text-base group-hover:text-red-400" />
               </div>
-              <span className={`ml-3 text-sm transition-all duration-200 whitespace-nowrap ${isOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
+              <span className={`ml-3 text-sm transition-all duration-200 whitespace-nowrap font-['Sarabun'] ${isOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
                 ออกจากระบบ
               </span>
             </button>
@@ -75,7 +75,7 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
       </aside>
 
       {/* ======= Mobile Bottom Nav (< md) ======= */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f172a] border-t border-slate-800 flex items-center justify-around h-16 px-2 safe-area-bottom">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f172a] border-t border-slate-800 flex items-center justify-around h-16 px-2 safe-area-bottom font-['Sarabun']">
         {filteredMenu.map(item => (
           <NavLink
             key={item.path}

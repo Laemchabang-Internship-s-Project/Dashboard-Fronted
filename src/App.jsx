@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
+import LogoutModal from './components/LogoutModal';
 import Sidebar from './components/Sidebar';
 import Overview from './pages/Overview';
 import GasInspection from './pages/GasInspection';
@@ -98,6 +99,16 @@ function MainLayout({ isAuthenticated, onLogout }) {
     window.innerWidth < 768 ? 'top-right' : 'bottom-right'
   );
 
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const handleRequestLogout = () => setShowLogoutModal(true);
+
+  const handleConfirmLogout = () => {
+    setShowLogoutModal(false);
+    onLogout();
+  };
+  const handleCancelLogout = () => setShowLogoutModal(false);
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
@@ -113,10 +124,15 @@ function MainLayout({ isAuthenticated, onLogout }) {
   return (
     <div className="flex w-full bg-[#f1f5f9] font-['Sarabun'] min-h-screen">
       <Toaster position={toastPosition} reverseOrder={false} />
-      <Sidebar isAuthenticated={isAuthenticated} onLogout={onLogout} />
+      <Sidebar isAuthenticated={isAuthenticated} onLogout={handleRequestLogout} />
       <main className="flex-1 w-full md:pl-16 transition-all duration-300 overflow-x-hidden overflow-y-auto pb-16 md:pb-0">
         <Outlet />
       </main>
+      <LogoutModal
+        open={showLogoutModal}
+        onConfirm={handleConfirmLogout}
+        onCancel={handleCancelLogout}
+      />
     </div>
   );
 }
