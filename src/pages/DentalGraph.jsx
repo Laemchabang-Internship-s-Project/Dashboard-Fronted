@@ -83,34 +83,7 @@ const ChartCanvas = ({ id, type, data, options }) => {
 
   return (
     <div className="flex flex-col h-full w-full">
-      {/* Custom HTML Legend */}
-      <div
-        className="flex md:grid md:grid-cols-6 lg:grid-cols-10 items-center justify-start gap-2 mb-4 md:mb-8 overflow-x-auto md:overflow-visible pb-2 md:pb-0 w-full"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
-      >
-        {data?.datasets?.map((ds, idx) => {
-          const isHidden = hiddenDatasets[idx];
-          const dotColor = ds.legendColor
-            || (Array.isArray(ds.backgroundColor) ? ds.backgroundColor[0] : ds.backgroundColor)
-            || ds.borderColor;
-          return (
-            <button
-              key={idx}
-              onClick={() => toggleDataset(idx)}
-              className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold transition-all duration-200
-                ${isHidden
-                  ? 'bg-gray-50 border-gray-200 text-gray-400 opacity-60'
-                  : 'bg-white border-gray-200 text-gray-700 shadow-sm hover:shadow hover:-translate-y-0.5'}`}
-            >
-              <span
-                className={`w-3 h-3 rounded-full shrink-0 ${isHidden ? 'bg-gray-300' : ''}`}
-                style={{ backgroundColor: isHidden ? undefined : dotColor }}
-              />
-              {ds.label}
-            </button>
-          );
-        })}
-      </div>
+
 
       {/* Canvas */}
       <div className="flex-1 relative w-full h-full min-h-[300px]">
@@ -148,26 +121,26 @@ const MetricCard = ({ label, value, icon, color }) => (
 
 // ─── Distinct colour palette (15) ───────────────────────────────────────────────
 const COLORS = [
-  '#3b82f6','#ef4444','#10b981','#f59e0b','#8b5cf6',
-  '#ec4899','#06b6d4','#f97316','#84cc16','#6366f1',
-  '#14b8a6','#eab308','#d946ef','#0ea5e9','#f43f5e',
+  '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
+  '#ec4899', '#06b6d4', '#f97316', '#84cc16', '#6366f1',
+  '#14b8a6', '#eab308', '#d946ef', '#0ea5e9', '#f43f5e',
 ];
 
-const MONTH_NAMES  = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-const MONTH_KEYS   = ['01','02','03','04','05','06','07','08','09','10','11','12'];
+const MONTH_NAMES = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+const MONTH_KEYS = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
 
 // ─── Main Component ─────────────────────────────────────────────────────────────
 export default function DentalGraph() {
-  const [rawData, setRawData]     = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState('');
+  const [rawData, setRawData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // View toggles
-  const [activeGraph, setActiveGraph]         = useState('daily');
-  const [activeMetric, setActiveMetric]       = useState('patient_count');
-  const [selectedDailyMonth, setSelectedDailyMonth]     = useState('');
-  const [selectedMonthlyYear, setSelectedMonthlyYear]   = useState('');
+  const [activeGraph, setActiveGraph] = useState('daily');
+  const [activeMetric, setActiveMetric] = useState('patient_count');
+  const [selectedDailyMonth, setSelectedDailyMonth] = useState('');
+  const [selectedMonthlyYear, setSelectedMonthlyYear] = useState('');
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchData = async () => {
@@ -202,7 +175,7 @@ export default function DentalGraph() {
 
   // ── Available months / years for filters ──────────────────────────────────
   const availableMonths = [...new Set(rawData.map(d => d.date.substring(0, 7)))].sort();
-  const availableYears  = [...new Set(rawData.map(d => d.date.substring(0, 4)))].sort();
+  const availableYears = [...new Set(rawData.map(d => d.date.substring(0, 4)))].sort();
 
   const formatMonthLabel = (yyyymm) => {
     if (!yyyymm) return '';
@@ -212,10 +185,10 @@ export default function DentalGraph() {
 
   // ── Metric metadata ────────────────────────────────────────────────────────
   const metrics = {
-    patient_count : { label: 'ผู้ป่วย (คน)',     color: '#3b82f6', legendColor: '#3b82f6' },
-    case_count    : { label: 'จำนวนเคส',          color: '#10b981', legendColor: '#10b981' },
-    total_revenue : { label: 'รายได้ (บาท)',       color: '#f59e0b', legendColor: '#f59e0b' },
-    doctor_count  : { label: 'แพทย์ (คน)',         color: '#8b5cf6', legendColor: '#8b5cf6' },
+    patient_count: { label: 'ผู้ป่วย (คน)', color: '#3b82f6', legendColor: '#3b82f6' },
+    case_count: { label: 'จำนวนเคส', color: '#10b981', legendColor: '#10b981' },
+    total_revenue: { label: 'รายได้ (บาท)', color: '#f59e0b', legendColor: '#f59e0b' },
+    doctor_count: { label: 'แพทย์ (คน)', color: '#8b5cf6', legendColor: '#8b5cf6' },
   };
 
   // ── 1. Daily chart data ────────────────────────────────────────────────────
@@ -241,10 +214,10 @@ export default function DentalGraph() {
   rawData.filter(d => d.date.startsWith(selectedMonthlyYear)).forEach(d => {
     const m = d.date.substring(5, 7);
     if (!monthlyAgg[m]) monthlyAgg[m] = { patient_count: 0, case_count: 0, total_revenue: 0, doctor_count: 0 };
-    monthlyAgg[m].patient_count  += d.patient_count;
-    monthlyAgg[m].case_count     += d.case_count;
-    monthlyAgg[m].total_revenue  += d.total_revenue;
-    monthlyAgg[m].doctor_count   += d.doctor_count;
+    monthlyAgg[m].patient_count += d.patient_count;
+    monthlyAgg[m].case_count += d.case_count;
+    monthlyAgg[m].total_revenue += d.total_revenue;
+    monthlyAgg[m].doctor_count += d.doctor_count;
   });
 
   const monthlyData = {
@@ -265,13 +238,13 @@ export default function DentalGraph() {
   const yoyAgg = {};
   rawData.forEach(d => {
     const yr = d.date.substring(0, 4);
-    const m  = d.date.substring(5, 7);
+    const m = d.date.substring(5, 7);
     if (!yoyAgg[yr]) yoyAgg[yr] = {};
     if (!yoyAgg[yr][m]) yoyAgg[yr][m] = { patient_count: 0, case_count: 0, total_revenue: 0, doctor_count: 0 };
-    yoyAgg[yr][m].patient_count  += d.patient_count;
-    yoyAgg[yr][m].case_count     += d.case_count;
-    yoyAgg[yr][m].total_revenue  += d.total_revenue;
-    yoyAgg[yr][m].doctor_count   += d.doctor_count;
+    yoyAgg[yr][m].patient_count += d.patient_count;
+    yoyAgg[yr][m].case_count += d.case_count;
+    yoyAgg[yr][m].total_revenue += d.total_revenue;
+    yoyAgg[yr][m].doctor_count += d.doctor_count;
   });
 
   const years = Object.keys(yoyAgg).sort();
@@ -301,10 +274,10 @@ export default function DentalGraph() {
 
   // ── Metric selector tabs ───────────────────────────────────────────────────
   const metricTabs = [
-    { key: 'patient_count',  label: 'ผู้ป่วย',   color: 'bg-blue-500'   },
-    { key: 'case_count',     label: 'เคส',        color: 'bg-emerald-500'},
-    { key: 'total_revenue',  label: 'รายได้',     color: 'bg-amber-500'  },
-    { key: 'doctor_count',   label: 'แพทย์',      color: 'bg-violet-500' },
+    { key: 'patient_count', label: 'ผู้ป่วย', color: 'bg-blue-500' },
+    { key: 'case_count', label: 'เคส', color: 'bg-emerald-500' },
+    { key: 'total_revenue', label: 'รายได้', color: 'bg-amber-500' },
+    { key: 'doctor_count', label: 'แพทย์', color: 'bg-violet-500' },
   ];
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -362,10 +335,10 @@ export default function DentalGraph() {
             {/* ── Summary KPI Cards ───────────────────────────────── */}
             {latestRow && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <MetricCard label="ผู้ป่วย (ล่าสุด)"  value={latestRow.patient_count.toLocaleString()} icon={faNotesMedical} color="bg-blue-500" />
-                <MetricCard label="เคส (ล่าสุด)"       value={latestRow.case_count.toLocaleString()}    icon={faFileMedical}  color="bg-emerald-500" />
-                <MetricCard label="รายได้ (ล่าสุด)"    value={`฿${latestRow.total_revenue.toLocaleString()}`} icon={faMoneyBillWave} color="bg-amber-500" />
-                <MetricCard label="แพทย์ (ล่าสุด)"    value={latestRow.doctor_count.toLocaleString()}  icon={faUserDoctor}   color="bg-violet-500" />
+                <MetricCard label="ผู้ป่วย (ล่าสุด)" value={latestRow.patient_count.toLocaleString()} icon={faNotesMedical} color="bg-blue-500" />
+                <MetricCard label="เคส (ล่าสุด)" value={latestRow.case_count.toLocaleString()} icon={faFileMedical} color="bg-emerald-500" />
+                <MetricCard label="รายได้ (ล่าสุด)" value={`฿${latestRow.total_revenue.toLocaleString()}`} icon={faMoneyBillWave} color="bg-amber-500" />
+                <MetricCard label="แพทย์ (ล่าสุด)" value={latestRow.doctor_count.toLocaleString()} icon={faUserDoctor} color="bg-violet-500" />
               </div>
             )}
 
@@ -431,9 +404,9 @@ export default function DentalGraph() {
                 {/* Right: Graph type switcher */}
                 <div className="flex bg-gray-100 p-1 rounded-xl w-full md:w-auto self-start">
                   {[
-                    { key: 'daily',   label: 'Daily',   icon: faChartLine, activeColor: 'text-blue-600'   },
-                    { key: 'monthly', label: 'Monthly', icon: faChartBar,  activeColor: 'text-violet-600' },
-                    { key: 'yoy',     label: 'YoY',     icon: faCalendarDays, activeColor: 'text-amber-600' },
+                    { key: 'daily', label: 'Daily', icon: faChartLine, activeColor: 'text-blue-600' },
+                    { key: 'monthly', label: 'Monthly', icon: faChartBar, activeColor: 'text-violet-600' },
+                    { key: 'yoy', label: 'YoY', icon: faCalendarDays, activeColor: 'text-amber-600' },
                   ].map(tab => (
                     <button
                       key={tab.key}

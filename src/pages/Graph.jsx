@@ -96,8 +96,8 @@ const ChartCanvas = ({ id, type, data, options }) => {
   return (
     <div className="flex flex-col h-full w-full">
       {/* Custom Modern Legend */}
-      <div 
-        className="flex md:grid md:grid-cols-6 lg:grid-cols-10 items-center justify-start gap-2 mb-4 md:mb-8 overflow-x-auto md:overflow-visible pb-2 md:pb-0 w-full" 
+      <div
+        className="flex md:grid md:grid-cols-6 lg:grid-cols-10 items-center justify-start gap-2 mb-4 md:mb-8 overflow-x-auto md:overflow-visible pb-2 md:pb-0 w-full"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
       >
         <style>{`div::-webkit-scrollbar { display: none; }`}</style>
