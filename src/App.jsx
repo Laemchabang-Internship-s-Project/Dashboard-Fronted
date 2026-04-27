@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar';
 import Overview from './pages/Overview';
 import GasInspection from './pages/GasInspection';
 import SummarOPD from './pages/SummaryOPD';
+import Graph from './pages/Graph';
 import NotFound from './pages/NotFound';
 import { authLogin, authVerify } from './services/api';
 
@@ -177,6 +178,11 @@ function App() {
         <Route path="/opd" element={
           <ProtectedRoute isAuthenticated={isAuthenticated} onAuthenticate={handleAuthenticate}>
             <SummarOPD />
+          </ProtectedRoute>
+        } />
+        <Route path="/graph" element={
+          <ProtectedRoute isAuthenticated={isAuthenticated} onAuthenticate={handleAuthenticate}>
+            <Graph />
           </ProtectedRoute>
         } />
         <Route path="*" element={<NotFound />} />

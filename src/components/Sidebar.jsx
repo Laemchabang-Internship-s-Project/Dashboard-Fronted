@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faNotesMedical, faGasPump, faBars, faChartPie, faChevronLeft, faArrowRightFromBracket } from '@fortawesome/free-solid-svg-icons';
+import { faNotesMedical, faGasPump, faBars, faChartPie, faChevronLeft, faArrowRightFromBracket, faChartLine } from '@fortawesome/free-solid-svg-icons';
 
 export default function Sidebar({ isAuthenticated, onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,7 +9,8 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
   const menuItems = [
     { path: '/dashboard', name: 'Overview', icon: faChartPie, public: true },
     { path: '/opd', name: 'OPD Real-time', icon: faNotesMedical, public: false },
-    { path: '/gas', name: 'Gas & Oil', icon: faGasPump, public: false }
+    { path: '/gas', name: 'Gas & Oil', icon: faGasPump, public: false },
+    { path: '/graph', name: 'Graph', icon: faChartLine, public: false }
   ];
 
   // แสดงเมนูทั้งหมด (การจำกัดสิทธิ์จะไปทำที่ App.jsx)
