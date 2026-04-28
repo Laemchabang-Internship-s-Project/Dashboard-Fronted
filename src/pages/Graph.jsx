@@ -25,7 +25,7 @@ export default function Graph() {
 
   // monthly
   const [monthlyRows, setMonthlyRows] = useState([]);
-  const [selectedYear, setSelectedYear] = useState('');
+  const [monthlyRange, setMonthlyRange] = useState('12');
 
   // yoy
   const [yoyMap, setYoyMap] = useState({});
@@ -66,7 +66,6 @@ export default function Graph() {
         setAvailableMonths(months);
         setAvailableYears(years);
         if (months.length) setSelectedMonth(months[0]);
-        if (years.length) setSelectedYear(years[0]);
       }
       if (yoy) setYoyMap(yoy);
 
@@ -124,18 +123,21 @@ export default function Graph() {
   };
 
   // ── Chart data: Monthly ────────────────────────────────────────────────────
-  const monthlyAgg = {};
-  monthlyRows.filter(r => r.year === selectedYear).forEach(r => {
-    monthlyAgg[r.month] = (monthlyAgg[r.month] || 0) + r.total;
+  const sortedMonthly = [...monthlyRows].sort((a, b) => {
+    if (a.year !== b.year) return a.year.localeCompare(b.year);
+    return a.month.localeCompare(b.month);
   });
+  
+  const sliceIndex = monthlyRange === 'all' ? 0 : -parseInt(monthlyRange, 10);
+  const filteredMonthly = sliceIndex === 0 ? sortedMonthly : sortedMonthly.slice(sliceIndex);
 
   const monthlyData = {
-    labels: MONTH_NAMES,
+    labels: filteredMonthly.map(r => `${MONTH_NAMES[parseInt(r.month, 10) - 1]} ${r.year.substring(2)}`),
     datasets: [{
-      label: `ปี ${selectedYear}`,
-      data: MONTH_KEYS.map(m => monthlyAgg[m] || 0),
-      backgroundColor: CHART_COLORS.slice(0, 12),
-      hoverBackgroundColor: CHART_COLORS.slice(0, 12),
+      label: `จำนวนผ่าตัด`,
+      data: filteredMonthly.map(r => r.total),
+      backgroundColor: filteredMonthly.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]),
+      hoverBackgroundColor: filteredMonthly.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]),
       legendColor: '#8b5cf6',
       borderRadius: 8,
       barPercentage: 0.5,
@@ -256,13 +258,14 @@ export default function Graph() {
                           <FontAwesomeIcon icon={faCalendarDays} className="text-violet-500/70" />
                         </div>
                         <select
-                          value={selectedYear}
-                          onChange={(e) => setSelectedYear(e.target.value)}
+                          value={monthlyRange}
+                          onChange={(e) => setMonthlyRange(e.target.value)}
                           className="appearance-none bg-violet-50/50 border-2 border-violet-100 text-violet-700 text-sm font-bold rounded-xl block w-full pl-9 pr-10 py-2 cursor-pointer outline-none hover:border-violet-300 transition-all"
                         >
-                          {availableYears.map(year => (
-                            <option key={year} value={year}>ปี {year}</option>
-                          ))}
+                          <option value="12">ย้อนหลัง 12 เดือน</option>
+                          <option value="24">ย้อนหลัง 24 เดือน</option>
+                          <option value="36">ย้อนหลัง 36 เดือน</option>
+                          <option value="all">ทั้งหมด (All time)</option>
                         </select>
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                           <FontAwesomeIcon icon={faChevronDown} className="text-violet-500/70 text-xs" />
