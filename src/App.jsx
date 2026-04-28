@@ -186,6 +186,8 @@ function App() {
 
         {/* หน้าที่ใครๆ ก็ดูได้ */}
         <Route path="/dashboard" element={<Overview />} />
+        <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : 
+        <PasswordPrompt onAuthenticate={handleAuthenticate} />} />
 
         <Route path="/beds" element={
           <ProtectedRoute isAuthenticated={isAuthenticated} onAuthenticate={handleAuthenticate}>
@@ -214,8 +216,8 @@ function App() {
             <DentalGraph />
           </ProtectedRoute>
         } />
-        <Route path="*" element={<NotFound />} />
       </Route>
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

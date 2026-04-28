@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faNotesMedical, 
-  faGasPump, 
-  faBars, 
-  faChartPie, 
-  faChevronLeft, 
-  faArrowRightFromBracket, 
-  faChartLine, 
+import {
+  faNotesMedical,
+  faGasPump,
+  faBars,
+  faChartPie,
+  faChevronLeft,
+  faArrowRightFromBracket,
+  faArrowRightToBracket, // เพิ่ม Icon สำหรับ Login
+  faChartLine,
   faBed,
   faTooth
 } from '@fortawesome/free-solid-svg-icons';
@@ -17,16 +18,16 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const menuItems = [
-    { path: '/dashboard', name: 'Overview',    icon: faChartPie,  public: true  },
-    { path: '/opd',       name: 'OPD Real-time',icon: faNotesMedical, public: false },
-    { path: '/gas',       name: 'Gas & Oil',    icon: faGasPump,   public: false },
-    { path: '/graph',     name: 'Doctor Ops',   icon: faChartLine, public: false },
-    { path: '/dental',    name: 'Dental',       icon: faTooth,     public: false },
-    { path: '/beds',      name: 'Beds',         icon: faBed,       public: false }
+    { path: '/dashboard', name: 'Overview', icon: faChartPie, public: true },
+    { path: '/opd', name: 'OPD Real-time', icon: faNotesMedical, public: false },
+    { path: '/gas', name: 'Gas & Oil', icon: faGasPump, public: false },
+    { path: '/graph', name: 'Doctor Ops', icon: faChartLine, public: false },
+    { path: '/dental', name: 'Dental', icon: faTooth, public: false },
+    { path: '/beds', name: 'Beds', icon: faBed, public: false }
   ];
 
-  // แสดงเมนูทั้งหมด (การจำกัดสิทธิ์จะไปทำที่ App.jsx)
-  const filteredMenu = menuItems;
+  // กรองเมนู: ถ้าล็อกอินแล้วเห็นทั้งหมด ถ้ายังให้เห็นแค่ public
+  const filteredMenu = isAuthenticated ? menuItems : menuItems.filter(item => item.public);
 
   return (
     <>
@@ -68,9 +69,9 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
           ))}
         </nav>
 
-        {/* Logout Button (Desktop) */}
-        {isAuthenticated && (
-          <div className="p-2 border-t border-slate-800/50">
+        {/* Login / Logout Button (Desktop) */}
+        <div className="p-2 border-t border-slate-800/50">
+          {isAuthenticated ? (
             <button
               onClick={onLogout}
               className="w-full group flex items-center h-11 px-3 rounded-xl transition-all duration-200 hover:bg-red-500/10 hover:text-red-400 text-slate-400"
@@ -82,20 +83,42 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
                 ออกจากระบบ
               </span>
             </button>
-          </div>
-        )}
+          ) : (
+            <NavLink
+              to="/login"
+              onClick={() => setIsOpen(false)}
+              className={({ isActive }) => `w-full group flex items-center h-11 px-3 rounded-xl transition-all duration-200 ${isActive ? 'bg-blue-600/10 text-blue-400 font-semibold' : 'hover:bg-blue-500/10 hover:text-blue-400 text-slate-400'}`}
+            >
+              <div className="w-5 flex justify-center items-center shrink-0">
+                <FontAwesomeIcon icon={faArrowRightToBracket} className="text-base group-hover:text-blue-400" />
+              </div>
+              <span className={`ml-3 text-sm transition-all duration-200 whitespace-nowrap font-['Sarabun'] ${isOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
+                เข้าสู่ระบบ
+              </span>
+            </NavLink>
+          )}
+        </div>
       </aside>
 
       {/* ======= Mobile Bottom Nav (< md) ======= */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f172a] border-t border-slate-800 flex items-center justify-around h-16 px-2 safe-area-bottom font-['Sarabun']">
+      {/* แก้ไขส่วนนี้: เปลี่ยน flex, ซ่อน scrollbar, เว้นระยะด้วย gap-2 */}
+      {/* ======= Mobile Bottom Nav (< md) ======= */}
+      <nav className={`md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f172a] border-t border-slate-800 flex items-center h-16 px-4 safe-area-bottom font-['Sarabun'] ${isAuthenticated
+          ? "overflow-x-auto gap-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          : "justify-between"
+        }`}>
+
+        {/* 1. เพิ่ม Invisible Spacer เฉพาะตอนยังไม่ Login เพื่อดัน Overview ให้ไปอยู่ตรงกลางพอดี */}
+        {!isAuthenticated && <div className="min-w-[72px] shrink-0" />}
+
         {filteredMenu.map(item => (
           <NavLink
             key={item.path}
             to={item.path}
             className={({ isActive }) => `
-              flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-xl transition-all duration-200 min-w-[60px]
-              ${isActive ? 'text-blue-400' : 'text-slate-400 hover:text-slate-200'}
-            `}
+        flex flex-col items-center justify-center gap-1 py-2 rounded-xl transition-all duration-200 min-w-[72px] shrink-0
+        ${isActive ? 'text-blue-400' : 'text-slate-400 hover:text-slate-200'}
+      `}
           >
             {({ isActive }) => (
               <>
@@ -105,15 +128,24 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
             )}
           </NavLink>
         ))}
-        {/* Logout Button (Mobile) */}
-        {isAuthenticated && (
+
+        {/* Login / Logout Button (Mobile) */}
+        {isAuthenticated ? (
           <button
             onClick={onLogout}
-            className="flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-xl transition-all duration-200 min-w-[60px] text-slate-400 hover:text-red-400"
+            className="flex flex-col items-center justify-center gap-1 py-2 rounded-xl transition-all duration-200 min-w-[72px] shrink-0 text-slate-400 hover:text-red-400"
           >
             <FontAwesomeIcon icon={faArrowRightFromBracket} className="text-xl" />
             <span className="text-[10px] font-medium">ออกระบบ</span>
           </button>
+        ) : (
+          <NavLink
+            to="/login"
+            className={({ isActive }) => `flex flex-col items-center justify-center gap-1 py-2 rounded-xl transition-all duration-200 min-w-[72px] shrink-0 ${isActive ? 'text-blue-400' : 'text-slate-400 hover:text-blue-400'}`}
+          >
+            <FontAwesomeIcon icon={faArrowRightToBracket} className="text-xl" />
+            <span className="text-[10px] font-medium">เข้าระบบ</span>
+          </NavLink>
         )}
       </nav>
     </>
