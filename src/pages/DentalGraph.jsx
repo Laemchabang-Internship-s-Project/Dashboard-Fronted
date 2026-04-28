@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
-import Chart from 'chart.js/auto';
+import React, { useEffect, useState } from 'react';
 import { Helmet } from "react-helmet-async";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -8,105 +7,9 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { apiGetInternal } from '../services/api';
 import { HeaderSkeleton, ChartSkeleton } from '../components/Skeleton';
+import { ChartCanvas, LiveClock, CHART_COLORS, MONTH_NAMES, MONTH_KEYS, formatMonthLabel } from '../components/ChartComponents';
 
-// ─── Reusable ChartCanvas with Interactive HTML Legend ─────────────────────────
-const ChartCanvas = ({ id, type, data, options }) => {
-  const chartRef = useRef(null);
-  const chartInstance = useRef(null);
-  const [hiddenDatasets, setHiddenDatasets] = useState({});
-
-  useEffect(() => { setHiddenDatasets({}); }, [data]);
-
-  useEffect(() => {
-    if (chartInstance.current) chartInstance.current.destroy();
-
-    if (chartRef.current && data) {
-      chartInstance.current = new Chart(chartRef.current, {
-        type,
-        data,
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            ...options?.plugins,
-            legend: { display: false },
-            tooltip: {
-              titleFont: { family: "'Sarabun', sans-serif", size: 14 },
-              bodyFont: { family: "'Sarabun', sans-serif", size: 13 },
-              mode: 'index',
-              intersect: false,
-              backgroundColor: 'rgba(15, 23, 42, 0.92)',
-              padding: 14,
-              cornerRadius: 10,
-              filter: (item) => item.raw !== null && item.raw !== undefined,
-              ...options?.plugins?.tooltip
-            }
-          },
-          interaction: { mode: 'index', intersect: false },
-          scales: {
-            x: {
-              grid: { display: false },
-              ticks: { font: { family: "'Sarabun', sans-serif", size: 11 }, maxRotation: 45, minRotation: 0 },
-              ...options?.scales?.x
-            },
-            y: {
-              border: { dash: [4, 4] },
-              grid: { color: '#f1f5f9' },
-              beginAtZero: true,
-              ticks: { font: { family: "'Sarabun', sans-serif", size: 11 }, maxTicksLimit: 12 },
-              ...options?.scales?.y
-            }
-          },
-          ...options
-        }
-      });
-
-      // Re-apply hidden states
-      Object.keys(hiddenDatasets).forEach(idx => {
-        if (hiddenDatasets[idx]) chartInstance.current.setDatasetVisibility(Number(idx), false);
-      });
-      chartInstance.current.update();
-    }
-
-    return () => { if (chartInstance.current) chartInstance.current.destroy(); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, options, type]);
-
-  const toggleDataset = (idx) => {
-    const isHidden = !hiddenDatasets[idx];
-    setHiddenDatasets(prev => ({ ...prev, [idx]: isHidden }));
-    if (chartInstance.current) {
-      chartInstance.current.setDatasetVisibility(idx, !isHidden);
-      chartInstance.current.update();
-    }
-  };
-
-  return (
-    <div className="flex flex-col h-full w-full">
-
-
-      {/* Canvas */}
-      <div className="flex-1 relative w-full h-full min-h-[300px]">
-        <canvas id={id} ref={chartRef} />
-      </div>
-    </div>
-  );
-};
-
-// ─── Live Clock ─────────────────────────────────────────────────────────────────
-const LiveClock = () => {
-  const [currentTime, setCurrentTime] = useState('');
-  useEffect(() => {
-    const opts = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
-    const tick = () => setCurrentTime(new Date().toLocaleString('th-TH', opts));
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
-  return <span className="text-xs font-semibold text-gray-500">{currentTime}</span>;
-};
-
-// ─── Metric Card ────────────────────────────────────────────────────────────────
+// ─── Metric Card (unique to DentalGraph) ────────────────────────────────────────
 const MetricCard = ({ label, value, icon, color }) => (
   <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4`}>
     <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${color}`}>
@@ -118,16 +21,6 @@ const MetricCard = ({ label, value, icon, color }) => (
     </div>
   </div>
 );
-
-// ─── Distinct colour palette (15) ───────────────────────────────────────────────
-const COLORS = [
-  '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
-  '#ec4899', '#06b6d4', '#f97316', '#84cc16', '#6366f1',
-  '#14b8a6', '#eab308', '#d946ef', '#0ea5e9', '#f43f5e',
-];
-
-const MONTH_NAMES = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-const MONTH_KEYS = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
 
 // ─── Main Component ─────────────────────────────────────────────────────────────
 export default function DentalGraph() {
@@ -177,11 +70,7 @@ export default function DentalGraph() {
   const availableMonths = [...new Set(rawData.map(d => d.date.substring(0, 7)))].sort();
   const availableYears = [...new Set(rawData.map(d => d.date.substring(0, 4)))].sort();
 
-  const formatMonthLabel = (yyyymm) => {
-    if (!yyyymm) return '';
-    const [y, m] = yyyymm.split('-');
-    return `${MONTH_NAMES[parseInt(m) - 1]} ${y}`;
-  };
+
 
   // ── Metric metadata ────────────────────────────────────────────────────────
   const metrics = {
@@ -202,7 +91,7 @@ export default function DentalGraph() {
       type: 'bar',
       label: meta.label,
       data: filteredDaily.map(d => d[key]),
-      backgroundColor: filteredDaily.map((_, j) => COLORS[(i * 4 + j) % COLORS.length]),
+      backgroundColor: filteredDaily.map((_, j) => CHART_COLORS[(i * 4 + j) % CHART_COLORS.length]),
       legendColor: meta.legendColor,
       borderRadius: { topLeft: 4, topRight: 4 },
       hidden: key !== activeMetric,
@@ -225,7 +114,7 @@ export default function DentalGraph() {
     datasets: Object.entries(metrics).map(([key, meta]) => ({
       label: meta.label,
       data: MONTH_KEYS.map(m => monthlyAgg[m]?.[key] || 0),
-      backgroundColor: COLORS.slice(0, 12),
+      backgroundColor: CHART_COLORS.slice(0, 12),
       legendColor: meta.legendColor,
       borderRadius: 8,
       barPercentage: 0.5,
@@ -260,8 +149,8 @@ export default function DentalGraph() {
         if (parseInt(m, 10) > maxMonth) return null;
         return yoyAgg[yr][m]?.[activeMetric] ?? 0;
       }),
-      borderColor: COLORS[idx % COLORS.length],
-      backgroundColor: COLORS[idx % COLORS.length],
+      borderColor: CHART_COLORS[idx % CHART_COLORS.length],
+      backgroundColor: CHART_COLORS[idx % CHART_COLORS.length],
       borderWidth: isLatest ? 4 : 2,
       pointRadius: isLatest ? 4 : 2,
       pointHoverRadius: 7,

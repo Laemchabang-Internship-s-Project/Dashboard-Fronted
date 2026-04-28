@@ -1,147 +1,12 @@
-import React, { useEffect, useState, useRef } from 'react';
-import Chart from 'chart.js/auto';
+import React, { useEffect, useState } from 'react';
 import { Helmet } from "react-helmet-async";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRotateRight, faChartLine, faChartBar, faCalendarDays, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { apiGetInternal } from '../services/api';
 import { HeaderSkeleton, ChartSkeleton } from '../components/Skeleton';
+import { ChartCanvas, LiveClock, CHART_COLORS, MONTH_NAMES, MONTH_KEYS, formatMonthLabel } from '../components/ChartComponents';
 
-const ChartCanvas = ({ id, type, data, options }) => {
-  const chartRef = useRef(null);
-  const chartInstance = useRef(null);
-  const [hiddenDatasets, setHiddenDatasets] = useState({});
 
-  useEffect(() => {
-    // Reset hidden states when data source changes
-    setHiddenDatasets({});
-  }, [data]);
-
-  useEffect(() => {
-    if (chartInstance.current) {
-      chartInstance.current.destroy();
-    }
-
-    if (chartRef.current && data) {
-      chartInstance.current = new Chart(chartRef.current, {
-        type,
-        data,
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            ...options?.plugins,
-            legend: { display: false }, // ซ่อน Legend แบบเก่าทิ้งไปเลย
-            tooltip: {
-              titleFont: { family: "'Sarabun', sans-serif", size: 14 },
-              bodyFont: { family: "'Sarabun', sans-serif", size: 13 },
-              mode: 'index',
-              intersect: false,
-              backgroundColor: 'rgba(15, 23, 42, 0.9)',
-              padding: 12,
-              cornerRadius: 8,
-              ...options?.plugins?.tooltip
-            }
-          },
-          interaction: {
-            mode: 'index',
-            intersect: false,
-          },
-          scales: {
-            x: {
-              grid: { display: false },
-              ticks: { font: { family: "'Sarabun', sans-serif", size: 11 }, maxRotation: 45, minRotation: 0 },
-              ...options?.scales?.x
-            },
-            y: {
-              border: { dash: [4, 4] },
-              grid: { color: '#f1f5f9' },
-              beginAtZero: true,
-              ticks: {
-                font: { family: "'Sarabun', sans-serif", size: 11 },
-                maxTicksLimit: 15
-              },
-              ...options?.scales?.y
-            }
-          },
-          ...options
-        }
-      });
-
-      // Apply existing hidden states to the newly created chart instance
-      Object.keys(hiddenDatasets).forEach(idx => {
-        if (hiddenDatasets[idx]) {
-          chartInstance.current.setDatasetVisibility(Number(idx), false);
-        }
-      });
-      chartInstance.current.update();
-    }
-
-    return () => {
-      if (chartInstance.current) {
-        chartInstance.current.destroy();
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, options, type]); // Do not include hiddenDatasets to avoid infinite chart recreation
-
-  const toggleDataset = (idx) => {
-    const isHidden = !hiddenDatasets[idx];
-    setHiddenDatasets(prev => ({ ...prev, [idx]: isHidden }));
-    if (chartInstance.current) {
-      chartInstance.current.setDatasetVisibility(idx, !isHidden);
-      chartInstance.current.update();
-    }
-  };
-
-  return (
-    <div className="flex flex-col h-full w-full">
-      {/* Custom Modern Legend */}
-      <div
-        className="flex md:grid md:grid-cols-6 lg:grid-cols-10 items-center justify-start gap-2 mb-4 md:mb-8 overflow-x-auto md:overflow-visible pb-2 md:pb-0 w-full"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
-      >
-        <style>{`div::-webkit-scrollbar { display: none; }`}</style>
-        {data?.datasets?.map((ds, idx) => {
-          const isHidden = hiddenDatasets[idx];
-          return (
-            <button
-              key={idx}
-              onClick={() => toggleDataset(idx)}
-              className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold transition-all duration-200
-                ${isHidden ? 'bg-gray-50 border-gray-200 text-gray-400 opacity-60' : 'bg-white border-gray-200 text-gray-700 shadow-sm hover:shadow hover:-translate-y-0.5'}`}
-            >
-              <span
-                className={`w-3 h-3 rounded-full ${isHidden ? 'bg-gray-300' : ''}`}
-                style={{ backgroundColor: isHidden ? undefined : (ds.legendColor || (Array.isArray(ds.backgroundColor) ? ds.backgroundColor[0] : ds.backgroundColor) || ds.borderColor) }}
-              ></span>
-              {ds.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Canvas Container */}
-      <div className="flex-1 relative w-full h-full min-h-[300px]">
-        <canvas id={id} ref={chartRef} />
-      </div>
-    </div>
-  );
-};
-
-const LiveClock = () => {
-  const [currentTime, setCurrentTime] = useState("");
-  useEffect(() => {
-    const options = {
-      year: 'numeric', month: 'long', day: 'numeric',
-      hour: '2-digit', minute: '2-digit', second: '2-digit'
-    };
-    const updateTime = () => setCurrentTime(new Date().toLocaleString('th-TH', options));
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
-  return <p className="text-gray-600 font-semibold text-sm leading-tight">{currentTime}</p>;
-};
 
 export default function Graph() {
   const [rawData, setRawData] = useState([]);
@@ -203,35 +68,6 @@ export default function Graph() {
 
   // --- Data Preparation ---
 
-  // Helper formatting
-  const formatMonthLabel = (yyyymm) => {
-    if (!yyyymm) return '';
-    const [year, month] = yyyymm.split('-');
-    const mName = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-    return `${mName[parseInt(month) - 1]} ${year}`;
-  };
-
-  const mNamesShort = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-  const monthKeys = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
-
-  const distinctColors = [
-    '#3b82f6', // 1 Blue
-    '#ef4444', // 2 Red
-    '#10b981', // 3 Emerald
-    '#f59e0b', // 4 Amber
-    '#8b5cf6', // 5 Violet
-    '#ec4899', // 6 Pink
-    '#06b6d4', // 7 Cyan
-    '#f97316', // 8 Orange
-    '#84cc16', // 9 Lime
-    '#6366f1', // 10 Indigo
-    '#14b8a6', // 11 Teal
-    '#eab308', // 12 Yellow
-    '#d946ef', // 13 Fuchsia
-    '#0ea5e9', // 14 Sky
-    '#f43f5e', // 15 Rose
-  ];
-
   // 1. Daily Trend (Bar Chart) - Filtered by selected month
   const filteredDailyData = selectedDailyMonth
     ? rawData.filter(d => d.op_date.startsWith(selectedDailyMonth))
@@ -247,9 +83,9 @@ export default function Graph() {
         type: 'bar',
         label: 'จำนวนผ่าตัดรายวัน',
         data: filteredDailyData.map(d => d.total_operations),
-        backgroundColor: filteredDailyData.map((_, i) => distinctColors[i % distinctColors.length]),
-        hoverBackgroundColor: filteredDailyData.map((_, i) => distinctColors[i % distinctColors.length]),
-        legendColor: '#3b82f6', // Solid Blue 500 for the legend pill
+        backgroundColor: filteredDailyData.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]),
+        hoverBackgroundColor: filteredDailyData.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]),
+        legendColor: '#3b82f6',
         borderRadius: { topLeft: 4, topRight: 4 }
       }
     ]
@@ -265,14 +101,14 @@ export default function Graph() {
   });
 
   const monthlyData = {
-    labels: mNamesShort, // Always show all 12 months
+    labels: MONTH_NAMES,
     datasets: [
       {
         label: `ปี ${selectedMonthlyYear}`,
-        data: monthKeys.map(m => monthlyAgg[m] || 0), // If no data, use 0
-        backgroundColor: distinctColors.slice(0, 12),
-        hoverBackgroundColor: distinctColors.slice(0, 12),
-        legendColor: '#8b5cf6', // Violet 500 for the legend pill
+        data: MONTH_KEYS.map(m => monthlyAgg[m] || 0),
+        backgroundColor: CHART_COLORS.slice(0, 12),
+        hoverBackgroundColor: CHART_COLORS.slice(0, 12),
+        legendColor: '#8b5cf6',
         borderRadius: 8,
         barPercentage: 0.5,
         borderSkipped: false
@@ -302,14 +138,14 @@ export default function Graph() {
     return {
       type: 'line',
       label: `ปี ${year}`,
-      data: monthKeys.map(m => {
+      data: MONTH_KEYS.map(m => {
         const mNum = parseInt(m, 10);
-        if (mNum > maxMonth) return null; // เดือนในอนาคตปล่อยเป็น null เพื่อให้เส้นกราฟหยุด
-        return yoyAgg[year][m] || 0; // เดือนที่ขาดหายไปตรงกลาง ให้แสดงเป็น 0
+        if (mNum > maxMonth) return null;
+        return yoyAgg[year][m] || 0;
       }),
-      borderColor: distinctColors[index % distinctColors.length],
-      backgroundColor: distinctColors[index % distinctColors.length],
-      borderWidth: isLatestYear ? 4 : 2, // Thicker line for the latest year
+      borderColor: CHART_COLORS[index % CHART_COLORS.length],
+      backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
+      borderWidth: isLatestYear ? 4 : 2,
       pointRadius: isLatestYear ? 4 : 2,
       pointHoverRadius: 7,
       tension: 0.3,
@@ -317,7 +153,7 @@ export default function Graph() {
     };
   });
   const yoyData = {
-    labels: mNamesShort,
+    labels: MONTH_NAMES,
     datasets: yoyDatasets
   };
 
