@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faNotesMedical, 
-  faGasPump, 
-  faBars, 
-  faChartPie, 
-  faChevronLeft, 
+import {
+  faNotesMedical,
+  faGasPump,
+  faBars,
+  faChartPie,
+  faChevronLeft,
   faArrowRightFromBracket,
   faArrowRightToBracket, // เพิ่ม Icon สำหรับ Login
-  faChartLine, 
+  faChartLine,
   faBed,
   faTooth
 } from '@fortawesome/free-solid-svg-icons';
@@ -18,12 +18,12 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const menuItems = [
-    { path: '/dashboard', name: 'Overview',    icon: faChartPie,  public: true  },
-    { path: '/opd',       name: 'OPD Real-time',icon: faNotesMedical, public: false },
-    { path: '/gas',       name: 'Gas & Oil',    icon: faGasPump,   public: false },
-    { path: '/graph',     name: 'Doctor Ops',   icon: faChartLine, public: false },
-    { path: '/dental',    name: 'Dental',       icon: faTooth,     public: false },
-    { path: '/beds',      name: 'Beds',         icon: faBed,       public: false }
+    { path: '/dashboard', name: 'Overview', icon: faChartPie, public: true },
+    { path: '/opd', name: 'OPD Real-time', icon: faNotesMedical, public: false },
+    { path: '/gas', name: 'Gas & Oil', icon: faGasPump, public: false },
+    { path: '/graph', name: 'Doctor Ops', icon: faChartLine, public: false },
+    { path: '/dental', name: 'Dental', icon: faTooth, public: false },
+    { path: '/beds', name: 'Beds', icon: faBed, public: false }
   ];
 
   // กรองเมนู: ถ้าล็อกอินแล้วเห็นทั้งหมด ถ้ายังให้เห็นแค่ public
@@ -102,15 +102,23 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
 
       {/* ======= Mobile Bottom Nav (< md) ======= */}
       {/* แก้ไขส่วนนี้: เปลี่ยน flex, ซ่อน scrollbar, เว้นระยะด้วย gap-2 */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f172a] border-t border-slate-800 flex items-center overflow-x-auto gap-2 h-16 px-4 safe-area-bottom font-['Sarabun'] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      {/* ======= Mobile Bottom Nav (< md) ======= */}
+      <nav className={`md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f172a] border-t border-slate-800 flex items-center h-16 px-4 safe-area-bottom font-['Sarabun'] ${isAuthenticated
+          ? "overflow-x-auto gap-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          : "justify-between"
+        }`}>
+
+        {/* 1. เพิ่ม Invisible Spacer เฉพาะตอนยังไม่ Login เพื่อดัน Overview ให้ไปอยู่ตรงกลางพอดี */}
+        {!isAuthenticated && <div className="min-w-[72px] shrink-0" />}
+
         {filteredMenu.map(item => (
           <NavLink
             key={item.path}
             to={item.path}
             className={({ isActive }) => `
-              flex flex-col items-center justify-center gap-1 py-2 rounded-xl transition-all duration-200 min-w-[72px] shrink-0
-              ${isActive ? 'text-blue-400' : 'text-slate-400 hover:text-slate-200'}
-            `}
+        flex flex-col items-center justify-center gap-1 py-2 rounded-xl transition-all duration-200 min-w-[72px] shrink-0
+        ${isActive ? 'text-blue-400' : 'text-slate-400 hover:text-slate-200'}
+      `}
           >
             {({ isActive }) => (
               <>
@@ -120,7 +128,7 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
             )}
           </NavLink>
         ))}
-        
+
         {/* Login / Logout Button (Mobile) */}
         {isAuthenticated ? (
           <button
