@@ -101,13 +101,14 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
       </aside>
 
       {/* ======= Mobile Bottom Nav (< md) ======= */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f172a] border-t border-slate-800 flex items-center justify-around h-16 px-2 safe-area-bottom font-['Sarabun']">
+      {/* แก้ไขส่วนนี้: เปลี่ยน flex, ซ่อน scrollbar, เว้นระยะด้วย gap-2 */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f172a] border-t border-slate-800 flex items-center overflow-x-auto gap-2 h-16 px-4 safe-area-bottom font-['Sarabun'] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {filteredMenu.map(item => (
           <NavLink
             key={item.path}
             to={item.path}
             className={({ isActive }) => `
-              flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-xl transition-all duration-200 min-w-[60px]
+              flex flex-col items-center justify-center gap-1 py-2 rounded-xl transition-all duration-200 min-w-[72px] shrink-0
               ${isActive ? 'text-blue-400' : 'text-slate-400 hover:text-slate-200'}
             `}
           >
@@ -124,7 +125,7 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
         {isAuthenticated ? (
           <button
             onClick={onLogout}
-            className="flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-xl transition-all duration-200 min-w-[60px] text-slate-400 hover:text-red-400"
+            className="flex flex-col items-center justify-center gap-1 py-2 rounded-xl transition-all duration-200 min-w-[72px] shrink-0 text-slate-400 hover:text-red-400"
           >
             <FontAwesomeIcon icon={faArrowRightFromBracket} className="text-xl" />
             <span className="text-[10px] font-medium">ออกระบบ</span>
@@ -132,7 +133,7 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
         ) : (
           <NavLink
             to="/login"
-            className={({ isActive }) => `flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-xl transition-all duration-200 min-w-[60px] ${isActive ? 'text-blue-400' : 'text-slate-400 hover:text-blue-400'}`}
+            className={({ isActive }) => `flex flex-col items-center justify-center gap-1 py-2 rounded-xl transition-all duration-200 min-w-[72px] shrink-0 ${isActive ? 'text-blue-400' : 'text-slate-400 hover:text-blue-400'}`}
           >
             <FontAwesomeIcon icon={faArrowRightToBracket} className="text-xl" />
             <span className="text-[10px] font-medium">เข้าระบบ</span>
