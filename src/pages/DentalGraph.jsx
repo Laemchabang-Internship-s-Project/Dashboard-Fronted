@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Helmet } from "react-helmet-async";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -9,9 +9,9 @@ import { apiGetInternal } from '../services/api';
 import { HeaderSkeleton, ChartSkeleton } from '../components/Skeleton';
 import { ChartCanvas, LiveClock, CHART_COLORS, MONTH_NAMES, MONTH_KEYS, formatMonthLabel } from '../components/ChartComponents';
 
-// ─── Metric Card (unique to DentalGraph) ────────────────────────────────────────
+// ─── Metric Card ──────────────────────────────────────────────────────────────
 const MetricCard = ({ label, value, icon, color }) => (
-  <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4`}>
+  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4">
     <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${color}`}>
       <FontAwesomeIcon icon={icon} className="text-white text-lg" />
     </div>
@@ -22,132 +22,175 @@ const MetricCard = ({ label, value, icon, color }) => (
   </div>
 );
 
-// ─── Main Component ─────────────────────────────────────────────────────────────
+// ─── helper ───────────────────────────────────────────────────────────────────
+function extractOptions(dailyRows = []) {
+  const months = [...new Set(dailyRows.map(d => d.date.substring(0, 7)))].sort((a, b) => b.localeCompare(a));
+  const years  = [...new Set(dailyRows.map(d => d.date.substring(0, 4)))].sort((a, b) => b.localeCompare(a));
+  return { months, years };
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function DentalGraph() {
-  const [rawData, setRawData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  // ── State แยก view ──────────────────────────────────────────────────────
+  const [activeGraph,   setActiveGraph]   = useState('daily');
+  const [activeMetric,  setActiveMetric]  = useState('patient_count');
 
-  // View toggles
-  const [activeGraph, setActiveGraph] = useState('daily');
-  const [activeMetric, setActiveMetric] = useState('patient_count');
-  const [selectedDailyMonth, setSelectedDailyMonth] = useState('');
-  const [selectedMonthlyYear, setSelectedMonthlyYear] = useState('');
+  // daily
+  const [dailyRows,        setDailyRows]        = useState([]);
+  const [availableMonths,  setAvailableMonths]   = useState([]);
+  const [availableYears,   setAvailableYears]    = useState([]);
+  const [selectedMonth,    setSelectedMonth]     = useState('');
 
-  // ── Fetch ──────────────────────────────────────────────────────────────────
-  const fetchData = async () => {
+  // monthly
+  const [monthlyRows,      setMonthlyRows]       = useState([]);
+  const [selectedYear,     setSelectedYear]      = useState('');
+
+  // yoy
+  const [yoyMap,           setYoyMap]            = useState({});
+
+  // meta (KPI cards)
+  const [meta,             setMeta]              = useState(null);
+
+  // ui
+  const [loading,          setLoading]           = useState(true);
+  const [error,            setError]             = useState('');
+  const [isRefreshing,     setIsRefreshing]      = useState(false);
+
+  // ── Fetch helper ──────────────────────────────────────────────────────────
+  const fetchView = useCallback(async (view, opts = {}) => {
     try {
-      const res = await apiGetInternal('/api/graph/dental-summary');
-      const sorted = (res.data || []).sort((a, b) => a.date.localeCompare(b.date));
-      setRawData(sorted);
-
-      // Init default month & year filters
-      if (sorted.length > 0) {
-        const latest = sorted[sorted.length - 1].date.substring(0, 7);
-        setSelectedDailyMonth(prev => prev || latest);
-        setSelectedMonthlyYear(prev => prev || sorted[sorted.length - 1].date.substring(0, 4));
-      }
-    } catch {
-      setError('ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
-    } finally {
-      setLoading(false);
+      const params = new URLSearchParams({ view, ...opts });
+      const res = await apiGetInternal(`/api/graph/dental-summary?${params}`);
+      if (!res || res.status !== 'success') throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
+      return res.data;
+    } catch (err) {
+      setError('โหลดข้อมูลไม่สำเร็จ: ' + err.message);
+      return null;
     }
-  };
+  }, []);
 
-  useEffect(() => { fetchData(); }, []);
+  // ── Initial load: daily + yoy + meta พร้อมกัน ────────────────────────────
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      setError('');
 
+      const [daily, yoy, metaData] = await Promise.all([
+        fetchView('daily'),
+        fetchView('yoy'),
+        fetchView('meta'),
+      ]);
+
+      if (daily) {
+        const sorted = daily.sort((a, b) => a.date.localeCompare(b.date));
+        setDailyRows(sorted);
+        const { months, years } = extractOptions(sorted);
+        setAvailableMonths(months);
+        setAvailableYears(years);
+        if (months.length) setSelectedMonth(months[months.length - 1]); // เดือนล่าสุด
+        if (years.length)  setSelectedYear(years[years.length - 1]);    // ปีล่าสุด
+      }
+      if (yoy)      setYoyMap(yoy);
+      if (metaData) setMeta(metaData);
+
+      setLoading(false);
+    })();
+  }, [fetchView]);
+
+  // ── Lazy load monthly เมื่อ user เปลี่ยนไป Monthly tab ──────────────────
+  useEffect(() => {
+    if (activeGraph !== 'monthly' || monthlyRows.length > 0) return;
+    (async () => {
+      const data = await fetchView('monthly');
+      if (data) setMonthlyRows(data);
+    })();
+  }, [activeGraph, monthlyRows.length, fetchView]);
+
+  // ── Refresh ────────────────────────────────────────────────────────────────
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await fetchData();
+    setError('');
+
+    const promises = [fetchView('daily'), fetchView('yoy'), fetchView('meta')];
+    if (activeGraph === 'monthly') promises.push(fetchView('monthly'));
+    const [daily, yoy, metaData, monthly] = await Promise.all(promises);
+
+    if (daily) {
+      const sorted = daily.sort((a, b) => a.date.localeCompare(b.date));
+      setDailyRows(sorted);
+      const { months, years } = extractOptions(sorted);
+      setAvailableMonths(months);
+      setAvailableYears(years);
+    }
+    if (yoy)      setYoyMap(yoy);
+    if (metaData) setMeta(metaData);
+    if (monthly)  setMonthlyRows(monthly);
+
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  // ── Summary stats (latest date row) ────────────────────────────────────────
-  const latestRow = rawData.length > 0 ? rawData[rawData.length - 1] : null;
-
-  // ── Available months / years for filters ──────────────────────────────────
-  const availableMonths = [...new Set(rawData.map(d => d.date.substring(0, 7)))].sort();
-  const availableYears = [...new Set(rawData.map(d => d.date.substring(0, 4)))].sort();
-
-
-
   // ── Metric metadata ────────────────────────────────────────────────────────
   const metrics = {
-    patient_count: { label: 'ผู้ป่วย (คน)', color: '#3b82f6', legendColor: '#3b82f6' },
-    case_count: { label: 'จำนวนเคส', color: '#10b981', legendColor: '#10b981' },
-    total_revenue: { label: 'รายได้ (บาท)', color: '#f59e0b', legendColor: '#f59e0b' },
-    doctor_count: { label: 'แพทย์ (คน)', color: '#8b5cf6', legendColor: '#8b5cf6' },
+    patient_count: { label: 'ผู้ป่วย (คน)',  color: '#3b82f6', legendColor: '#3b82f6' },
+    case_count:    { label: 'จำนวนเคส',       color: '#10b981', legendColor: '#10b981' },
+    total_revenue: { label: 'รายได้ (บาท)',   color: '#f59e0b', legendColor: '#f59e0b' },
+    doctor_count:  { label: 'แพทย์ (คน)',    color: '#8b5cf6', legendColor: '#8b5cf6' },
   };
 
-  // ── 1. Daily chart data ────────────────────────────────────────────────────
-  const filteredDaily = selectedDailyMonth
-    ? rawData.filter(d => d.date.startsWith(selectedDailyMonth))
-    : [];
+  // ── Chart data: Daily ──────────────────────────────────────────────────────
+  const filteredDaily = selectedMonth
+    ? dailyRows.filter(d => d.date.startsWith(selectedMonth))
+    : dailyRows.slice(-31);
 
   const dailyData = {
     labels: filteredDaily.map(d => { const p = d.date.split('-'); return `${p[2]}/${p[1]}`; }),
-    datasets: Object.entries(metrics).map(([key, meta], i) => ({
+    datasets: Object.entries(metrics).map(([key, meta_m], i) => ({
       type: 'bar',
-      label: meta.label,
+      label: meta_m.label,
       data: filteredDaily.map(d => d[key]),
       backgroundColor: filteredDaily.map((_, j) => CHART_COLORS[(i * 4 + j) % CHART_COLORS.length]),
-      legendColor: meta.legendColor,
+      legendColor: meta_m.legendColor,
       borderRadius: { topLeft: 4, topRight: 4 },
       hidden: key !== activeMetric,
-    }))
+    })),
   };
 
-  // ── 2. Monthly chart data (bar) ────────────────────────────────────────────
+  // ── Chart data: Monthly ────────────────────────────────────────────────────
   const monthlyAgg = {};
-  rawData.filter(d => d.date.startsWith(selectedMonthlyYear)).forEach(d => {
-    const m = d.date.substring(5, 7);
-    if (!monthlyAgg[m]) monthlyAgg[m] = { patient_count: 0, case_count: 0, total_revenue: 0, doctor_count: 0 };
-    monthlyAgg[m].patient_count += d.patient_count;
-    monthlyAgg[m].case_count += d.case_count;
-    monthlyAgg[m].total_revenue += d.total_revenue;
-    monthlyAgg[m].doctor_count += d.doctor_count;
+  monthlyRows.filter(r => r.year === selectedYear).forEach(r => {
+    if (!monthlyAgg[r.month]) monthlyAgg[r.month] = { patient_count: 0, case_count: 0, total_revenue: 0, doctor_count: 0 };
+    monthlyAgg[r.month].patient_count += r.patient_count;
+    monthlyAgg[r.month].case_count    += r.case_count;
+    monthlyAgg[r.month].total_revenue += r.total_revenue;
+    monthlyAgg[r.month].doctor_count  += r.doctor_count;
   });
 
   const monthlyData = {
     labels: MONTH_NAMES,
-    datasets: Object.entries(metrics).map(([key, meta]) => ({
-      label: meta.label,
+    datasets: Object.entries(metrics).map(([key, meta_m]) => ({
+      label: meta_m.label,
       data: MONTH_KEYS.map(m => monthlyAgg[m]?.[key] || 0),
       backgroundColor: CHART_COLORS.slice(0, 12),
-      legendColor: meta.legendColor,
+      legendColor: meta_m.legendColor,
       borderRadius: 8,
       barPercentage: 0.5,
       borderSkipped: false,
       hidden: key !== activeMetric,
-    }))
+    })),
   };
 
-  // ── 3. YoY chart data (line overlay) ─────────────────────────────────────
-  const yoyAgg = {};
-  rawData.forEach(d => {
-    const yr = d.date.substring(0, 4);
-    const m = d.date.substring(5, 7);
-    if (!yoyAgg[yr]) yoyAgg[yr] = {};
-    if (!yoyAgg[yr][m]) yoyAgg[yr][m] = { patient_count: 0, case_count: 0, total_revenue: 0, doctor_count: 0 };
-    yoyAgg[yr][m].patient_count += d.patient_count;
-    yoyAgg[yr][m].case_count += d.case_count;
-    yoyAgg[yr][m].total_revenue += d.total_revenue;
-    yoyAgg[yr][m].doctor_count += d.doctor_count;
-  });
-
-  const years = Object.keys(yoyAgg).sort();
+  // ── Chart data: YoY ────────────────────────────────────────────────────────
+  const years = Object.keys(yoyMap).sort();
   const yoyDatasets = years.map((yr, idx) => {
     const isLatest = idx === years.length - 1;
-    const monthsWithData = Object.keys(yoyAgg[yr]);
+    const monthsWithData = Object.keys(yoyMap[yr]);
     const maxMonth = monthsWithData.length > 0 ? Math.max(...monthsWithData.map(Number)) : 0;
-
     return {
       type: 'line',
       label: `ปี ${yr}`,
       data: MONTH_KEYS.map(m => {
         if (parseInt(m, 10) > maxMonth) return null;
-        return yoyAgg[yr][m]?.[activeMetric] ?? 0;
+        return yoyMap[yr][m]?.[activeMetric] ?? 0;
       }),
       borderColor: CHART_COLORS[idx % CHART_COLORS.length],
       backgroundColor: CHART_COLORS[idx % CHART_COLORS.length],
@@ -158,15 +201,13 @@ export default function DentalGraph() {
       fill: false,
     };
   });
-
   const yoyData = { labels: MONTH_NAMES, datasets: yoyDatasets };
 
-  // ── Metric selector tabs ───────────────────────────────────────────────────
   const metricTabs = [
     { key: 'patient_count', label: 'ผู้ป่วย', color: 'bg-blue-500' },
-    { key: 'case_count', label: 'เคส', color: 'bg-emerald-500' },
-    { key: 'total_revenue', label: 'รายได้', color: 'bg-amber-500' },
-    { key: 'doctor_count', label: 'แพทย์', color: 'bg-violet-500' },
+    { key: 'case_count',    label: 'เคส',      color: 'bg-emerald-500' },
+    { key: 'total_revenue', label: 'รายได้',   color: 'bg-amber-500' },
+    { key: 'doctor_count',  label: 'แพทย์',    color: 'bg-violet-500' },
   ];
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -186,14 +227,14 @@ export default function DentalGraph() {
           .soft-shadow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
         `}</style>
 
-        {loading && !rawData.length ? (
+        {loading && !dailyRows.length ? (
           <div className="space-y-6">
             <HeaderSkeleton />
             <ChartSkeleton height={600} />
           </div>
         ) : (
           <>
-            {/* ── Glass Header ───────────────────────────────────── */}
+            {/* ── Glass Header ─────────────────────────────────────────── */}
             <div className="flex flex-wrap justify-between items-center glass p-5 rounded-2xl soft-shadow border border-white/40 mb-6">
               <div>
                 <h1 className="text-2xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
@@ -221,17 +262,17 @@ export default function DentalGraph() {
               <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200 shadow-sm">{error}</div>
             )}
 
-            {/* ── Summary KPI Cards ───────────────────────────────── */}
-            {latestRow && (
+            {/* ── Summary KPI Cards (จาก meta key เดียว) ───────────────── */}
+            {meta && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <MetricCard label="ผู้ป่วย (ล่าสุด)" value={latestRow.patient_count.toLocaleString()} icon={faNotesMedical} color="bg-blue-500" />
-                <MetricCard label="เคส (ล่าสุด)" value={latestRow.case_count.toLocaleString()} icon={faFileMedical} color="bg-emerald-500" />
-                <MetricCard label="รายได้ (ล่าสุด)" value={`฿${latestRow.total_revenue.toLocaleString()}`} icon={faMoneyBillWave} color="bg-amber-500" />
-                <MetricCard label="แพทย์ (ล่าสุด)" value={latestRow.doctor_count.toLocaleString()} icon={faUserDoctor} color="bg-violet-500" />
+                <MetricCard label="ผู้ป่วย (ล่าสุด)" value={meta.patient_count.toLocaleString()} icon={faNotesMedical} color="bg-blue-500" />
+                <MetricCard label="เคส (ล่าสุด)"     value={meta.case_count.toLocaleString()}    icon={faFileMedical}  color="bg-emerald-500" />
+                <MetricCard label="รายได้ (ล่าสุด)"  value={`฿${meta.total_revenue.toLocaleString()}`} icon={faMoneyBillWave} color="bg-amber-500" />
+                <MetricCard label="แพทย์ (ล่าสุด)"   value={meta.doctor_count.toLocaleString()}  icon={faUserDoctor}   color="bg-violet-500" />
               </div>
             )}
 
-            {/* ── Main Chart Card ─────────────────────────────────── */}
+            {/* ── Main Chart Card ───────────────────────────────────────── */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 lg:p-8 flex flex-col">
 
               {/* Top Section: Title & Toolbar */}
@@ -249,8 +290,8 @@ export default function DentalGraph() {
                           <FontAwesomeIcon icon={faCalendarDays} className="text-blue-400/80" />
                         </div>
                         <select
-                          value={selectedDailyMonth}
-                          onChange={e => setSelectedDailyMonth(e.target.value)}
+                          value={selectedMonth}
+                          onChange={e => setSelectedMonth(e.target.value)}
                           className="appearance-none bg-blue-50/50 border-2 border-blue-100 text-blue-700 text-sm font-bold rounded-xl block w-full pl-9 pr-10 py-2 cursor-pointer outline-none hover:border-blue-300 transition-all"
                         >
                           {availableMonths.map(m => <option key={m} value={m}>{formatMonthLabel(m)}</option>)}
@@ -271,8 +312,8 @@ export default function DentalGraph() {
                           <FontAwesomeIcon icon={faCalendarDays} className="text-violet-400/80" />
                         </div>
                         <select
-                          value={selectedMonthlyYear}
-                          onChange={e => setSelectedMonthlyYear(e.target.value)}
+                          value={selectedYear}
+                          onChange={e => setSelectedYear(e.target.value)}
                           className="appearance-none bg-violet-50/50 border-2 border-violet-100 text-violet-700 text-sm font-bold rounded-xl block w-full pl-9 pr-10 py-2 cursor-pointer outline-none hover:border-violet-300 transition-all"
                         >
                           {availableYears.map(y => <option key={y} value={y}>ปี {y}</option>)}
@@ -293,9 +334,9 @@ export default function DentalGraph() {
                 {/* Right: Graph type switcher */}
                 <div className="flex bg-gray-100 p-1 rounded-xl w-full md:w-auto self-start">
                   {[
-                    { key: 'daily', label: 'Daily', icon: faChartLine, activeColor: 'text-blue-600' },
-                    { key: 'monthly', label: 'Monthly', icon: faChartBar, activeColor: 'text-violet-600' },
-                    { key: 'yoy', label: 'YoY', icon: faCalendarDays, activeColor: 'text-amber-600' },
+                    { key: 'daily',   label: 'Daily',   icon: faChartLine,    activeColor: 'text-blue-600' },
+                    { key: 'monthly', label: 'Monthly', icon: faChartBar,     activeColor: 'text-violet-600' },
+                    { key: 'yoy',     label: 'YoY',     icon: faCalendarDays, activeColor: 'text-amber-600' },
                   ].map(tab => (
                     <button
                       key={tab.key}
@@ -309,7 +350,7 @@ export default function DentalGraph() {
                 </div>
               </div>
 
-              {/* Metric selector (ผู้ป่วย / เคส / รายได้ / แพทย์) */}
+              {/* Metric selector */}
               <div className="flex flex-wrap gap-2 mb-6">
                 <span className="text-xs text-gray-400 font-semibold self-center mr-1">แสดง:</span>
                 {metricTabs.map(m => (
@@ -329,15 +370,17 @@ export default function DentalGraph() {
               {/* Graph Content Area */}
               <div className="w-full relative flex-1 h-[350px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px]">
                 {activeGraph === 'daily' && (
-                  <ChartCanvas id="dentalDailyChart" type="bar" data={dailyData}
+                  <ChartCanvas id="dentalDailyChart" type="bar" data={dailyData} hideLegend={true}
                     options={{ maintainAspectRatio: false, scales: { x: { ticks: { maxTicksLimit: 31 } } } }} />
                 )}
                 {activeGraph === 'monthly' && (
-                  <ChartCanvas id="dentalMonthlyChart" type="bar" data={monthlyData}
-                    options={{ maintainAspectRatio: false }} />
+                  monthlyRows.length === 0
+                    ? <div className="flex items-center justify-center h-full text-gray-400">กำลังโหลด...</div>
+                    : <ChartCanvas id="dentalMonthlyChart" type="bar" data={monthlyData} hideLegend={true}
+                        options={{ maintainAspectRatio: false }} />
                 )}
                 {activeGraph === 'yoy' && (
-                  <ChartCanvas id="dentalYoyChart" type="line" data={yoyData}
+                  <ChartCanvas id="dentalYoyChart" type="line" data={yoyData} hideLegend={false}
                     options={{ maintainAspectRatio: false }} />
                 )}
               </div>
@@ -348,4 +391,3 @@ export default function DentalGraph() {
     </div>
   );
 }
-
