@@ -11,7 +11,9 @@ import {
   faArrowRightToBracket, // เพิ่ม Icon สำหรับ Login
   faChartLine,
   faBed,
-  faTooth
+  faTooth,
+  faBrain,
+  faSkullCrossbones
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function Sidebar({ isAuthenticated, onLogout }) {
@@ -23,6 +25,8 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
     { path: '/gas', name: 'Gas & Oil', icon: faGasPump, public: false },
     { path: '/graph', name: 'Doctor Ops', icon: faChartLine, public: false },
     { path: '/dental', name: 'Dental', icon: faTooth, public: false },
+    { path: '/depression', name: 'Depression', icon: faBrain, public: false },
+    { path: '/death', name: 'Death', icon: faSkullCrossbones, public: false },
     { path: '/beds', name: 'Beds', icon: faBed, public: false }
   ];
 

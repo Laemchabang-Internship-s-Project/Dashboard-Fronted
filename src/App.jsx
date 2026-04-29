@@ -9,6 +9,8 @@ import GasInspection from './pages/GasInspection';
 import SummarOPD from './pages/SummaryOPD';
 import Graph from './pages/Graph';
 import DentalGraph from './pages/DentalGraph';
+import DepressionGraph from './pages/DepressionGraph';
+import DeathGraph from './pages/DeathGraph';
 import BedDashboard from './pages/Bed';
 import NotFound from './pages/NotFound';
 import { authLogin, authVerify } from './services/api';
@@ -214,6 +216,16 @@ function App() {
         <Route path="/dental" element={
           <ProtectedRoute isAuthenticated={isAuthenticated} onAuthenticate={handleAuthenticate}>
             <DentalGraph />
+          </ProtectedRoute>
+        } />
+        <Route path="/depression" element={
+          <ProtectedRoute isAuthenticated={isAuthenticated} onAuthenticate={handleAuthenticate}>
+            <DepressionGraph />
+          </ProtectedRoute>
+        } />
+        <Route path="/death" element={
+          <ProtectedRoute isAuthenticated={isAuthenticated} onAuthenticate={handleAuthenticate}>
+            <DeathGraph />
           </ProtectedRoute>
         } />
       </Route>

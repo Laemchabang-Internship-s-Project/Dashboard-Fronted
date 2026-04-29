@@ -223,6 +223,18 @@ export default function DentalGraph() {
         <style>{`
           .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
           .soft-shadow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
+          
+          @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          
+          .animate-slide-down { animation: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+          .animate-fade-up { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         `}</style>
 
         {loading && !dailyRows.length ? (
@@ -262,16 +274,16 @@ export default function DentalGraph() {
 
             {/* ── Summary KPI Cards (จาก meta key เดียว) ───────────────── */}
             {meta && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-slide-down">
                 <MetricCard label="ผู้ป่วย (ล่าสุด)" value={meta.patient_count.toLocaleString()} icon={faNotesMedical} color="bg-blue-500" />
-                <MetricCard label="เคส (ล่าสุด)"     value={meta.case_count.toLocaleString()}    icon={faFileMedical}  color="bg-emerald-500" />
-                <MetricCard label="รายได้ (ล่าสุด)"  value={`฿${meta.total_revenue.toLocaleString()}`} icon={faMoneyBillWave} color="bg-amber-500" />
-                <MetricCard label="แพทย์ (ล่าสุด)"   value={meta.doctor_count.toLocaleString()}  icon={faUserDoctor}   color="bg-violet-500" />
+                <MetricCard label="เคส (ล่าสุด)" value={meta.case_count.toLocaleString()} icon={faFileMedical} color="bg-emerald-500" />
+                <MetricCard label="รายได้ (ล่าสุด)" value={`฿${meta.total_revenue.toLocaleString()}`} icon={faMoneyBillWave} color="bg-amber-500" />
+                <MetricCard label="แพทย์ (ล่าสุด)" value={meta.doctor_count.toLocaleString()} icon={faUserDoctor} color="bg-violet-500" />
               </div>
             )}
 
             {/* ── Main Chart Card ───────────────────────────────────────── */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 lg:p-8 flex flex-col">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 lg:p-8 flex flex-col animate-fade-up" style={{ animationDelay: '0.2s' }}>
 
               {/* Top Section: Title & Toolbar */}
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 mb-4 border-b border-gray-50 pb-6">
