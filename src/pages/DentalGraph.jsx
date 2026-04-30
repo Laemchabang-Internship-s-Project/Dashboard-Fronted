@@ -8,53 +8,46 @@ import {
 import { apiGetInternal } from '../services/api';
 import { HeaderSkeleton, ChartSkeleton } from '../components/Skeleton';
 import { ChartCanvas, LiveClock, CHART_COLORS, MONTH_NAMES, MONTH_KEYS, formatMonthLabel } from '../components/ChartComponents';
-
-// ─── Metric Card ──────────────────────────────────────────────────────────────
-const MetricCard = ({ label, value, icon, color }) => (
-  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4">
-    <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${color}`}>
-      <FontAwesomeIcon icon={icon} className="text-white text-lg" />
-    </div>
-    <div>
-      <p className="text-xs text-gray-400 font-semibold">{label}</p>
-      <p className="text-xl font-bold text-gray-800">{value ?? '—'}</p>
-    </div>
-  </div>
-);
+import {
+  MetricCard,
+  GlassCard,
+  DashboardStyles,
+  MATERIAL_COLORS
+} from '../components/DashboardUI';
 
 // ─── helper ───────────────────────────────────────────────────────────────────
 function extractOptions(dailyRows = []) {
   const months = [...new Set(dailyRows.map(d => d.date.substring(0, 7)))].sort((a, b) => b.localeCompare(a));
-  const years  = [...new Set(dailyRows.map(d => d.date.substring(0, 4)))].sort((a, b) => b.localeCompare(a));
+  const years = [...new Set(dailyRows.map(d => d.date.substring(0, 4)))].sort((a, b) => b.localeCompare(a));
   return { months, years };
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function DentalGraph() {
   // ── State แยก view ──────────────────────────────────────────────────────
-  const [activeGraph,   setActiveGraph]   = useState('daily');
-  const [activeMetric,  setActiveMetric]  = useState('patient_count');
+  const [activeGraph, setActiveGraph] = useState('daily');
+  const [activeMetric, setActiveMetric] = useState('patient_count');
 
   // daily
-  const [dailyRows,        setDailyRows]        = useState([]);
-  const [availableMonths,  setAvailableMonths]   = useState([]);
-  const [availableYears,   setAvailableYears]    = useState([]);
-  const [selectedMonth,    setSelectedMonth]     = useState('');
+  const [dailyRows, setDailyRows] = useState([]);
+  const [availableMonths, setAvailableMonths] = useState([]);
+  const [availableYears, setAvailableYears] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState('');
 
   // monthly
-  const [monthlyRows,      setMonthlyRows]       = useState([]);
-  const [monthlyRange,     setMonthlyRange]      = useState('12');
+  const [monthlyRows, setMonthlyRows] = useState([]);
+  const [monthlyRange, setMonthlyRange] = useState('12');
 
   // yoy
-  const [yoyMap,           setYoyMap]            = useState({});
+  const [yoyMap, setYoyMap] = useState({});
 
   // meta (KPI cards)
-  const [meta,             setMeta]              = useState(null);
+  const [meta, setMeta] = useState(null);
 
   // ui
-  const [loading,          setLoading]           = useState(true);
-  const [error,            setError]             = useState('');
-  const [isRefreshing,     setIsRefreshing]      = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // ── Fetch helper ──────────────────────────────────────────────────────────
   const fetchView = useCallback(async (view, opts = {}) => {
@@ -89,7 +82,7 @@ export default function DentalGraph() {
         setAvailableYears(years);
         if (months.length) setSelectedMonth(months[0]); // เดือนล่าสุด (เนื่องจาก sort DESC แล้ว)
       }
-      if (yoy)      setYoyMap(yoy);
+      if (yoy) setYoyMap(yoy);
       if (metaData) setMeta(metaData);
 
       setLoading(false);
@@ -121,19 +114,19 @@ export default function DentalGraph() {
       setAvailableMonths(months);
       setAvailableYears(years);
     }
-    if (yoy)      setYoyMap(yoy);
+    if (yoy) setYoyMap(yoy);
     if (metaData) setMeta(metaData);
-    if (monthly)  setMonthlyRows(monthly);
+    if (monthly) setMonthlyRows(monthly);
 
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
   // ── Metric metadata ────────────────────────────────────────────────────────
   const metrics = {
-    patient_count: { label: 'ผู้ป่วย (คน)',  color: '#3b82f6', legendColor: '#3b82f6' },
-    case_count:    { label: 'จำนวนเคส',       color: '#10b981', legendColor: '#10b981' },
-    total_revenue: { label: 'รายได้ (บาท)',   color: '#f59e0b', legendColor: '#f59e0b' },
-    doctor_count:  { label: 'แพทย์ (คน)',    color: '#8b5cf6', legendColor: '#8b5cf6' },
+    patient_count: { label: 'ผู้ป่วย (คน)', color: '#3b82f6', legendColor: '#3b82f6' },
+    case_count: { label: 'จำนวนเคส', color: '#10b981', legendColor: '#10b981' },
+    total_revenue: { label: 'รายได้ (บาท)', color: '#f59e0b', legendColor: '#f59e0b' },
+    doctor_count: { label: 'แพทย์ (คน)', color: '#8b5cf6', legendColor: '#8b5cf6' },
   };
 
   // ── Chart data: Daily ──────────────────────────────────────────────────────
@@ -159,7 +152,7 @@ export default function DentalGraph() {
     if (a.year !== b.year) return a.year.localeCompare(b.year);
     return a.month.localeCompare(b.month);
   });
-  
+
   const sliceIndex = monthlyRange === 'all' ? 0 : -parseInt(monthlyRange, 10);
   const filteredMonthly = sliceIndex === 0 ? sortedMonthly : sortedMonthly.slice(sliceIndex);
 
@@ -203,9 +196,9 @@ export default function DentalGraph() {
 
   const metricTabs = [
     { key: 'patient_count', label: 'ผู้ป่วย', color: 'bg-blue-500' },
-    { key: 'case_count',    label: 'เคส',      color: 'bg-emerald-500' },
-    { key: 'total_revenue', label: 'รายได้',   color: 'bg-amber-500' },
-    { key: 'doctor_count',  label: 'แพทย์',    color: 'bg-violet-500' },
+    { key: 'case_count', label: 'เคส', color: 'bg-emerald-500' },
+    { key: 'total_revenue', label: 'รายได้', color: 'bg-amber-500' },
+    { key: 'doctor_count', label: 'แพทย์', color: 'bg-violet-500' },
   ];
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -219,23 +212,9 @@ export default function DentalGraph() {
         <meta name="description" content="กราฟสถิติแผนกทันตกรรม" />
       </Helmet>
 
+      <DashboardStyles />
+
       <div className="max-w-[1600px] mx-auto space-y-6 pb-20">
-        <style>{`
-          .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
-          .soft-shadow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
-          
-          @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-15px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          
-          .animate-slide-down { animation: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-          .animate-fade-up { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        `}</style>
 
         {loading && !dailyRows.length ? (
           <div className="space-y-6">
@@ -283,7 +262,7 @@ export default function DentalGraph() {
             )}
 
             {/* ── Main Chart Card ───────────────────────────────────────── */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 lg:p-8 flex flex-col animate-fade-up" style={{ animationDelay: '0.2s' }}>
+            <GlassCard className="animate-fade-up" style={{ animationDelay: '0.2s' }}>
 
               {/* Top Section: Title & Toolbar */}
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 mb-4 border-b border-gray-50 pb-6">
@@ -347,9 +326,9 @@ export default function DentalGraph() {
                 {/* Right: Graph type switcher */}
                 <div className="flex bg-gray-100 p-1 rounded-xl w-full md:w-auto self-start">
                   {[
-                    { key: 'daily',   label: 'Daily',   icon: faChartLine,    activeColor: 'text-blue-600' },
-                    { key: 'monthly', label: 'Monthly', icon: faChartBar,     activeColor: 'text-violet-600' },
-                    { key: 'yoy',     label: 'YoY',     icon: faCalendarDays, activeColor: 'text-amber-600' },
+                    { key: 'daily', label: 'Daily', icon: faChartLine, activeColor: 'text-blue-600' },
+                    { key: 'monthly', label: 'Monthly', icon: faChartBar, activeColor: 'text-violet-600' },
+                    { key: 'yoy', label: 'YoY', icon: faCalendarDays, activeColor: 'text-amber-600' },
                   ].map(tab => (
                     <button
                       key={tab.key}
@@ -381,7 +360,7 @@ export default function DentalGraph() {
               </div>
 
               {/* Graph Content Area */}
-              <div className="w-full relative flex-1 h-[350px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px]">
+              <div className="w-full relative flex-1 h-[350px] sm:h-[350px]  xl:h-[400px]">
                 {activeGraph === 'daily' && (
                   <ChartCanvas id="dentalDailyChart" type="bar" data={dailyData} hideLegend={true}
                     options={{ maintainAspectRatio: false, scales: { x: { ticks: { maxTicksLimit: 31 } } } }} />
@@ -390,14 +369,14 @@ export default function DentalGraph() {
                   monthlyRows.length === 0
                     ? <div className="flex items-center justify-center h-full text-gray-400">กำลังโหลด...</div>
                     : <ChartCanvas id="dentalMonthlyChart" type="bar" data={monthlyData} hideLegend={true}
-                        options={{ maintainAspectRatio: false }} />
+                      options={{ maintainAspectRatio: false }} />
                 )}
                 {activeGraph === 'yoy' && (
                   <ChartCanvas id="dentalYoyChart" type="line" data={yoyData} hideLegend={false}
                     options={{ maintainAspectRatio: false }} />
                 )}
               </div>
-            </div>
+            </GlassCard>
           </>
         )}
       </div>

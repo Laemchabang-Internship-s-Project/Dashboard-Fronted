@@ -16,6 +16,7 @@
     "@tailwindcss/vite": "^4.2.2",
     "apexcharts": "^5.10.6",
     "chart.js": "^4.5.1",
+    "chartjs-plugin-datalabels": "^2.2.0",
     "event-source-polyfill": "^1.0.31",
     "react": "^19.2.4",
     "react-apexcharts": "^2.1.0",

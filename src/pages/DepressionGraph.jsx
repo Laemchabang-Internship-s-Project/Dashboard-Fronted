@@ -4,33 +4,25 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faRotateRight, faChartLine, faChartBar, faCalendarDays,
   faBrain, faUserPlus, faExclamationTriangle, faChartPie, faTimes, faSpinner,
-  faMapMarkerAlt, faUser
+  faMapMarkerAlt, faUser, faCheckCircle, faHeartPulse
 } from '@fortawesome/free-solid-svg-icons';
 import ApexChart from 'react-apexcharts';
 import { apiGetInternal } from '../services/api';
 import { HeaderSkeleton, ChartSkeleton } from '../components/Skeleton';
-import { LiveClock, CHART_COLORS, MONTH_NAMES } from '../components/ChartComponents';
+import { ChartCanvas, LiveClock, MONTH_NAMES, MONTH_KEYS, CHART_COLORS, formatMonthLabel } from '../components/ChartComponents';
+import {
+  MetricCard,
+  GlassCard,
+  DashboardStyles,
+  MATERIAL_COLORS
+} from '../components/DashboardUI';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-const MATERIAL_COLORS = ["#020617", "#ff8f00", "#00897b", "#1e88e5", "#d81b60", "#f44336", "#9c27b0", "#3f51b5"];
-
-// ─── Metric Card ──────────────────────────────────────────────────────────────
-const MetricCard = ({ label, value, icon, color, onClick, isClickable }) => (
-  <div
-    className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4 transition-all duration-200
-      ${isClickable ? 'cursor-pointer hover:shadow-md hover:border-blue-200 hover:-translate-y-1' : ''}`}
-    onClick={onClick}
-  >
-    <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${color}`}>
-      <FontAwesomeIcon icon={icon} className="text-white text-lg" />
-    </div>
-    <div>
-      <p className="text-xs text-gray-400 font-semibold">{label}</p>
-      <p className="text-xl font-bold text-gray-800">{value ?? '—'}</p>
-      {isClickable && <p className="text-[10px] text-blue-500 mt-1">คลิกเพื่อดูรายชื่อ</p>}
-    </div>
-  </div>
-);
+// ─── helper ───────────────────────────────────────────────────────────────────
+function extractOptions(dailyRows = []) {
+  const months = [...new Set(dailyRows.map(d => d.date.substring(0, 7)))].sort((a, b) => b.localeCompare(a));
+  const years = [...new Set(dailyRows.map(d => d.date.substring(0, 4)))].sort((a, b) => b.localeCompare(a));
+  return { months, years };
+}
 
 // ─── Modal Drill-down ──────────────────────────────────────────────────────────
 const UnassessedModal = ({ isOpen, onClose }) => {
@@ -137,16 +129,28 @@ const UnassessedModal = ({ isOpen, onClose }) => {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function DepressionGraph() {
-  const [activeGraph, setActiveGraph] = useState('status'); // 'status', 'daily', 'monthly'
-  const [summaryData, setSummaryData] = useState(null);
+  const [activeGraph, setActiveGraph] = useState('status');
+
+  const [dailyRows, setDailyRows] = useState([]);
+  const [availableMonths, setAvailableMonths] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState('');
+
+  const [monthlyRows, setMonthlyRows] = useState([]);
+  const [monthlyRange, setMonthlyRange] = useState('12');
+
+  const [statusRows, setStatusRows] = useState([]);
+  const [kpi, setKpi] = useState(null);
+  const [yoyMap, setYoyMap] = useState({});
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchData = useCallback(async () => {
+  const fetchView = useCallback(async (view, opts = {}) => {
     try {
-      const res = await apiGetInternal('/api/graph/depression-summary');
+      const params = new URLSearchParams({ view, ...opts });
+      const res = await apiGetInternal(`/api/graph/depression-summary?${params}`);
       if (!res || res.status !== 'success') throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
       return res.data;
     } catch (err) {
@@ -158,71 +162,183 @@ export default function DepressionGraph() {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const data = await fetchData();
-      if (data) setSummaryData(data);
+      setError('');
+      const [daily, monthly, status, kpiData, yoyData] = await Promise.all([
+        fetchView('daily'),
+        fetchView('monthly'),
+        fetchView('status'),
+        fetchView('kpi'),
+        fetchView('yoy')
+      ]);
+
+      if (daily) {
+        setDailyRows(daily);
+        const { months } = extractOptions(daily);
+        setAvailableMonths(months);
+        if (months.length) setSelectedMonth(months[0]);
+      }
+      if (monthly) setMonthlyRows(monthly);
+      if (status) setStatusRows(status);
+      if (kpiData) setKpi(kpiData);
+      if (yoyData) setYoyMap(yoyData);
+
       setLoading(false);
     })();
-  }, [fetchData]);
+  }, [fetchView]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
     setError('');
-    const data = await fetchData();
-    if (data) setSummaryData(data);
+    const [daily, monthly, status, kpiData, yoyData] = await Promise.all([
+      fetchView('daily'),
+      fetchView('monthly'),
+      fetchView('status'),
+      fetchView('kpi'),
+      fetchView('yoy')
+    ]);
+
+    if (daily) {
+      setDailyRows(daily);
+      const { months } = extractOptions(daily);
+      setAvailableMonths(months);
+    }
+    if (monthly) setMonthlyRows(monthly);
+    if (status) setStatusRows(status);
+    if (kpiData) setKpi(kpiData);
+    if (yoyData) setYoyMap(yoyData);
+
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  // ── ApexCharts Configs (Wrapped in useMemo for stability) ───────────────────
+  // ── ApexCharts Configs ───────────────────────────────────────────────────
   
-  const statusBarConfig = useMemo(() => {
-    if (!summaryData) return null;
+  const { total_cases, total_unassessed, today_new } = kpi || {};
+  const assessed_count = (total_cases || 0) - (total_unassessed || 0);
+  const coverage_rate = total_cases > 0 ? ((assessed_count / total_cases) * 100).toFixed(1) : 0;
+
+  const highRiskCount = useMemo(() => {
+    if (!statusRows) return 0;
+    return statusRows
+      .filter(s => s.status_name.match(/รุนแรง|ปานกลาง|กำลังรักษา|เฝ้าระวัง|เสี่ยง/))
+      .reduce((sum, s) => sum + s.patient_count, 0);
+  }, [statusRows]);
+
+  const coveragePieConfig = useMemo(() => {
     return {
-      series: [{ name: "จำนวนผู้ป่วย", data: summaryData.status_summary.map(s => s.patient_count) }],
+      series: [assessed_count, total_unassessed || 0],
       options: {
-        chart: { type: 'bar', toolbar: { show: false } },
-        plotOptions: { bar: { borderRadius: 4, horizontal: true, distributed: true, barHeight: '70%', dataLabels: { position: 'right' } } },
+        chart: { type: 'donut' },
+        labels: ['ประเมินแล้ว', 'ยังไม่ได้ประเมิน'],
+        colors: ['#10b981', '#f43f5e'],
+        plotOptions: {
+          pie: {
+            donut: {
+              size: '70%',
+              labels: {
+                show: true,
+                name: { show: true, fontFamily: "'Sarabun', sans-serif", fontSize: '14px', color: '#64748b' },
+                value: { show: true, fontFamily: "'Sarabun', sans-serif", fontSize: '24px', fontWeight: 'bold', formatter: (val) => Number(val).toLocaleString() },
+                total: { show: true, showAlways: true, label: 'ลงทะเบียนทั้งหมด', fontFamily: "'Sarabun', sans-serif", fontSize: '12px', formatter: () => (total_cases || 0).toLocaleString() }
+              }
+            }
+          }
+        },
+        dataLabels: { enabled: false },
+        stroke: { width: 0 },
+        legend: { position: 'bottom', fontFamily: "'Sarabun', sans-serif" },
+        tooltip: { theme: 'light', style: { fontFamily: "'Sarabun', sans-serif" } }
+      }
+    };
+  }, [assessed_count, total_unassessed, total_cases]);
+
+  const evaluationRows = useMemo(() => {
+    return statusRows.filter(s => !s.status_name.includes('ยังไม่ได้ประเมิน'));
+  }, [statusRows]);
+
+  const statusBarConfig = useMemo(() => {
+    if (!evaluationRows || evaluationRows.length === 0) return null;
+    return {
+      series: [{ name: "จำนวนผู้ป่วย", data: evaluationRows.map(s => s.patient_count) }],
+      options: {
+        chart: { type: 'bar', toolbar: { show: true } },
+        plotOptions: { 
+          bar: { borderRadius: 4, horizontal: true, distributed: true, barHeight: '70%', dataLabels: { position: 'top' } } 
+        },
         colors: MATERIAL_COLORS,
-        dataLabels: { enabled: true, style: { colors: ['#333'], fontFamily: "'Sarabun', sans-serif" }, formatter: (val) => val.toLocaleString(), offsetX: 10 },
-        xaxis: { categories: summaryData.status_summary.map(s => s.status_name), labels: { style: { fontFamily: "'Sarabun', sans-serif" } } },
-        yaxis: { labels: { style: { fontFamily: "'Sarabun', sans-serif", fontSize: '11px' }, maxWidth: 200 } },
-        grid: { borderColor: '#f1f5f9' },
+        dataLabels: {
+          enabled: true,
+          style: { colors: ['#333'], fontFamily: "'Sarabun', sans-serif" },
+          formatter: (val) => val.toLocaleString(),
+          textAnchor: 'start',
+          offsetX: 15
+        },
+        xaxis: { categories: evaluationRows.map(s => s.status_name), labels: { style: { fontFamily: "'Sarabun', sans-serif" } } },
+        yaxis: { labels: { style: { fontFamily: "'Sarabun', sans-serif" }, maxWidth: 200 } },
+        grid: { borderColor: '#f1f5f9', padding: { right: 50 } },
         tooltip: { theme: "light", style: { fontFamily: "'Sarabun', sans-serif" } },
         legend: { show: false }
       }
     };
-  }, [summaryData]);
-
+  }, [evaluationRows]);
+  //แก้เป็นแนวตั้ง
   const dailyConfig = useMemo(() => {
-    if (!summaryData) return null;
-    const recentDaily = summaryData.daily_trend.slice(-30);
+    if (!dailyRows || dailyRows.length === 0) return null;
+    const filteredDaily = selectedMonth
+      ? dailyRows.filter(d => d.date.startsWith(selectedMonth))
+      : dailyRows.slice(-30);
+
     return {
-      series: [{ name: "เคสใหม่", data: recentDaily.map(d => d.total_new_cases) }],
+      series: [{ name: "เคสใหม่", data: filteredDaily.map(d => d.total_new_cases) }],
       options: {
         chart: { type: 'bar', toolbar: { show: true } },
-        plotOptions: { bar: { borderRadius: 4, columnWidth: '60%' } },
+        plotOptions: { 
+          bar: { 
+            borderRadius: 4, 
+            columnWidth: '60%',
+            dataLabels: { position: 'top' } 
+          } 
+        },
+        dataLabels: {
+          enabled: true,
+          offsetY: -20,
+          style: { colors: ['#475569'], fontSize: '10px', fontFamily: "'Sarabun', sans-serif" },
+          formatter: (val) => val > 0 ? val.toLocaleString() : ''
+        },
         colors: ['#3b82f6'],
-        xaxis: { 
-          categories: recentDaily.map(d => { const p = d.date.split('-'); return `${p[2]}/${p[1]}`; }),
+        xaxis: {
+          categories: filteredDaily.map(d => { const p = d.date.split('-'); return `${p[2]}/${p[1]}`; }),
           labels: { style: { fontFamily: "'Sarabun', sans-serif", fontSize: '10px' } }
         },
         yaxis: { labels: { style: { fontFamily: "'Sarabun', sans-serif" } } },
-        title: { text: 'จำนวนเคสใหม่รายวัน (30 วันล่าสุด)', align: 'center', style: { fontFamily: "'Sarabun', sans-serif" } },
+        title: { text: selectedMonth ? `จำนวนเคสใหม่รายวัน (${formatMonthLabel(selectedMonth)})` : 'จำนวนเคสใหม่รายวัน (30 วันล่าสุด)', align: 'center', style: { fontFamily: "'Sarabun', sans-serif" } },
         tooltip: { theme: "light", style: { fontFamily: "'Sarabun', sans-serif" } }
       }
     };
-  }, [summaryData]);
+  }, [dailyRows, selectedMonth]);
 
   const monthlyConfig = useMemo(() => {
-    if (!summaryData) return null;
-    // Backend: { year, month, total }
-    const recentMonthly = summaryData.monthly_trend.slice(-12);
+    if (!monthlyRows || monthlyRows.length === 0) return null;
+    const sliceIndex = monthlyRange === 'all' ? 0 : -parseInt(monthlyRange, 10);
+    const recentMonthly = sliceIndex === 0 ? monthlyRows : monthlyRows.slice(sliceIndex);
     return {
       series: [{ name: "เคสใหม่", data: recentMonthly.map(r => r.total) }],
       options: {
         chart: { type: 'bar', toolbar: { show: true } },
-        plotOptions: { bar: { borderRadius: 6, columnWidth: '50%' } },
+        plotOptions: { 
+          bar: { 
+            borderRadius: 6, 
+            columnWidth: '50%', 
+            dataLabels: { position: 'top' } 
+          } 
+        },
+        dataLabels: {
+          enabled: true,
+          offsetY: -20,
+          style: { colors: ['#475569'], fontSize: '11px', fontFamily: "'Sarabun', sans-serif", fontWeight: 'bold' },
+          formatter: (val) => val > 0 ? val.toLocaleString() : ''
+        },
         colors: ['#8b5cf6'],
-        xaxis: { 
+        xaxis: {
           categories: recentMonthly.map(r => `${MONTH_NAMES[parseInt(r.month, 10) - 1]} ${r.year.substring(2)}`),
           labels: { style: { fontFamily: "'Sarabun', sans-serif" } }
         },
@@ -231,21 +347,47 @@ export default function DepressionGraph() {
         tooltip: { theme: "light", style: { fontFamily: "'Sarabun', sans-serif" } }
       }
     };
-  }, [summaryData]);
+  }, [monthlyRows, monthlyRange]);
+
+  const yoyData = useMemo(() => {
+    if (!yoyMap || Object.keys(yoyMap).length === 0) return null;
+    const years = Object.keys(yoyMap).sort();
+
+    const datasets = years.map((yr, idx) => {
+      const isLatest = idx === years.length - 1;
+      const monthsWithData = Object.keys(yoyMap[yr]);
+      const maxMonth = monthsWithData.length > 0 ? Math.max(...monthsWithData.map(Number)) : 0;
+
+      return {
+        type: 'line',
+        label: `ปี ${yr}`,
+        data: MONTH_KEYS.map(m => {
+          if (parseInt(m, 10) > maxMonth) return null;
+          return yoyMap[yr][m] || 0;
+        }),
+        borderColor: CHART_COLORS[idx % CHART_COLORS.length],
+        backgroundColor: CHART_COLORS[idx % CHART_COLORS.length],
+        borderWidth: isLatest ? 4 : 2,
+        pointRadius: isLatest ? 4 : 2,
+        pointHoverRadius: 7,
+        tension: 0.3,
+        fill: false,
+      };
+    });
+
+    return {
+      labels: MONTH_NAMES,
+      datasets
+    };
+  }, [yoyMap]);
 
   return (
     <div className="p-3 md:p-6 min-h-screen" style={{ fontFamily: "'Sarabun', sans-serif", background: 'linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)' }}>
       <Helmet><title>Depression Registry - LCBH</title></Helmet>
-
-      <style>{`
-        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
-        .soft-shadow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-up { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-      `}</style>
+      <DashboardStyles />
 
       <div className="max-w-[1600px] mx-auto space-y-6 pb-20">
-        {loading && !summaryData ? (
+        {loading && (!dailyRows || dailyRows.length === 0) ? (
           <div className="space-y-6">
             <HeaderSkeleton /><ChartSkeleton height={600} />
           </div>
@@ -273,31 +415,90 @@ export default function DepressionGraph() {
 
             {error && <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200 mb-6">{error}</div>}
 
-            {/* KPI Cards */}
-            {summaryData && summaryData.kpi && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <MetricCard label="ผู้ป่วยสะสมทั้งหมด" value={summaryData.kpi.total_cases.toLocaleString()} icon={faUserPlus} color="bg-blue-500" />
-                <MetricCard label="เคสใหม่วันนี้" value={summaryData.kpi.today_new.toLocaleString()} icon={faCalendarDays} color="bg-emerald-500" />
-                <MetricCard label="กลุ่มที่ยังไม่ได้ประเมิน" value={summaryData.kpi.total_unassessed.toLocaleString()} icon={faExclamationTriangle} color="bg-red-500" isClickable={true} onClick={() => setIsModalOpen(true)} />
-              </div>
-            )}
+            {/* Summary KPIs */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+              <MetricCard 
+                label="จำนวนผู้ลงทะเบียนทั้งหมด" 
+                value={(total_cases || 0).toLocaleString()} 
+                icon={faUserPlus} 
+                color="bg-blue-500" 
+              />
+              <MetricCard 
+                label="อัตราความครอบคลุมการคัดกรอง" 
+                value={`${coverage_rate}%`} 
+                icon={faCheckCircle} 
+                color="bg-emerald-500" 
+              />
+              <MetricCard 
+                label="จำนวนที่รอดำเนินการ (ยังไม่ประเมิน)" 
+                value={(total_unassessed || 0).toLocaleString()} 
+                icon={faExclamationTriangle} 
+                color="bg-red-500" 
+                isClickable={true} 
+                onClick={() => setIsModalOpen(true)} 
+              />
+              <MetricCard 
+                label="กลุ่มเสี่ยงสูง / เฝ้าระวัง" 
+                value={highRiskCount.toLocaleString()} 
+                icon={faHeartPulse} 
+                color="bg-orange-500" 
+              />
+            </div>
 
             {/* Main Chart Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 lg:p-8 flex flex-col animate-fade-up">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-gray-50 pb-6">
-                <h2 className="font-bold text-gray-700 text-lg flex items-center">
-                  {activeGraph === 'status' && <><FontAwesomeIcon icon={faChartPie} className="text-amber-500 mr-2" />สัดส่วนสถานะการประเมิน (Status Distribution)</>}
-                  {activeGraph === 'daily' && <><FontAwesomeIcon icon={faChartLine} className="text-blue-500 mr-2" />แนวโน้มรายวัน (Daily Trend)</>}
-                  {activeGraph === 'monthly' && <><FontAwesomeIcon icon={faChartBar} className="text-violet-500 mr-2" />แนวโน้มรายเดือน (Monthly Trend)</>}
-                </h2>
+            <GlassCard className="animate-fade-up">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 border-b border-gray-50 pb-6">
+                <div className="flex flex-wrap items-center gap-3">
+                  {activeGraph === 'status' && (
+                    <h2 className="font-bold text-gray-700 text-lg flex items-center">
+                      <FontAwesomeIcon icon={faChartPie} className="text-amber-500 mr-2" />สัดส่วนสถานะการประเมิน (Status)
+                    </h2>
+                  )}
+                  {activeGraph === 'daily' && (
+                    <>
+                      <h2 className="font-bold text-gray-700 text-lg flex items-center">
+                        <FontAwesomeIcon icon={faChartLine} className="text-blue-500 mr-2" />แนวโน้มรายวัน (Daily Trend)
+                      </h2>
+                      <select
+                        value={selectedMonth}
+                        onChange={e => setSelectedMonth(e.target.value)}
+                        className="bg-blue-50 border border-blue-100 text-blue-700 text-sm font-bold rounded-lg px-3 py-1.5 outline-none hover:border-blue-300 transition-all"
+                      >
+                        {availableMonths.map(m => <option key={m} value={m}>{formatMonthLabel(m)}</option>)}
+                      </select>
+                    </>
+                  )}
+                  {activeGraph === 'monthly' && (
+                    <>
+                      <h2 className="font-bold text-gray-700 text-lg flex items-center">
+                        <FontAwesomeIcon icon={faChartBar} className="text-violet-500 mr-2" />แนวโน้มรายเดือน (Monthly)
+                      </h2>
+                      <select
+                        value={monthlyRange}
+                        onChange={e => setMonthlyRange(e.target.value)}
+                        className="bg-violet-50 border border-violet-100 text-violet-700 text-sm font-bold rounded-lg px-3 py-1.5 outline-none hover:border-violet-300 transition-all"
+                      >
+                        <option value="12">ย้อนหลัง 12 เดือน</option>
+                        <option value="24">ย้อนหลัง 24 เดือน</option>
+                        <option value="all">ทั้งหมด (All time)</option>
+                      </select>
+                    </>
+                  )}
+                  {activeGraph === 'yoy' && (
+                    <h2 className="font-bold text-gray-700 text-lg flex items-center">
+                      <FontAwesomeIcon icon={faCalendarDays} className="text-amber-500 mr-2" />เปรียบเทียบรายปี (YoY)
+                    </h2>
+                  )}
+                </div>
 
-                <div className="flex bg-gray-100 p-1 rounded-xl w-full md:w-auto">
+                <div className="flex bg-gray-100 p-1 rounded-xl w-full lg:w-auto">
                   {[
                     { key: 'status', label: 'Status', icon: faChartPie, activeColor: 'text-amber-600' },
                     { key: 'daily', label: 'Daily', icon: faChartLine, activeColor: 'text-blue-600' },
                     { key: 'monthly', label: 'Monthly', icon: faChartBar, activeColor: 'text-violet-600' },
+                    { key: 'yoy', label: 'YoY', icon: faCalendarDays, activeColor: 'text-emerald-600' },
                   ].map(tab => (
-                    <button key={tab.key} onClick={() => setActiveGraph(tab.key)} className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeGraph === tab.key ? 'bg-white shadow-sm ' + tab.activeColor : 'text-gray-500'}`}>
+                    <button key={tab.key} onClick={() => setActiveGraph(tab.key)} className={`flex-1 lg:flex-none px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeGraph === tab.key ? 'bg-white shadow-sm ' + tab.activeColor : 'text-gray-500 hover:text-gray-700'}`}>
                       <FontAwesomeIcon icon={tab.icon} className="mr-2" /> {tab.label}
                     </button>
                   ))}
@@ -305,21 +506,29 @@ export default function DepressionGraph() {
               </div>
 
               <div className="w-full relative flex-1 min-h-[400px]">
-                {summaryData && (
-                  <>
-                    {activeGraph === 'status' && statusBarConfig && (
-                      <ApexChart options={statusBarConfig.options} series={statusBarConfig.series} type="bar" height={400} />
-                    )}
-                    {activeGraph === 'daily' && dailyConfig && (
-                      <ApexChart options={dailyConfig.options} series={dailyConfig.series} type="bar" height={400} />
-                    )}
-                    {activeGraph === 'monthly' && monthlyConfig && (
-                      <ApexChart options={monthlyConfig.options} series={monthlyConfig.series} type="bar" height={400} />
-                    )}
-                  </>
+                {activeGraph === 'status' && (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+                    <div className="lg:col-span-1 h-[350px]">
+                      <h3 className="text-center font-bold text-gray-600 mb-2">ภาพรวมความครอบคลุม</h3>
+                      {coveragePieConfig && <ApexChart options={coveragePieConfig.options} series={coveragePieConfig.series} type="donut" height={300} />}
+                    </div>
+                    <div className="lg:col-span-2 h-[400px]">
+                      <h3 className="text-center font-bold text-gray-600 mb-2">รายละเอียดกลุ่มที่ประเมินแล้ว</h3>
+                      {statusBarConfig && <ApexChart options={statusBarConfig.options} series={statusBarConfig.series} type="bar" height={350} />}
+                    </div>
+                  </div>
+                )}
+                {activeGraph === 'daily' && dailyConfig && (
+                  <ApexChart options={dailyConfig.options} series={dailyConfig.series} type="bar" height={400} />
+                )}
+                {activeGraph === 'monthly' && monthlyConfig && (
+                  <ApexChart options={monthlyConfig.options} series={monthlyConfig.series} type="bar" height={400} />
+                )}
+                {activeGraph === 'yoy' && yoyData && (
+                  <ChartCanvas id="depressionYoyChart" type="line" data={yoyData} hideLegend={false} options={{ maintainAspectRatio: false }} />
                 )}
               </div>
-            </div>
+            </GlassCard>
           </>
         )}
       </div>

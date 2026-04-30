@@ -5,6 +5,7 @@ import { faRotateRight, faChartLine, faChartBar, faCalendarDays, faChevronDown }
 import { apiGetInternal } from '../services/api';
 import { HeaderSkeleton, ChartSkeleton } from '../components/Skeleton';
 import { ChartCanvas, LiveClock, CHART_COLORS, MONTH_NAMES, MONTH_KEYS, formatMonthLabel } from '../components/ChartComponents';
+import { GlassCard, DashboardStyles } from '../components/DashboardUI';
 
 // ─── helper: ดึง list ปีและเดือนที่มีในข้อมูล daily ──────────────────────────
 function extractOptions(dailyRows = []) {
@@ -177,11 +178,9 @@ export default function Graph() {
         <meta name="description" content="กราฟแสดงสถิติการผ่าตัดของแพทย์" />
       </Helmet>
 
+      <DashboardStyles />
+
       <div className="max-w-[1600px] mx-auto space-y-6 pb-20">
-        <style>{`
-          .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
-          .soft-shadow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
-        `}</style>
 
         {loading && !dailyRows.length ? (
           <div className="space-y-6">
@@ -214,7 +213,7 @@ export default function Graph() {
             )}
 
             {/* Main Unified Dashboard Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 lg:p-8 flex flex-col ">
+            <GlassCard className="p-4 md:p-6 lg:p-8 flex flex-col animate-fade-up">
 
               {/* Top Section: Title & Toolbar */}
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 mb-4 border-b border-gray-50 pb-6">
@@ -325,7 +324,7 @@ export default function Graph() {
                   <ChartCanvas id="yoyChart" type="line" data={yoyData} hideLegend={false} options={{ maintainAspectRatio: false }} />
                 )}
               </div>
-            </div>
+            </GlassCard>
 
           </>
         )}

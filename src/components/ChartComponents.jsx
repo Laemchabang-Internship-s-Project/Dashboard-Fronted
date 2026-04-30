@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Chart from 'chart.js/auto';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -22,7 +23,7 @@ export const CHART_COLORS = [
 ];
 
 export const MONTH_NAMES = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-export const MONTH_KEYS  = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+export const MONTH_KEYS = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
@@ -75,24 +76,24 @@ export const createExternalTooltipHandler = () => (context) => {
   // สร้างเนื้อหา
   if (tooltip.body) {
     const titleLines = tooltip.title || [];
-    const bodyLines  = tooltip.body.map(b => b.lines);
+    const bodyLines = tooltip.body.map(b => b.lines);
 
     let html = `<div style="margin-bottom:8px;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:4px;font-size:14px;">
       ${titleLines.map(t => `<span>${t}</span>`).join('')}
     </div>`;
 
     html += '<div style="display:flex;flex-direction:column;gap:6px;">';
-    
+
     // เตรียมข้อมูลและแปลงค่าตัวเลขสำหรับการจัดเรียง
     const sortedItems = bodyLines.map((body, i) => {
-      const colors   = tooltip.labelColors[i];
-      const parts    = body[0].split(':');
-      const label    = parts[0];
-      const valStr   = parts.slice(1).join(':').trim(); // ค่าที่เป็น text (เช่น "1,234" หรือ "฿500")
-      
+      const colors = tooltip.labelColors[i];
+      const parts = body[0].split(':');
+      const label = parts[0];
+      const valStr = parts.slice(1).join(':').trim(); // ค่าที่เป็น text (เช่น "1,234" หรือ "฿500")
+
       // ลบตัวอักษรที่ไม่ใช่ตัวเลขออกเพื่อใช้ในการเปรียบเทียบค่า
       const numVal = parseFloat(valStr.replace(/[^0-9.-]+/g, '')) || 0;
-      
+
       return { colors, label, valStr, numVal };
     }).sort((a, b) => b.numVal - a.numVal); // จัดเรียงจากมากไปน้อย
 
@@ -112,9 +113,9 @@ export const createExternalTooltipHandler = () => (context) => {
 
   // จัดตำแหน่ง — อยู่เหนือจุดที่ชี้
   const { offsetLeft: posX, offsetTop: posY } = chart.canvas;
-  tooltipEl.style.opacity   = 1;
-  tooltipEl.style.left      = posX + tooltip.caretX + 'px';
-  tooltipEl.style.top       = posY + tooltip.caretY + 'px';
+  tooltipEl.style.opacity = 1;
+  tooltipEl.style.left = posX + tooltip.caretX + 'px';
+  tooltipEl.style.top = posY + tooltip.caretY + 'px';
   tooltipEl.style.transform = 'translate(-50%, -105%)';
 };
 
@@ -127,7 +128,7 @@ export const createExternalTooltipHandler = () => (context) => {
  *  - options  : object   — Chart.js options (merged with defaults)
  */
 export const ChartCanvas = ({ id, type, data, options, hideLegend = false }) => {
-  const chartRef      = useRef(null);
+  const chartRef = useRef(null);
   const chartInstance = useRef(null);
   const [hiddenDatasets, setHiddenDatasets] = useState({});
 
@@ -143,11 +144,25 @@ export const ChartCanvas = ({ id, type, data, options, hideLegend = false }) => 
       chartInstance.current = new Chart(chartRef.current, {
         type,
         data,
+        plugins: [ChartDataLabels],
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
             ...options?.plugins,
+            datalabels: {
+              display: function (context) {
+                // แสดงเฉพาะกราฟแท่ง (bar) หรือถ้า dataset นั้นเป็น type bar
+                return context.dataset.type === 'bar' || (!context.dataset.type && type === 'bar');
+              },
+              color: '#475569',
+              anchor: 'end',
+              align: 'top',
+              offset: 4,
+              font: { family: "'Sarabun', sans-serif", weight: 'bold', size: 10 },
+              formatter: (val) => val > 0 ? val.toLocaleString() : '',
+              ...options?.plugins?.datalabels
+            },
             legend: { display: false },
             tooltip: {
               enabled: false,                // ปิด Tooltip แบบ Canvas
