@@ -38,6 +38,8 @@ export default function GasInspection() {
   })
 );
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const chartRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -71,6 +73,8 @@ export default function GasInspection() {
       const data = await apiGet("/api/fuel/history?limit=100");
       const records = data.records || [];
       setAllRecords(records);
+      if (records.length < 100) setHasMore(false);
+      else setHasMore(true);
       setIsLoading(false);
 
       if (records.length > 0 && records[0].timestamp) {
@@ -83,6 +87,25 @@ export default function GasInspection() {
     } catch (err) {
       console.error(err);
       setIsLoading(false);
+    }
+  };
+
+  const loadMoreRecords = async () => {
+    if (isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+    try {
+      const currentLength = allRecords.length;
+      const data = await apiGet(`/api/fuel/history?limit=100&offset=${currentLength}`);
+      const newRecords = data.records || [];
+      
+      if (newRecords.length < 100) {
+        setHasMore(false);
+      }
+      setAllRecords(prev => [...prev, ...newRecords]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoadingMore(false);
     }
   };
 
@@ -374,6 +397,31 @@ export default function GasInspection() {
                   </tbody>
                 </table>
               </div>
+              
+              {hasMore && (
+                <div className="mt-6 flex justify-center pb-4">
+                  <button
+                    onClick={loadMoreRecords}
+                    disabled={isLoadingMore}
+                    className={`px-6 py-2.5 rounded-full font-medium shadow-sm transition-all duration-200 border
+                      ${isLoadingMore 
+                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
+                        : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50 hover:shadow hover:-translate-y-0.5'}`}
+                  >
+                    {isLoadingMore ? (
+                      <span className="flex items-center gap-2">
+                        <FontAwesomeIcon icon={faSync} className="animate-spin" />
+                        กำลังโหลดข้อมูล...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <FontAwesomeIcon icon={faFilter} />
+                        โหลดประวัติย้อนหลังเพิ่มเติม
+                      </span>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           </>
         )}

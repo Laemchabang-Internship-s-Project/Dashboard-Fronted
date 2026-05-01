@@ -28,113 +28,12 @@ function extractOptions(dailyRows = []) {
   return { months, years };
 }
 
-// ─── Modal Drill-down ──────────────────────────────────────────────────────────
-const UnassessedModal = ({ isOpen, onClose }) => {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (isOpen) fetchData();
-  }, [isOpen]);
-
-  const fetchData = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const res = await apiGetInternal('/api/graph/depression-unassessed');
-      if (res && res.status === 'success') {
-        setData(res.data);
-      } else {
-        throw new Error('ไม่สามารถดึงข้อมูลได้');
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-slide-up">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-          <div>
-            <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-              <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-500" />
-              รายชื่อผู้ป่วยที่ยังไม่ได้ประเมิน
-            </h3>
-            <p className="text-sm text-gray-500 mt-1">รวมทั้งสิ้น {data.length.toLocaleString()} ราย</p>
-          </div>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-            <FontAwesomeIcon icon={faTimes} className="text-xl" />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="p-0 overflow-auto flex-1">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-              <FontAwesomeIcon icon={faSpinner} className="animate-spin text-3xl mb-3 text-blue-500" />
-              <p>กำลังโหลดข้อมูล...</p>
-            </div>
-          ) : error ? (
-            <div className="p-6 text-center text-red-500 bg-red-50 m-6 rounded-xl border border-red-100">{error}</div>
-          ) : (
-            <table className="w-full text-left border-collapse">
-              <thead className="bg-white sticky top-0 shadow-sm z-10">
-                <tr>
-                  <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b">HN</th>
-                  <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b">ชื่อ-สกุล</th>
-                  <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b">เพศ/อายุ</th>
-                  <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b">สัญชาติ</th>
-                  <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b">วันที่ลงทะเบียน</th>
-                  <th className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b">สถานะ/ที่อยู่</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {data.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-blue-50/50 transition-colors">
-                    <td className="py-3 px-6 text-sm text-gray-600 font-mono">{row.hn}</td>
-                    <td className="py-3 px-6 text-sm font-medium text-gray-800">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded-full ${row.sex === 'ชาย' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'} flex items-center justify-center shrink-0`}>
-                          <FontAwesomeIcon icon={faUser} className="text-xs" />
-                        </div>
-                        {row.patient_name}
-                      </div>
-                    </td>
-                    <td className="py-3 px-6 text-sm text-gray-600">{row.sex} / {row.age} ปี</td>
-                    <td className="py-3 px-6 text-sm text-gray-600">{row.citizenship}</td>
-                    <td className="py-3 px-6 text-sm text-gray-600">{row.register_date}</td>
-                    <td className="py-3 px-6 text-sm text-gray-600">
-                      <div className="font-semibold text-amber-600 mb-1">{row.status}</div>
-                      <div className="flex items-start gap-1 text-xs text-gray-500">
-                        <FontAwesomeIcon icon={faMapMarkerAlt} className="text-red-400 mt-0.5 shrink-0" />
-                        <span>{row.address}</span>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {data.length === 0 && (
-                  <tr><td colSpan="6" className="py-8 text-center text-gray-500">ไม่พบข้อมูล</td></tr>
-                )}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function DepressionGraph() {
   const [activeGraph, setActiveGraph] = useState('status');
   const [statusYear, setStatusYear] = useState('all');
+  const [statusMonth, setStatusMonth] = useState('all');
 
   const [dailyRows, setDailyRows] = useState([]);
   const [availableMonths, setAvailableMonths] = useState([]);
@@ -149,15 +48,19 @@ export default function DepressionGraph() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [status, setStatus] = useState({ text: "Connecting...", color: "bg-gray-200 text-gray-800" });
 
 
   const fetchView = useCallback(async (view, opts = {}) => {
     try {
       const params = new URLSearchParams({ view, ...opts });
-      if (view === 'status' && statusYear !== 'all') {
-        params.append('year', statusYear);
+      if (view === 'status') {
+        if (statusYear !== 'all') {
+          if (statusMonth !== 'all') {
+            params.append('month', `${statusYear}-${statusMonth}`);
+          } else {
+            params.append('year', statusYear);
+          }
+        }
       }
       const res = await apiGetInternal(`/api/graph/depression-summary?${params}`);
       if (!res || res.status !== 'success') throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
@@ -166,7 +69,7 @@ export default function DepressionGraph() {
       setError('โหลดข้อมูลไม่สำเร็จ: ' + err.message);
       return null;
     }
-  }, [statusYear]);
+  }, [statusYear, statusMonth]);
 
   useEffect(() => {
     (async () => {
@@ -389,8 +292,6 @@ export default function DepressionGraph() {
                 value={(total_unassessed || 0).toLocaleString()}
                 icon={faExclamationTriangle}
                 color="bg-red-500"
-                isClickable={true}
-                onClick={() => setIsModalOpen(true)}
               />
               <MetricCard
                 label="กลุ่มเสี่ยงสูง / เฝ้าระวัง"
@@ -409,17 +310,33 @@ export default function DepressionGraph() {
                       <h2 className="font-bold text-gray-700 text-lg flex items-center">
                         <FontAwesomeIcon icon={faChartPie} className="text-amber-500 mr-2" />สัดส่วนสถานะการประเมิน (Status)
                       </h2>
-                      <select
-                        value={statusYear}
-                        onChange={e => setStatusYear(e.target.value)}
-                        className="bg-amber-50 border border-amber-100 text-amber-700 text-sm font-bold rounded-lg px-3 py-1.5 outline-none hover:border-amber-300 transition-all"
-                      >
-                        <option value="all">ทั้งหมด (All time)</option>
-                        <option value="2026">2026</option>
-                        <option value="2025">2025</option>
-                        <option value="2024">2024</option>
-                        <option value="2023">2023</option>
-                      </select>
+                      <div className="flex gap-2">
+                        <select
+                          value={statusYear}
+                          onChange={e => {
+                            setStatusYear(e.target.value);
+                            if (e.target.value === 'all') setStatusMonth('all');
+                          }}
+                          className="bg-amber-50 border border-amber-100 text-amber-700 text-sm font-bold rounded-lg px-3 py-1.5 outline-none hover:border-amber-300 transition-all"
+                        >
+                          <option value="all">ทั้งหมด (All time)</option>
+                          <option value="2026">2026</option>
+                          <option value="2025">2025</option>
+                          <option value="2024">2024</option>
+                          <option value="2023">2023</option>
+                        </select>
+                        <select
+                          value={statusMonth}
+                          onChange={e => setStatusMonth(e.target.value)}
+                          disabled={statusYear === 'all'}
+                          className="bg-amber-50 border border-amber-100 text-amber-700 text-sm font-bold rounded-lg px-3 py-1.5 outline-none hover:border-amber-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <option value="all">ทั้งปี</option>
+                          {MONTH_NAMES.map((name, i) => (
+                            <option key={i} value={String(i + 1).padStart(2, '0')}>{name}</option>
+                          ))}
+                        </select>
+                      </div>
                     </>
                   )}
                   {activeGraph === 'daily' && (
@@ -498,7 +415,6 @@ export default function DepressionGraph() {
           </>
         )}
       </div>
-      <UnassessedModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 }

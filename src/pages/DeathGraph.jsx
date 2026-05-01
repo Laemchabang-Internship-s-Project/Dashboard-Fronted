@@ -32,7 +32,10 @@ const CAUSE_NAME_MAP = {
 export default function DeathGraph() {
   const [activeGraph, setActiveGraph] = useState('causes');
   const [causesRows, setCausesRows] = useState([]);
-  const [causesYear, setCausesYear] = useState('all');
+  const currentYYYY = new Date().getFullYear().toString();
+  const currentMM = String(new Date().getMonth() + 1).padStart(2, '0');
+  const [causesYear, setCausesYear] = useState(currentYYYY);
+  const [causesMonth, setCausesMonth] = useState(currentMM);
   const [monthlyRows, setMonthlyRows] = useState([]);
   const [monthlyRange, setMonthlyRange] = useState('12');
   const [placesRows, setPlacesRows] = useState([]);
@@ -46,8 +49,15 @@ export default function DeathGraph() {
   const fetchView = useCallback(async (view) => {
     try {
       let url = `/api/graph/death-summary?view=${view}`;
-      if (view === 'causes' && causesYear !== 'all') {
-        url += `&year=${causesYear}`;
+      // causes และ places ใช้ filter เดียวกัน
+      if (view === 'causes' || view === 'places') {
+        if (causesYear !== 'all') {
+          if (causesMonth !== 'all') {
+            url += `&month=${causesYear}-${causesMonth}`;
+          } else {
+            url += `&year=${causesYear}`;
+          }
+        }
       }
       const res = await apiGetInternal(url);
       if (!res || res.status !== 'success') throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
@@ -56,7 +66,7 @@ export default function DeathGraph() {
       setError('โหลดข้อมูลไม่สำเร็จ: ' + err.message);
       return null;
     }
-  }, [causesYear]);
+  }, [causesYear, causesMonth]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -68,7 +78,7 @@ export default function DeathGraph() {
       fetchView('hours')
     ]);
 
-    if (causesData) setCausesRows(causesData);
+    if (causesData !== null) setCausesRows(causesData || []);
     if (monthlyData) setMonthlyRows(monthlyData);
     if (placesData) setPlacesRows(placesData);
     if (hoursData) setHoursRows(hoursData);
@@ -108,19 +118,40 @@ export default function DeathGraph() {
     return sortedPlaces.reduce((acc, p) => acc + p.count, 0) || 0;
   }, [sortedPlaces]);
 
+  // KPI: ใช้ปี/เดือนปัจจุบัน (ตามปฏิทิน)
+  const latestYearKpi = useMemo(() => {
+    const now = new Date();
+    const curYear = now.getFullYear().toString();
+    const curMonth = String(now.getMonth() + 1).padStart(2, '0');
+    const curMonthYear = `${curYear}-${curMonth}`;
+
+    // รวมยอดทั้งปีปัจจุบัน
+    const yearTotal = (monthlyRows || [])
+      .filter(r => (r.month_year || '').startsWith(curYear))
+      .reduce((sum, r) => sum + (r.death_count || 0), 0);
+
+    // ยอดเดือนปัจจุบัน (อาจเป็น 0 ถ้ายังไม่มีข้อมูล)
+    const curMonthRow = (monthlyRows || []).find(r => r.month_year === curMonthYear);
+    const latestMonthCount = curMonthRow ? (curMonthRow.death_count || 0) : 0;
+
+    return { year: curYear, total: yearTotal, latestMonth: curMonthYear, latestMonthCount };
+  }, [monthlyRows]);
+
   // ── ApexCharts Configs (useMemo for Stability) ───────────────────────────
 
   const causesData = useMemo(() => {
-    if (!causesRows || causesRows.length === 0) return null;
+    const rows = causesRows && causesRows.length > 0 ? causesRows : [{ cause: 'ไม่พบข้อมูล', total_cases: 0 }];
+    const isEmpty = causesRows && causesRows.length === 0;
     return {
-      labels: causesRows.map(c => CAUSE_NAME_MAP[c.cause] || c.cause),
+      _isEmpty: isEmpty,
+      labels: rows.map(c => CAUSE_NAME_MAP[c.cause] || c.cause),
       datasets: [{
         label: "จำนวนการเสียชีวิต",
-        data: causesRows.map(c => c.total_cases),
-        backgroundColor: causesRows.map((_, i) => MATERIAL_COLORS[i % MATERIAL_COLORS.length]),
+        data: rows.map(c => c.total_cases),
+        backgroundColor: isEmpty ? ['#e2e8f0'] : rows.map((_, i) => MATERIAL_COLORS[i % MATERIAL_COLORS.length]),
         borderRadius: 4,
-        maxBarThickness: 50,
-        minBarLength: 40,
+        maxBarThickness: isEmpty ? 80 : 50,
+        minBarLength: isEmpty ? 0 : 40,
       }]
     };
   }, [causesRows]);
@@ -220,11 +251,22 @@ export default function DeathGraph() {
             />
             <ErrorMessage error={error} />
 
-            {/* KPI Cards */}
+            {/* KPI Cards — ปีล่าสุด + เดือนล่าสุด */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <MetricCard label="ยอดรวมผู้เสียชีวิต" value={totalDeaths.toLocaleString()} icon={faNotesMedical} color="bg-red-500" />
-              {sortedPlaces.slice(0, 3).map((p, i) => (
-                <MetricCard key={i} label={p.place_name} value={p.count.toLocaleString()} icon={faLocationDot} color={i === 0 ? 'bg-blue-500' : i === 1 ? 'bg-rose-500' : 'bg-amber-500'} />
+              <MetricCard
+                label={`ยอดรวมผู้เสียชีวิต ปี ${latestYearKpi.year}`}
+                value={(latestYearKpi.total || 0).toLocaleString()}
+                icon={faNotesMedical}
+                color="bg-red-500"
+              />
+              <MetricCard
+                label={`เดือนล่าสุด (${latestYearKpi.latestMonth})`}
+                value={(latestYearKpi.latestMonthCount || 0).toLocaleString()}
+                icon={faLocationDot}
+                color="bg-blue-500"
+              />
+              {sortedPlaces.slice(0, 2).map((p, i) => (
+                <MetricCard key={i} label={p.place_name} value={p.count.toLocaleString()} icon={faLocationDot} color={i === 0 ? 'bg-rose-500' : 'bg-amber-500'} />
               ))}
             </div>
 
@@ -237,18 +279,34 @@ export default function DeathGraph() {
                       <h2 className="font-bold text-gray-700 text-lg flex items-center">
                         <FontAwesomeIcon icon={faBiohazard} className="text-red-500 mr-2" />สาเหตุการเสียชีวิต (Top Causes)
                       </h2>
-                      <select
-                        value={causesYear}
-                        onChange={e => setCausesYear(e.target.value)}
-                        className="bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-lg px-3 py-1.5 outline-none hover:border-red-300 transition-all"
-                      >
-                        <option value="all">ทั้งหมด (All time)</option>
-                        <option value="2026">2026</option>
-                        <option value="2025">2025</option>
-                        <option value="2024">2024</option>
-                        <option value="2023">2023</option>
-                        <option value="2022">2022</option>
-                      </select>
+                      <div className="flex gap-2">
+                        <select
+                          value={causesYear}
+                          onChange={e => {
+                            setCausesYear(e.target.value);
+                            if (e.target.value === 'all') setCausesMonth('all');
+                          }}
+                          className="bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-lg px-3 py-1.5 outline-none hover:border-red-300 transition-all"
+                        >
+                          <option value="all">ทั้งหมด (All time)</option>
+                          <option value="2026">2026</option>
+                          <option value="2025">2025</option>
+                          <option value="2024">2024</option>
+                          <option value="2023">2023</option>
+                          <option value="2022">2022</option>
+                        </select>
+                        <select
+                          value={causesMonth}
+                          onChange={e => setCausesMonth(e.target.value)}
+                          disabled={causesYear === 'all'}
+                          className="bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-lg px-3 py-1.5 outline-none hover:border-red-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <option value="all">ทั้งปี</option>
+                          {MONTH_NAMES.map((name, i) => (
+                            <option key={i} value={String(i + 1).padStart(2, '0')}>{name}</option>
+                          ))}
+                        </select>
+                      </div>
                     </>
                   )}
                   {activeGraph === 'monthly' && (
@@ -292,8 +350,13 @@ export default function DeathGraph() {
               </div>
 
               <div className="w-full relative flex-1 min-h-[400px]">
-                {activeGraph === 'causes' && causesData && (
+                {activeGraph === 'causes' && (
                   <div className="h-[500px] w-full relative">
+                    {causesData._isEmpty && (
+                      <div className="absolute top-2 left-0 right-0 flex justify-center z-10">
+                        <span className="bg-gray-100 text-gray-500 text-xs px-3 py-1 rounded-full">ไม่พบข้อมูลในช่วงเวลานี้</span>
+                      </div>
+                    )}
                     <ChartCanvas
                       id="causesChart"
                       type="bar"
@@ -307,21 +370,40 @@ export default function DeathGraph() {
                     />
                   </div>
                 )}
-                {activeGraph === 'places' && placesPieConfig && (
-                  <div className="flex justify-center items-center h-[450px]">
-                    <div className="w-full max-w-2xl">
-                      <ApexChart options={placesPieConfig.options} series={placesPieConfig.series} type="pie" height={380} />
-                    </div>
+                {activeGraph === 'places' && (
+                  <div className="flex justify-center items-center h-[450px] relative">
+                    {(!placesRows || placesRows.length === 0) ? (
+                      <div className="flex flex-col items-center justify-center text-gray-400">
+                        <div className="text-5xl mb-3">📊</div>
+                        <p className="font-semibold text-base text-gray-500">ไม่พบข้อมูล</p>
+                      </div>
+                    ) : (
+                      <div className="w-full max-w-2xl">
+                        <ApexChart options={placesPieConfig.options} series={placesPieConfig.series} type="pie" height={380} />
+                      </div>
+                    )}
                   </div>
                 )}
-                {activeGraph === 'monthly' && monthlyData && (
+                {activeGraph === 'monthly' && (
                   <div className="h-[450px] relative">
-                    <ChartCanvas id="monthlyDeathChart" type="line" data={monthlyData} hideLegend={true} options={{ maintainAspectRatio: false }} />
+                    {(!monthlyRows || monthlyRows.length === 0) && (
+                      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 rounded-xl">
+                        <div className="text-5xl mb-3">📊</div>
+                        <p className="text-gray-500 font-semibold text-base">ไม่พบข้อมูล</p>
+                      </div>
+                    )}
+                    {monthlyData && <ChartCanvas id="monthlyDeathChart" type="line" data={monthlyData} hideLegend={true} options={{ maintainAspectRatio: false }} />}
                   </div>
                 )}
-                {activeGraph === 'hours' && hoursData && (
+                {activeGraph === 'hours' && (
                   <div className="h-[450px] relative">
-                    <ChartCanvas id="hoursChart" type="line" data={hoursData} hideLegend={true} options={{ maintainAspectRatio: false }} />
+                    {(!hoursRows || hoursRows.length === 0) && (
+                      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 rounded-xl">
+                        <div className="text-5xl mb-3">📊</div>
+                        <p className="text-gray-500 font-semibold text-base">ไม่พบข้อมูล</p>
+                      </div>
+                    )}
+                    {hoursData && <ChartCanvas id="hoursChart" type="line" data={hoursData} hideLegend={true} options={{ maintainAspectRatio: false }} />}
                   </div>
                 )}
               </div>
