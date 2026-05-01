@@ -82,7 +82,7 @@ export default function BedDashboard() {
         );
 
         setBedData({ ...data, ...totals, by_ward: newByWard });
-        setStatus({ text: "UPDATED", type: "success" });
+        setStatus({ text: "LIVE", type: "success" });
       }
     } catch (error) {
       console.error("Error fetching bed summary:", error);
@@ -236,8 +236,8 @@ export default function BedDashboard() {
                             <p className="text-[10px] text-blue-400 mt-1">ทั้งหมด</p>
                           </div>
                           <div className="bg-rose-50 rounded-xl px-2 py-2 text-center">
-                            <p className={`text-[17px] font-semibold leading-none ${rateColor}`}>{wardRate}%</p>
-                            <p className="text-[10px] text-rose-300 mt-1">ครองเตียง</p>
+                            <p className={`text-[17px] font-semibold leading-none `}>{wardRate}%</p>
+                            <p className="text-[10px] text-rose-300 mt-1">อัตราครองเตียง</p>
                           </div>
                           <div className="bg-emerald-50 rounded-xl px-2 py-2 text-center">
                             <p className="text-[17px] font-semibold text-emerald-600 leading-none">{stats.available}</p>
