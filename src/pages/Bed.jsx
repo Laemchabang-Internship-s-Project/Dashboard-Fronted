@@ -282,7 +282,7 @@ export default function BedDashboard() {
                             <p className="text-[10px] text-gray-400 mt-1">คงเหลือ</p>
                           </div>
 
-                          <div className="bg-rose-50 rounded-xl px-2 py-2 text-center">
+                          <div className="bg-rose-50 rounded-xl px-2 py-2 text-center col-start-2">
                             <p className={`text-[17px] font-semibold leading-none `}>{wardRate}%</p>
                             <p className="text-[10px] text-rose-300 mt-1">อัตราครองเตียง</p>
                           </div>
