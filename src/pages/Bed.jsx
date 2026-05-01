@@ -2,56 +2,45 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Helmet } from "react-helmet-async";
 import { apiGetInternal } from "../services/api";
 
-// --- Helper: ตัวเลขวิ่ง (นำมาจากหน้าเดิม) ---
-const AnimatedStat = ({ value, Component = "h2", className = "" }) => {
-  const [displayValue, setDisplayValue] = useState("-");
-  const ref = useRef(null);
+const AnimatedStat = ({ value, suffix = "", className = "" }) => {
+  const [display, setDisplay] = useState("-");
+  const frameRef = useRef(null);
 
   useEffect(() => {
     if (value === "-" || value == null || isNaN(value)) {
-      setDisplayValue(value || "-");
+      setDisplay(value || "-");
       return;
     }
-    const newValue = parseFloat(value);
-    const oldValue = parseFloat(displayValue) || 0;
-    if (oldValue === newValue) { setDisplayValue(newValue); return; }
+    const target = parseFloat(value);
+    let current = parseFloat(display) || 0;
+    if (current === target) { setDisplay(target); return; }
 
-    let start = oldValue;
-    const duration = 300;
-    const step = (newValue - start) / (duration / 16);
-    let animationFrame;
-    function update() {
-      start += step;
-      if ((step > 0 && start >= newValue) || (step < 0 && start <= newValue)) {
-        setDisplayValue(newValue);
-      } else {
-        setDisplayValue(Math.round(start));
-        animationFrame = requestAnimationFrame(update);
-      }
+    const delta = (target - current) / 15;
+    cancelAnimationFrame(frameRef.current);
+    function step() {
+      current += delta;
+      const done = delta > 0 ? current >= target : current <= target;
+      setDisplay(done ? target : Math.round(current));
+      if (!done) frameRef.current = requestAnimationFrame(step);
     }
-    update();
-    return () => cancelAnimationFrame(animationFrame);
+    step();
+    return () => cancelAnimationFrame(frameRef.current);
   }, [value]);
 
-  return <Component ref={ref} className={className}>{displayValue}</Component>;
+  return <span className={className}>{display}{suffix}</span>;
 };
 
 export default function BedDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState("");
-  const [status, setStatus] = useState({ text: "Connecting...", color: "bg-gray-200 text-gray-800" });
-
-  const [bedData, setBedData] = useState({
-    total: "-", available: "-", occupied: "-", other: "-", by_ward: {}
-  });
-
+  const [status, setStatus] = useState({ text: "Connecting...", type: "neutral" });
+  const [bedData, setBedData] = useState({ total: 0, available: 0, occupied: 0, other: 0, by_ward: {} });
   const [selectedWard, setSelectedWard] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date().toLocaleString('th-TH', {
-        year: 'numeric', month: 'long', day: 'numeric',
         hour: '2-digit', minute: '2-digit', second: '2-digit'
       }));
     }, 1000);
@@ -61,30 +50,21 @@ export default function BedDashboard() {
   const fetchBedData = async () => {
     try {
       const response = await apiGetInternal("/api/beds/summary");
-
-      if (response && response.data) {
+      if (response?.data) {
         const data = response.data;
-
         const FIXED_WARD = "ผู้ป่วยอายุรกรรมหญิง";
         const FIXED_TOTAL = 30;
-
-        // clone ward data
         const newByWard = { ...data.by_ward };
 
-        // 👉 fix ward เป้าหมาย
         if (newByWard[FIXED_WARD]) {
           const w = newByWard[FIXED_WARD];
-
-          const newAvailable = Math.max(0, FIXED_TOTAL - w.occupied);
-
           newByWard[FIXED_WARD] = {
             ...w,
             total: FIXED_TOTAL,
-            available: newAvailable,
+            available: Math.max(0, FIXED_TOTAL - w.occupied),
           };
         }
 
-        // 👉 คำนวณ global ใหม่
         const totals = Object.values(newByWard).reduce(
           (acc, w) => {
             acc.total += w.total || 0;
@@ -96,24 +76,12 @@ export default function BedDashboard() {
           { total: 0, available: 0, occupied: 0, other: 0 }
         );
 
-        // 👉 set state ครั้งเดียว (สำคัญ)
-        setBedData({
-          ...data,
-          ...totals,
-          by_ward: newByWard,
-        });
-
-        setStatus({
-          text: "UPDATED",
-          color: "bg-green-100 text-green-700 font-bold",
-        });
+        setBedData({ ...data, ...totals, by_ward: newByWard });
+        setStatus({ text: "UPDATED", type: "success" });
       }
     } catch (error) {
       console.error("Error fetching bed summary:", error);
-      setStatus({
-        text: "ERROR",
-        color: "bg-red-100 text-red-700 font-bold",
-      });
+      setStatus({ text: "ERROR", type: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -121,125 +89,176 @@ export default function BedDashboard() {
 
   useEffect(() => {
     fetchBedData();
-    const pollInterval = setInterval(fetchBedData, 30000);
-    return () => clearInterval(pollInterval);
+    const poll = setInterval(fetchBedData, 30000);
+    return () => clearInterval(poll);
   }, []);
 
   const wardEntries = Object.entries(bedData.by_ward || {});
   const filteredWards = selectedWard === "all"
     ? wardEntries
-    : wardEntries.filter(([wardName]) => wardName === selectedWard);
+    : wardEntries.filter(([name]) => name === selectedWard);
 
-  // คำนวณ % ภาพรวม
-  const globalOccupancyRate = (bedData.total > 0)
+  const occupancyRate = bedData.total > 0
     ? Math.round((bedData.occupied / bedData.total) * 100)
     : 0;
+
+  const statusStyles = {
+    success: "bg-green-50 text-green-700 border border-green-200",
+    error:   "bg-red-50 text-red-700 border border-red-200",
+    neutral: "bg-gray-100 text-gray-600 border border-gray-200",
+  };
+
   return (
-    <div className="p-3 md:p-6 min-h-screen bg-[#f1f5f9] relative" style={{ fontFamily: "'Sarabun', sans-serif" }}>
+    <div className="min-h-screen bg-slate-50 p-4 md:p-6" style={{ fontFamily: "'Sarabun', sans-serif" }}>
       <Helmet><title>Bed Summary - LCBH</title></Helmet>
 
-      <style>{`
-        .stat-card { transition: all 0.25s ease; }
-        .stat-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); }
-        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
-        .soft-shadow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
-      `}</style>
+      <div className="max-w-[1600px] mx-auto space-y-5">
 
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 glass p-4 md:p-5 rounded-2xl soft-shadow border border-white/40">
-          <div className="flex-shrink-0">
-            <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-tight">ภาพรวมเตียงผู้ป่วยใน (IPD)</h1>
+        {/* Header */}
+        <div className="bg-white border border-gray-100 rounded-2xl px-5 py-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
+          <div>
+            <h1 className="text-[21px] font-semibold text-gray-900 tracking-tight">
+              ภาพรวมเตียงผู้ป่วยใน (IPD)
+            </h1>
+            
           </div>
-
-          <div className="flex flex-col md:flex-row md:items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Ward picker button — opens modal */}
             <button
               onClick={() => setIsModalOpen(true)}
-              className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors w-full md:w-64 text-left flex justify-between items-center"
+              className="bg-white border border-gray-200 rounded-lg px-4 py-1.5 text-[13px] text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors flex items-center gap-2 max-w-[200px]"
             >
-              <span className="truncate mr-2">
-                {selectedWard === 'all' ? 'ดูทั้งหมด' : selectedWard}
-              </span>
-              <svg className="w-4 h-4 flex-shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              <span className="truncate">{selectedWard === "all" ? "ดูทั้งหมด" : selectedWard}</span>
+              <svg className="w-4 h-4 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              </svg>
             </button>
-
-            <div className="flex items-center gap-2 whitespace-nowrap justify-between md:justify-start">
-              <p className="text-gray-600 font-semibold text-[11px] md:text-sm">{currentTime || "--:--:--"}</p>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>
-                {status.text}
-              </span>
-            </div>
+            <span className={`text-[11px] font-medium px-3 py-1 rounded-full uppercase tracking-wide ${statusStyles[status.type]}`}>
+              {status.text}
+            </span>
+            <span className="text-[12px] text-gray-400 tabular-nums">{currentTime || "--:--:--"}</span>
           </div>
         </div>
 
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1e40af]"></div>
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-[6px] md:gap-4 mb-8">
-              <div className="stat-card bg-gradient-to-br from-[#E0F2FE] to-[#BAE6FD] text-[#1e293b] p-4 md:p-5 rounded-[14px] shadow-sm flex flex-col justify-between min-h-[120px] border border-blue-200">
-                <div className="flex items-center gap-3 opacity-90 mb-2">
-                  <span className="text-xs md:text-sm font-medium">เตียงทั้งหมด (Total)</span>
-                </div>
-                <AnimatedStat value={150} Component="h2" className="text-[2rem] md:text-[2.8rem] font-bold mt-auto text-blue-900" />
+            {/* KPI Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1">
+                <span className="text-[12px] text-gray-400">เตียงทั้งหมด</span>
+                <AnimatedStat value={150} className="text-[30px] font-semibold leading-none text-blue-600" />
+                <span className="text-[11px] text-gray-300">Total beds</span>
               </div>
 
-              <div className="stat-card bg-gradient-to-br from-[#FFE4E6] to-[#FDA4AF] text-[#1e293b] p-4 md:p-5 rounded-[14px] shadow-sm flex flex-col justify-between min-h-[120px] border border-rose-200">
-                <div className="flex items-center gap-3 opacity-90 mb-2">
-                  <span className="text-xs md:text-sm font-medium text-rose-800">จ่ายเตียงแล้ว (Occupied)</span>
+              <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1">
+                <span className="text-[12px] text-gray-400">จ่ายเตียงแล้ว</span>
+                <AnimatedStat value={bedData.occupied} className="text-[30px] font-semibold leading-none text-rose-500" />
+                <span className="text-[11px] text-gray-300">Occupied</span>
+                <div className="h-1 bg-gray-100 rounded-full overflow-hidden mt-1">
+                  <div className="h-1 bg-rose-400 rounded-full transition-all duration-700" style={{ width: `${Math.round((bedData.occupied / bedData.total) * 100)}%` }} />
                 </div>
-                <div className="flex items-baseline gap-1 mt-auto">
-                  <AnimatedStat value={bedData.occupied} Component="h2" className="text-[2rem] md:text-[2.8rem] font-bold text-rose-700" />
+              </div>
 
+              {/* <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1">
+                <span className="text-[12px] text-gray-400">เตียงว่าง</span>
+                <AnimatedStat value={bedData.available} className="text-[30px] font-semibold leading-none text-emerald-500" />
+                <span className="text-[11px] text-gray-300">Available</span>
+                <div className="h-1 bg-gray-100 rounded-full overflow-hidden mt-1">
+                  <div className="h-1 bg-emerald-400 rounded-full transition-all duration-700" style={{ width: `${Math.round((bedData.available / bedData.total) * 100)}%` }} />
+                </div>
+              </div> */}
+
+              <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1">
+                <span className="text-[12px] text-gray-400">อัตราครองเตียง</span>
+                <AnimatedStat value={occupancyRate} suffix="%" className="text-[30px] font-semibold leading-none text-amber-500" />
+                <span className="text-[11px] text-gray-300">Occupancy rate</span>
+                <div className="h-1 bg-gray-100 rounded-full overflow-hidden mt-1">
+                  <div className="h-1 bg-amber-400 rounded-full transition-all duration-700" style={{ width: `${occupancyRate}%` }} />
                 </div>
               </div>
             </div>
 
-            <h2 className="text-xl font-bold text-gray-800 mb-4 pl-2 border-l-4 border-[#1e40af]">แยกตามหอผู้ป่วย (Ward)</h2>
+            {/* Ward Section */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-[3px] h-[14px] bg-blue-600 rounded-full" />
+                <h2 className="text-[13px] font-medium text-gray-500">แยกตามหอผู้ป่วย</h2>
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredWards.map(([wardName, stats]) => (
-                <div key={wardName} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition flex flex-col h-full">
-                  <h3 className="text-lg font-bold text-gray-800 mb-3 line-clamp-1" title={wardName}>{wardName}</h3>
-
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-blue-50 p-2 rounded-lg text-center">
-                      <p className="text-[10px] font-bold text-blue-600 mb-1">ทั้งหมด</p>
-                      <p className="text-lg font-black text-blue-900">{stats.total}</p>
-                    </div>
-                    <div className="bg-rose-50 p-2 rounded-lg text-center border border-rose-100">
-                      <p className="text-[10px] font-bold text-rose-600 mb-1">อัตราครองเตียง</p>
-                      <p className="text-lg font-black text-rose-700">
-                        {stats.total > 0 ? Math.round((stats.occupied / stats.total) * 100) : 0}%
-                      </p>
-                    </div>
-                    <div className="bg-green-50 p-2 rounded-lg text-center border border-green-100">
-                      <p className="text-[10px] font-bold text-green-600 mb-1">คงเหลือ</p>
-                      <p className="text-lg font-black text-green-700">{stats.available}</p>
-                    </div>
-                  </div>
+              {filteredWards.length === 0 ? (
+                <div className="text-center py-16 text-gray-300 text-sm">ไม่พบข้อมูลหอผู้ป่วย</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  {filteredWards.map(([wardName, stats]) => {
+                    const wardRate = stats.total > 0 ? Math.round((stats.occupied / stats.total) * 100) : 0;
+                    const rateColor = wardRate >= 90 ? "text-rose-600" : wardRate >= 70 ? "text-amber-500" : "text-emerald-500";
+                    const barColor  = wardRate >= 90 ? "bg-rose-400"  : wardRate >= 70 ? "bg-amber-400"  : "bg-emerald-400";
+                    return (
+                      <div key={wardName} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm hover:border-gray-200 transition-colors">
+                        <p className="text-[15px] font-medium text-gray-800 mb-3 leading-snug line-clamp-2 min-h-[38px]" title={wardName}>
+                          {wardName}
+                        </p>
+                        <div className="grid grid-cols-3 gap-2 mb-3">
+                          <div className="bg-blue-50 rounded-xl px-2 py-2 text-center">
+                            <p className="text-[17px] font-semibold text-blue-700 leading-none">{stats.total}</p>
+                            <p className="text-[10px] text-blue-400 mt-1">ทั้งหมด</p>
+                          </div>
+                          <div className="bg-rose-50 rounded-xl px-2 py-2 text-center">
+                            <p className={`text-[17px] font-semibold leading-none ${rateColor}`}>{wardRate}%</p>
+                            <p className="text-[10px] text-rose-300 mt-1">ครองเตียง</p>
+                          </div>
+                          <div className="bg-emerald-50 rounded-xl px-2 py-2 text-center">
+                            <p className="text-[17px] font-semibold text-emerald-600 leading-none">{stats.available}</p>
+                            <p className="text-[10px] text-emerald-400 mt-1">คงเหลือ</p>
+                          </div>
+                        </div>
+                        <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+                          <div className={`h-1 rounded-full transition-all duration-700 ${barColor}`} style={{ width: `${wardRate}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
+              )}
             </div>
           </>
         )}
       </div>
 
-      {/* Modal Dropdown */}
+      {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" style={{ fontFamily: "'Sarabun', sans-serif" }}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          style={{ fontFamily: "'Sarabun', sans-serif" }}
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-              <h3 className="text-lg font-bold text-gray-800">เลือกหอผู้ป่วย (Ward)</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-red-500 focus:outline-none transition-colors">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              <h3 className="text-[16px] font-semibold text-gray-800">เลือกหอผู้ป่วย (Ward)</h3>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-red-500 transition-colors focus:outline-none"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
             <div className="overflow-y-auto p-3 space-y-1">
               <button
-                onClick={() => { setSelectedWard('all'); setIsModalOpen(false); }}
-                className={`w-full text-left px-4 py-3 rounded-xl transition-all ${selectedWard === 'all' ? 'bg-blue-50 text-blue-700 font-bold border border-blue-100' : 'hover:bg-gray-50 text-gray-700 border border-transparent'}`}
+                onClick={() => { setSelectedWard("all"); setIsModalOpen(false); }}
+                className={`w-full text-left px-4 py-3 rounded-xl text-[14px] transition-all ${
+                  selectedWard === "all"
+                    ? "bg-blue-50 text-blue-700 font-semibold border border-blue-100"
+                    : "hover:bg-gray-50 text-gray-700 border border-transparent"
+                }`}
               >
                 ทั้งหมด
               </button>
@@ -247,7 +266,11 @@ export default function BedDashboard() {
                 <button
                   key={name}
                   onClick={() => { setSelectedWard(name); setIsModalOpen(false); }}
-                  className={`w-full text-left px-4 py-3 rounded-xl transition-all ${selectedWard === name ? 'bg-blue-50 text-blue-700 font-bold border border-blue-100' : 'hover:bg-gray-50 text-gray-700 border border-transparent'}`}
+                  className={`w-full text-left px-4 py-3 rounded-xl text-[14px] transition-all ${
+                    selectedWard === name
+                      ? "bg-blue-50 text-blue-700 font-semibold border border-blue-100"
+                      : "hover:bg-gray-50 text-gray-700 border border-transparent"
+                  }`}
                 >
                   {name}
                 </button>
