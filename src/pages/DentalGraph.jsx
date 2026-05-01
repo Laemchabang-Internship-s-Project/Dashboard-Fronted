@@ -9,10 +9,14 @@ import { apiGetInternal } from '../services/api';
 import { HeaderSkeleton, ChartSkeleton } from '../components/Skeleton';
 import { ChartCanvas, LiveClock, CHART_COLORS, MONTH_NAMES, MONTH_KEYS, formatMonthLabel } from '../components/ChartComponents';
 import {
+  DashboardStyles,
   MetricCard,
   GlassCard,
-  DashboardStyles,
-  MATERIAL_COLORS
+  SectionHeader,
+  MATERIAL_COLORS,
+  DashboardHeader,
+  ErrorMessage,
+  GraphTabs
 } from '../components/DashboardUI';
 
 // ─── helper ───────────────────────────────────────────────────────────────────
@@ -47,7 +51,8 @@ export default function DentalGraph() {
   // ui
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [status, setStatus] = useState({ text: "Connecting...", color: "bg-gray-200 text-gray-800" });
+
 
   // ── Fetch helper ──────────────────────────────────────────────────────────
   const fetchView = useCallback(async (view, opts = {}) => {
@@ -143,6 +148,7 @@ export default function DentalGraph() {
       backgroundColor: filteredDaily.map((_, j) => CHART_COLORS[(i * 4 + j) % CHART_COLORS.length]),
       legendColor: meta_m.legendColor,
       borderRadius: { topLeft: 4, topRight: 4 },
+      maxBarThickness: 50,
       hidden: key !== activeMetric,
     })),
   };
@@ -165,6 +171,7 @@ export default function DentalGraph() {
       legendColor: meta_m.legendColor,
       borderRadius: 8,
       barPercentage: 0.5,
+      maxBarThickness: 50,
       borderSkipped: false,
       hidden: key !== activeMetric,
     })),
@@ -223,33 +230,11 @@ export default function DentalGraph() {
           </div>
         ) : (
           <>
-            {/* ── Glass Header ─────────────────────────────────────────── */}
-            <div className="flex flex-wrap justify-between items-center glass p-5 rounded-2xl soft-shadow border border-white/40 mb-6">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
-                  <FontAwesomeIcon icon={faTooth} className="text-teal-500" />
-                  Dental Analytics Dashboard
-                </h1>
-                <p className="text-gray-400 text-sm mt-1">สถิติและภาพรวมแผนกทันตกรรม</p>
-              </div>
-              <div className="flex items-center gap-3 mt-4 md:mt-0">
-                <button
-                  onClick={handleRefresh}
-                  disabled={isRefreshing}
-                  className={`p-2 bg-white/50 border border-gray-200 text-gray-500 rounded-xl transition hover:bg-white shadow-sm ${isRefreshing ? 'opacity-50' : ''}`}
-                >
-                  <FontAwesomeIcon icon={faRotateRight} className={isRefreshing ? 'animate-spin' : ''} />
-                </button>
-                <div className="flex flex-col items-end whitespace-nowrap">
-                  <LiveClock />
-                </div>
-                <span className="text-[10px] px-3 py-1 rounded-full uppercase font-bold tracking-wider bg-teal-100 text-teal-700">ONLINE</span>
-              </div>
-            </div>
-
-            {error && (
-              <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200 shadow-sm">{error}</div>
-            )}
+            <DashboardHeader
+              title="Dental Analytics Dashboard"
+              subtitle="สถิติและภาพรวมแผนกทันตกรรม"
+            />
+            <ErrorMessage error={error} />
 
             {/* ── Summary KPI Cards (จาก meta key เดียว) ───────────────── */}
             {meta && (
@@ -323,23 +308,15 @@ export default function DentalGraph() {
                   )}
                 </div>
 
-                {/* Right: Graph type switcher */}
-                <div className="flex bg-gray-100 p-1 rounded-xl w-full md:w-auto self-start">
-                  {[
+                <GraphTabs
+                  activeTab={activeGraph}
+                  onTabChange={setActiveGraph}
+                  tabs={[
                     { key: 'daily', label: 'Daily', icon: faChartLine, activeColor: 'text-blue-600' },
                     { key: 'monthly', label: 'Monthly', icon: faChartBar, activeColor: 'text-violet-600' },
                     { key: 'yoy', label: 'YoY', icon: faCalendarDays, activeColor: 'text-amber-600' },
-                  ].map(tab => (
-                    <button
-                      key={tab.key}
-                      onClick={() => setActiveGraph(tab.key)}
-                      className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2
-                        ${activeGraph === tab.key ? `bg-white ${tab.activeColor} shadow-sm` : 'text-gray-500 hover:text-gray-700'}`}
-                    >
-                      <FontAwesomeIcon icon={tab.icon} /> {tab.label}
-                    </button>
-                  ))}
-                </div>
+                  ]}
+                />
               </div>
 
               {/* Metric selector */}

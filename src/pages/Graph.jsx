@@ -5,7 +5,16 @@ import { faRotateRight, faChartLine, faChartBar, faCalendarDays, faChevronDown }
 import { apiGetInternal } from '../services/api';
 import { HeaderSkeleton, ChartSkeleton } from '../components/Skeleton';
 import { ChartCanvas, LiveClock, CHART_COLORS, MONTH_NAMES, MONTH_KEYS, formatMonthLabel } from '../components/ChartComponents';
-import { GlassCard, DashboardStyles } from '../components/DashboardUI';
+import {
+  DashboardStyles,
+  MetricCard,
+  GlassCard,
+  SectionHeader,
+  MATERIAL_COLORS,
+  DashboardHeader,
+  ErrorMessage,
+  GraphTabs
+} from '../components/DashboardUI';
 
 // ─── helper: ดึง list ปีและเดือนที่มีในข้อมูล daily ──────────────────────────
 function extractOptions(dailyRows = []) {
@@ -34,7 +43,7 @@ export default function Graph() {
   // ui
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [status, setStatus] = useState({ text: "Connecting...", color: "bg-gray-200 text-gray-800" });
 
   // ── Fetch: ดึงเฉพาะ view ที่ใช้งาน ────────────────────────────────────────
   const fetchView = useCallback(async (view, opts = {}) => {
@@ -120,6 +129,7 @@ export default function Graph() {
       hoverBackgroundColor: filteredDaily.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]),
       legendColor: '#f63b3b',
       borderRadius: { topLeft: 4, topRight: 4 },
+      maxBarThickness: 50,
     }],
   };
 
@@ -128,7 +138,7 @@ export default function Graph() {
     if (a.year !== b.year) return a.year.localeCompare(b.year);
     return a.month.localeCompare(b.month);
   });
-  
+
   const sliceIndex = monthlyRange === 'all' ? 0 : -parseInt(monthlyRange, 10);
   const filteredMonthly = sliceIndex === 0 ? sortedMonthly : sortedMonthly.slice(sliceIndex);
 
@@ -142,6 +152,7 @@ export default function Graph() {
       legendColor: '#8b5cf6',
       borderRadius: 8,
       barPercentage: 0.5,
+      maxBarThickness: 50,
       borderSkipped: false,
     }],
   };
@@ -189,28 +200,12 @@ export default function Graph() {
           </div>
         ) : (
           <>
-            {/* Header (Glass) */}
-            <div className="flex flex-wrap justify-between items-center glass p-5 rounded-2xl soft-shadow border border-white/40 mb-6">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800 tracking-tight"> Doctor Operations Dashboard</h1>
-                <p className="text-gray-400 text-sm mt-1">สถิติและภาพรวมการผ่าตัดของแพทย์</p>
-              </div>
-              <div className="flex items-center gap-3 mt-4 md:mt-0">
-                <button onClick={handleRefresh} disabled={isRefreshing} className={`p-2 bg-white/50 border border-gray-200 text-gray-500 rounded-xl transition hover:bg-white shadow-sm ${isRefreshing ? 'opacity-50' : ''}`}>
-                  <FontAwesomeIcon icon={faRotateRight} className={`${isRefreshing ? 'animate-spin' : ''}`} />
-                </button>
-                <div className="flex flex-col items-end whitespace-nowrap">
-                  <LiveClock />
-                </div>
-                <span className="text-[10px] px-3 py-1 rounded-full uppercase font-bold tracking-wider bg-blue-100 text-blue-700">ONLINE</span>
-              </div>
-            </div>
+            <DashboardHeader
+              title="Doctor Operations Dashboard"
+              subtitle="สถิติและภาพรวมการผ่าตัดของแพทย์"
+            />
 
-            {error && (
-              <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200 shadow-sm">
-                {error}
-              </div>
-            )}
+            <ErrorMessage error={error} />
 
             {/* Main Unified Dashboard Card */}
             <GlassCard className="p-4 md:p-6 lg:p-8 flex flex-col animate-fade-up">
@@ -281,30 +276,15 @@ export default function Graph() {
                   )}
                 </div>
 
-                {/* 2. Unified Toolbar (Selector) */}
-                <div className="flex bg-gray-100 p-1 rounded-xl w-full md:w-auto self-start">
-                  <button
-                    onClick={() => setActiveGraph('daily')}
-                    className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2
-          ${activeGraph === 'daily' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                  >
-                    <FontAwesomeIcon icon={faChartLine} /> Daily
-                  </button>
-                  <button
-                    onClick={() => setActiveGraph('monthly')}
-                    className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2
-          ${activeGraph === 'monthly' ? 'bg-white text-violet-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                  >
-                    <FontAwesomeIcon icon={faChartBar} /> Monthly
-                  </button>
-                  <button
-                    onClick={() => setActiveGraph('yoy')}
-                    className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2
-          ${activeGraph === 'yoy' ? 'bg-white text-amber-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                  >
-                    <FontAwesomeIcon icon={faCalendarDays} /> YoY
-                  </button>
-                </div>
+                <GraphTabs
+                  activeTab={activeGraph}
+                  onTabChange={setActiveGraph}
+                  tabs={[
+                    { key: 'daily', label: 'Daily', icon: faChartLine, activeColor: 'text-blue-600' },
+                    { key: 'monthly', label: 'Monthly', icon: faChartBar, activeColor: 'text-violet-600' },
+                    { key: 'yoy', label: 'YoY', icon: faCalendarDays, activeColor: 'text-amber-600' },
+                  ]}
+                />
               </div>
 
               {/* Graph Content Area */}

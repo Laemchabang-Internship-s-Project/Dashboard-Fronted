@@ -6,6 +6,7 @@ import FuelSummaryCard from '../components/FuelSummaryCard';
 import { Helmet } from "react-helmet-async";
 import { apiGet, createInternalEventSource } from "../services/api";
 import { FuelCardSkeleton, ChartSkeleton, TableSkeleton, HeaderSkeleton } from '../components/Skeleton';
+import { DashboardHeader } from '../components/DashboardUI';
 
 const STATUS_OK = ["ปกติ", "ok", "ดี", "good", "normal", "เต็ม", "พอเพียง", "อนุมัติแล้ว", "ผ่าน"];
 const STATUS_WARN = ["ต่ำ", "low", "น้อย", "ต่ำกว่ามาตรฐาน", "เกือบหมด", "รอ"];
@@ -28,10 +29,8 @@ export default function GasInspection() {
   const [isLoading, setIsLoading] = useState(true);
   const [allRecords, setAllRecords] = useState([]);
   const [activeFilter, setActiveFilter] = useState("all");
-  const [statusText, setStatusText] = useState("Connecting...");
-  const [statusColor, setStatusColor] = useState("bg-gray-100 text-gray-500");
+  const [status, setStatus] = useState({ text: "Connecting...", color: "bg-gray-200 text-gray-800" });
   const [lastUpdated, setLastUpdated] = useState("รอข้อมูล...");
-  const [currentTime, setCurrentTime] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const chartRef = useRef(null);
   const canvasRef = useRef(null);
@@ -81,26 +80,12 @@ export default function GasInspection() {
     }
   };
 
-  // อัปเดตเวลาปัจจุบัน (Clock) เหมือนหน้า Summary
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      const options = {
-        year: 'numeric', month: 'long', day: 'numeric',
-        hour: '2-digit', minute: '2-digit', second: '2-digit'
-      };
-      setCurrentTime(now.toLocaleString('th-TH', options));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
   useEffect(() => {
     loadHistory();
 
     const es = createInternalEventSource("/api/dashboard/internal/stream");
     es.onopen = () => {
-      setStatusText("LIVE");
-      setStatusColor("bg-green-100 text-green-700");
+      setStatus({ text: "LIVE", color: "bg-green-100 text-green-700" });
     };
     es.onmessage = (event) => {
       try {
@@ -120,8 +105,7 @@ export default function GasInspection() {
       } catch (e) { }
     };
     es.onerror = () => {
-      setStatusText("RECONNECTING");
-      setStatusColor("bg-orange-100 text-orange-700");
+      setStatus({ text: "RECONNECTING", color: "bg-orange-100 text-orange-700" });
     };
 
     return () => es.close();
@@ -287,22 +271,15 @@ export default function GasInspection() {
         ) : (
           <>
 
-            <div className="flex flex-wrap justify-between items-center glass p-5 rounded-2xl soft-shadow border border-white/40 mb-6">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800 tracking-tight"> Fuel Management Dashboard</h1>
-                <p className="text-gray-400 text-sm mt-1">ข้อมูลล่าสุดจาก Google Form | อัปเดตอัตโนมัติ</p>
-              </div>
-              <div className="flex items-center gap-3 mt-2 md:mt-0">
-                <button onClick={handleRefresh} disabled={isRefreshing} className={`p-2 bg-white/50 border border-gray-200 text-gray-500 rounded-xl transition hover:bg-white shadow-sm ${isRefreshing ? 'opacity-50' : ''}`}>
-                  <FontAwesomeIcon icon={faRotateRight} className={`${isRefreshing ? 'animate-spin' : ''}`} />
-                </button>
-                <div className="flex flex-col items-end whitespace-nowrap">
-                  <p className="text-gray-600 font-semibold text-sm leading-tight">{currentTime}</p>
-                  <span className="text-[10px] text-gray-400 leading-tight">{lastUpdated}</span>
-                </div>
-                <span className={`text-[10px] px-3 py-1 rounded-full uppercase font-bold tracking-wider ${statusColor}`}>{statusText}</span>
-              </div>
-            </div>
+            <DashboardHeader
+              title="Fuel Management Dashboard"
+              subtitle="ข้อมูลล่าสุดจาก Google Form | อัปเดตอัตโนมัติ"
+              statusText={status.text}
+              statusColorClass={status.color}
+            >
+
+            </DashboardHeader>
+
 
             <div>
               <h2 className="font-bold text-gray-700 text-base mb-3"><FontAwesomeIcon icon={faChartSimple} className="text-blue-600 mr-2" />สรุปนํ้ามันเครื่องกำเนิดไฟฟ้า (Generator)</h2>

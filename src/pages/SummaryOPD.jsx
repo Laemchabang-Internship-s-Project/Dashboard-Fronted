@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Helmet } from "react-helmet-async";
 import { apiGet, apiGetInternal, createInternalEventSource } from "../services/api";
 import { HeaderSkeleton, StatCardSkeleton, DepartmentBlockSkeleton } from '../components/Skeleton';
+import { DashboardHeader } from '../components/DashboardUI';
 
 // --- Helper: แปลงนาทีเป็น ชม./นาที ---
 function formatWaitTime(minutes) {
@@ -343,47 +344,36 @@ export default function OPDDashboard() {
         ) : (
           <>
             {/* ===== HEADER ===== */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 glass p-4 md:p-5 rounded-2xl soft-shadow border border-white/40">
-
-              {/* ส่วนที่ 1: หัวข้อ - บนคอมล็อกกว้าง แต่บนมือถือปล่อยอิสระ */}
-              <div className="flex-shrink-0 md:w-[200px]">
-                <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-tight">Dashboard</h1>
-                <p className="text-gray-400 text-sm mt-1">ภาพรวมระบบ</p>
+            <DashboardHeader
+              title="Dashboard"
+              subtitle="ภาพรวมระบบ"
+              statusText={status.text}
+              statusColorClass={status.color}
+            >
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
+                <input
+                  type="date"
+                  value={startDate}
+                  placeholder="วว/ดด/ปปปป"
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[120px] appearance-none"
+                  style={{ colorScheme: 'light' }}
+                />
+                <span className="text-gray-500 text-sm">-</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  placeholder="วว/ดด/ปปปป"
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[120px] appearance-none"
+                  style={{ colorScheme: 'light' }}
+                />
+                <button onClick={applyDateFilter}
+                  className="bg-[#1e40af] hover:bg-blue-800 text-white text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap active:scale-95">ค้นหา</button>
+                <button onClick={clearDateFilter}
+                  className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isFilterMode ? 'hidden' : ''}`}>ล้าง</button>
               </div>
-
-              {/* ส่วนที่ 2: Filter - บนมือถือให้เต็มความกว้าง บนคอมให้อยู่กลาง */}
-              <div className="flex-1 flex justify-center w-full md:w-auto">
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
-                  <input
-                    type="date"
-                    value={startDate}
-                    placeholder="วว/ดด/ปปปป"
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[120px] appearance-none"
-                    style={{ colorScheme: 'light' }}
-                  />
-                  <span className="text-gray-500 text-sm">-</span>
-                  <input
-                    type="date"
-                    value={endDate}
-                    placeholder="วว/ดด/ปปปป"
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[120px] appearance-none"
-                    style={{ colorScheme: 'light' }}
-                  />
-                  <button onClick={applyDateFilter}
-                    className="bg-[#1e40af] hover:bg-blue-800 text-white text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap active:scale-95">ค้นหา</button>
-                  <button onClick={clearDateFilter}
-                    className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isFilterMode ? 'hidden' : ''}`}>ล้าง</button>
-                </div>
-              </div>
-
-              {/* ส่วนที่ 3: เวลา - บนคอมล็อกกว้าง 200px ชิดขวา บนมือถือจัดชิดซ้าย/กลางตามความเหมาะสม */}
-              <div className="flex items-center gap-2 whitespace-nowrap flex-shrink-0 md:w-[200px] md:justify-end">
-                <p className="text-gray-600 font-semibold text-[11px] md:text-sm">{currentTime || "--:--:--"}</p>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>{status.text}</span>
-              </div>
-            </div>
+            </DashboardHeader>
 
             {/* Top 4 Global Cards */}
             <div className="rounded-[20px] p-[6px] mb-4">

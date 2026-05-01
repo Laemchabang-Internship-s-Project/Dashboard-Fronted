@@ -79,7 +79,10 @@ export const createExternalTooltipHandler = () => (context) => {
     const bodyLines = tooltip.body.map(b => b.lines);
 
     let html = `<div style="margin-bottom:8px;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:4px;font-size:14px;">
-      ${titleLines.map(t => `<span>${t}</span>`).join('')}
+      ${titleLines.map(t => {
+        if (Array.isArray(t)) return t.map(line => `<div>${line}</div>`).join('');
+        return `<div>${t}</div>`;
+      }).join('')}
     </div>`;
 
     html += '<div style="display:flex;flex-direction:column;gap:6px;">';
@@ -141,9 +144,18 @@ export const ChartCanvas = ({ id, type, data, options, hideLegend = false }) => 
     const externalTooltipHandler = createExternalTooltipHandler();
 
     if (chartRef.current && data) {
+      // ฉีด minBarLength เข้าไปในทุก dataset ที่เป็นกราฟแท่ง
+      const enhancedData = {
+        ...data,
+        datasets: data.datasets.map(ds => ({
+          ...ds,
+          minBarLength: ds.minBarLength ?? 40 // การันตีว่าแท่งไม่เล็กกว่า 40px
+        }))
+      };
+
       chartInstance.current = new Chart(chartRef.current, {
         type,
-        data,
+        data: enhancedData,
         plugins: [ChartDataLabels],
         options: {
           responsive: true,
@@ -155,11 +167,11 @@ export const ChartCanvas = ({ id, type, data, options, hideLegend = false }) => 
                 // แสดงเฉพาะกราฟแท่ง (bar) หรือถ้า dataset นั้นเป็น type bar
                 return context.dataset.type === 'bar' || (!context.dataset.type && type === 'bar');
               },
-              color: '#475569',
-              anchor: 'end',
-              align: 'top',
-              offset: 4,
-              font: { family: "'Sarabun', sans-serif", weight: 'bold', size: 10 },
+              color: '#ffffff',
+              anchor: 'center',
+              align: 'center',
+              offset: 0,
+              font: { family: "'Sarabun', sans-serif", weight: 'bold', size: 12 },
               formatter: (val) => val > 0 ? val.toLocaleString() : '',
               ...options?.plugins?.datalabels
             },
@@ -169,7 +181,11 @@ export const ChartCanvas = ({ id, type, data, options, hideLegend = false }) => 
               external: externalTooltipHandler, // ใช้ HTML Tooltip แทน
             },
           },
-          interaction: { mode: 'index', intersect: false },
+          interaction: { 
+            mode: 'index', 
+            intersect: false,
+            axis: options?.indexAxis === 'y' ? 'y' : 'x'
+          },
           scales: {
             x: {
               grid: { display: false },

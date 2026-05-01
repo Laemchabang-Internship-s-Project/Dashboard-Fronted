@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Helmet } from "react-helmet-async";
 import { apiGetInternal } from "../services/api";
+import { DashboardHeader } from '../components/DashboardUI';
 
 // --- Helper: ตัวเลขวิ่ง (นำมาจากหน้าเดิม) ---
 const AnimatedStat = ({ value, Component = "h2", className = "" }) => {
@@ -105,31 +106,23 @@ export default function BedDashboard() {
       <div className="max-w-7xl mx-auto">
         
         {/* ===== HEADER ===== */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 glass p-4 md:p-5 rounded-2xl soft-shadow border border-white/40">
-          <div className="flex-shrink-0">
-            <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-tight">ภาพรวมเตียงผู้ป่วยใน (IPD)</h1>
-          </div>
-          
-          <div className="flex flex-col md:flex-row md:items-center gap-3">
-            {/* --- ปุ่มเปิด Modal เลือกแผนก --- */}
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors w-full md:w-64 text-left flex justify-between items-center"
-            >
-              <span className="truncate mr-2">
-                {selectedWard === 'all' ? 'ดูทั้งหมด' : selectedWard}
-              </span>
-              <svg className="w-4 h-4 flex-shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-            </button>
-
-            <div className="flex items-center gap-2 whitespace-nowrap justify-between md:justify-start">
-              <p className="text-gray-600 font-semibold text-[11px] md:text-sm">{currentTime || "--:--:--"}</p>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${status.color}`}>
-                {status.text}
-              </span>
-            </div>
-          </div>
-        </div>
+        <DashboardHeader
+          title="ภาพรวมเตียงผู้ป่วยใน (IPD)"
+          subtitle="สถิติเตียงผู้ป่วยและหอผู้ป่วย"
+          statusText={status.text}
+          statusColorClass={status.color}
+        >
+          {/* --- ปุ่มเปิด Modal เลือกแผนก --- */}
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors w-full md:w-64 text-left flex justify-between items-center"
+          >
+            <span className="truncate mr-2">
+              {selectedWard === 'all' ? 'ดูทั้งหมด' : selectedWard}
+            </span>
+            <svg className="w-4 h-4 flex-shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+        </DashboardHeader>
 
         {isLoading ? (
           <div className="flex justify-center items-center h-64">

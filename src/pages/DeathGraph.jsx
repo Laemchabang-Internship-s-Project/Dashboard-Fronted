@@ -1,43 +1,62 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import ApexChart from 'react-apexcharts';
 import {
   faSkullCrossbones, faHospital, faHouse, faClock, faChartBar,
   faChartPie, faRotateRight, faLocationDot, faBiohazard, faNotesMedical
 } from '@fortawesome/free-solid-svg-icons';
-import ApexChart from 'react-apexcharts';
 import { apiGetInternal } from '../services/api';
 import { HeaderSkeleton, ChartSkeleton } from '../components/Skeleton';
-import { LiveClock, MONTH_NAMES } from '../components/ChartComponents';
+import { ChartCanvas, LiveClock, MONTH_NAMES } from '../components/ChartComponents';
 import {
+  DashboardStyles,
   MetricCard,
   GlassCard,
-  DashboardStyles,
-  MATERIAL_COLORS
+  SectionHeader,
+  MATERIAL_COLORS,
+  DashboardHeader,
+  ErrorMessage,
+  GraphTabs
 } from '../components/DashboardUI';
+
+// ─── helper: Mapping ชื่อสาเหตุเพื่อให้แสดงผลหลายบรรทัด ───────────────────────
+const CAUSE_NAME_MAP = {
+  'สาเหตุจากภายนอกอื่นๆ ที่ทำให้ป่วยหรือตาย': ['สาเหตุจากภายนอกอื่นๆ', 'ที่ทำให้ป่วยหรือตาย'],
+  'อุบัติเหตุจากการขนส่ง และผลที่ตามมา': ['อุบัติเหตุจากการขนส่ง', 'และผลที่ตามมา'],
+  'อาการ, อาการแสดงและสิ่งผิดปกติที่พบได้จากการตรวจทางคลีนิก และทางห้องปฏิบัติการ': ['อาการแสดงและสิ่งผิดปกติ', 'ที่พบได้จากการตรวจทางคลีนิก'],
+  'โรคระบบย่อยอาหาร รวมโรคในช่องปาก': ['โรคระบบย่อยอาหาร', 'รวมโรคในช่องปาก']
+};
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function DeathGraph() {
   const [activeGraph, setActiveGraph] = useState('causes');
   const [causesRows, setCausesRows] = useState([]);
+  const [causesYear, setCausesYear] = useState('all');
   const [monthlyRows, setMonthlyRows] = useState([]);
   const [monthlyRange, setMonthlyRange] = useState('12');
   const [placesRows, setPlacesRows] = useState([]);
   const [hoursRows, setHoursRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [status, setStatus] = useState({ text: "Connecting...", color: "bg-gray-200 text-gray-800" });
+
+
 
   const fetchView = useCallback(async (view) => {
     try {
-      const res = await apiGetInternal(`/api/graph/death-summary?view=${view}`);
+      let url = `/api/graph/death-summary?view=${view}`;
+      if (view === 'causes' && causesYear !== 'all') {
+        url += `&year=${causesYear}`;
+      }
+      const res = await apiGetInternal(url);
       if (!res || res.status !== 'success') throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
       return res.data;
     } catch (err) {
       setError('โหลดข้อมูลไม่สำเร็จ: ' + err.message);
       return null;
     }
-  }, []);
+  }, [causesYear]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -91,39 +110,36 @@ export default function DeathGraph() {
 
   // ── ApexCharts Configs (useMemo for Stability) ───────────────────────────
 
-  const causesConfig = useMemo(() => {
+  const causesData = useMemo(() => {
     if (!causesRows || causesRows.length === 0) return null;
     return {
-      series: [{ name: "จำนวนการเสียชีวิต", data: causesRows.map(c => c.total_cases) }],
-      options: {
-        chart: { type: 'bar', toolbar: { show: true } },
-        plotOptions: { bar: { borderRadius: 4, horizontal: true, distributed: true, barHeight: '70%', dataLabels: { position: 'top' } } },
-        colors: MATERIAL_COLORS,
-        dataLabels: {
-          enabled: true,
-          style: { colors: ['#333'], fontFamily: "'Sarabun', sans-serif" },
-          formatter: (val) => val.toLocaleString(),
-          textAnchor: 'start',
-          offsetX: 15
-        },
-        xaxis: { categories: causesRows.map(c => c.cause), labels: { style: { fontFamily: "'Sarabun', sans-serif" } } },
-        yaxis: { labels: { style: { fontFamily: "'Sarabun', sans-serif" }, maxWidth: 200 } },
-        grid: { borderColor: '#f1f5f9' },
-        tooltip: { theme: "light", style: { fontFamily: "'Sarabun', sans-serif" } },
-        legend: { show: false }
-      }
+      labels: causesRows.map(c => CAUSE_NAME_MAP[c.cause] || c.cause),
+      datasets: [{
+        label: "จำนวนการเสียชีวิต",
+        data: causesRows.map(c => c.total_cases),
+        backgroundColor: causesRows.map((_, i) => MATERIAL_COLORS[i % MATERIAL_COLORS.length]),
+        borderRadius: 4,
+        maxBarThickness: 50,
+        minBarLength: 40,
+      }]
     };
   }, [causesRows]);
+  //pie death graph
 
   const placesPieConfig = useMemo(() => {
     if (!placesRows || placesRows.length === 0) return null;
     return {
       series: sortedPlaces.map(p => p.count),
       options: {
-        chart: { type: 'pie', toolbar: { show: false } },
+        chart: { type: 'pie', toolbar: { show: true } },
         labels: sortedPlaces.map(p => p.place_name),
         colors: MATERIAL_COLORS,
-        dataLabels: { enabled: false },
+        dataLabels: {
+          enabled: true,
+          style: { colors: ['#1e293b'], fontFamily: "'Sarabun', sans-serif", fontSize: '12px' },
+          dropShadow: { enabled: false }
+        },
+        //legend ตรง pie charts
         legend: {
           position: 'bottom',
           fontFamily: "'Sarabun', sans-serif",
@@ -143,49 +159,46 @@ export default function DeathGraph() {
     };
   }, [placesRows, sortedPlaces]);
 
-  const monthlyTrendConfig = useMemo(() => {
+  const monthlyData = useMemo(() => {
     if (!monthlyRows || monthlyRows.length === 0) return null;
     const sliceIndex = monthlyRange === 'all' ? 0 : -parseInt(monthlyRange, 10);
     const recentMonthly = sliceIndex === 0 ? monthlyRows : monthlyRows.slice(sliceIndex);
     return {
-      series: [{ name: "ผู้เสียชีวิต", data: recentMonthly.map(m => m.death_count) }],
-      options: {
-        chart: { type: 'line', toolbar: { show: true }, zoom: { enabled: false } },
-        stroke: { curve: 'smooth', width: 3 },
-        colors: ['#ef4444'],
-        xaxis: {
-          categories: recentMonthly.map(m => {
-            const [y, mo] = m.month_year.split('-');
-            return `${MONTH_NAMES[parseInt(mo, 10) - 1]} ${y.substring(2)}`;
-          }),
-          labels: { style: { fontFamily: "'Sarabun', sans-serif" } }
-        },
-        yaxis: { labels: { style: { fontFamily: "'Sarabun', sans-serif" } } },
-        markers: { size: 4 },
-        grid: { borderColor: '#f1f5f9' },
-        title: { text: 'จำนวนผู้เสียชีวิตรายเดือน', align: 'center', style: { fontFamily: "'Sarabun', sans-serif" } },
-        tooltip: { theme: "light", style: { fontFamily: "'Sarabun', sans-serif" } }
-      }
+      labels: recentMonthly.map(m => {
+        const [y, mo] = m.month_year.split('-');
+        return `${MONTH_NAMES[parseInt(mo, 10) - 1]} ${y.substring(2)}`;
+      }),
+      datasets: [{
+        label: "ผู้เสียชีวิต",
+        data: recentMonthly.map(m => m.death_count),
+        borderColor: '#ef4444',
+        backgroundColor: '#ef4444',
+        borderWidth: 3,
+        tension: 0.4,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        fill: false,
+      }]
     };
   }, [monthlyRows, monthlyRange]);
 
-  const hoursConfig = useMemo(() => {
+  const hoursData = useMemo(() => {
     if (!hoursRows || hoursRows.length === 0) return null;
     return {
-      series: [{ name: "จำนวนเคส", data: hoursRows.map(h => h.total_cases) }],
-      options: {
-        chart: { type: 'line', toolbar: { show: false } },
-        stroke: { curve: 'smooth', width: 4 },
-        colors: ['#f59e0b'],
-        xaxis: {
-          categories: hoursRows.map(h => `${String(h.death_hour).padStart(2, '0')}:00`),
-          labels: { style: { fontFamily: "'Sarabun', sans-serif", fontSize: '10px' } }
-        },
-        yaxis: { labels: { style: { fontFamily: "'Sarabun', sans-serif" } } },
-        grid: { borderColor: '#f1f5f9' },
-        markers: { size: 5, colors: ['#fff'], strokeColors: '#f59e0b', strokeWidth: 3 },
-        tooltip: { theme: "light", style: { fontFamily: "'Sarabun', sans-serif" } }
-      }
+      labels: hoursRows.map(h => `${String(h.death_hour).padStart(2, '0')}:00`),
+      datasets: [{
+        label: "จำนวนเคส",
+        data: hoursRows.map(h => h.total_cases),
+        borderColor: '#f59e0b',
+        backgroundColor: '#f59e0b',
+        borderWidth: 4,
+        tension: 0.4,
+        pointRadius: 5,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#f59e0b',
+        pointBorderWidth: 3,
+        fill: false,
+      }]
     };
   }, [hoursRows]);
 
@@ -201,25 +214,11 @@ export default function DeathGraph() {
           </div>
         ) : (
           <>
-            {/* Header */}
-            <div className="flex flex-wrap justify-between items-center glass p-5 rounded-2xl soft-shadow border border-white/40 mb-6">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
-                  <FontAwesomeIcon icon={faSkullCrossbones} className="text-red-500" />
-                  Death Analysis Dashboard
-                </h1>
-                <p className="text-gray-400 text-sm mt-1">สถิติและภาพรวมการเสียชีวิต</p>
-              </div>
-              <div className="flex items-center gap-3 mt-4 md:mt-0">
-                <button onClick={handleRefresh} disabled={isRefreshing} className="p-2 bg-white/50 border border-gray-200 text-gray-500 rounded-xl hover:bg-white shadow-sm">
-                  <FontAwesomeIcon icon={faRotateRight} className={isRefreshing ? 'animate-spin' : ''} />
-                </button>
-                <div className="flex flex-col items-end whitespace-nowrap"><LiveClock /></div>
-                <span className="text-[10px] px-3 py-1 rounded-full uppercase font-bold tracking-wider bg-red-100 text-red-700">ONLINE</span>
-              </div>
-            </div>
-
-            {error && <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200 mb-6">{error}</div>}
+            <DashboardHeader
+              title="Death Analysis Dashboard"
+              subtitle="สถิติและภาพรวมการเสียชีวิต"
+            />
+            <ErrorMessage error={error} />
 
             {/* KPI Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -234,9 +233,23 @@ export default function DeathGraph() {
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 border-b border-gray-50 pb-6">
                 <div className="flex flex-wrap items-center gap-3">
                   {activeGraph === 'causes' && (
-                    <h2 className="font-bold text-gray-700 text-lg flex items-center">
-                      <FontAwesomeIcon icon={faBiohazard} className="text-red-500 mr-2" />สาเหตุการเสียชีวิต (Top Causes)
-                    </h2>
+                    <>
+                      <h2 className="font-bold text-gray-700 text-lg flex items-center">
+                        <FontAwesomeIcon icon={faBiohazard} className="text-red-500 mr-2" />สาเหตุการเสียชีวิต (Top Causes)
+                      </h2>
+                      <select
+                        value={causesYear}
+                        onChange={e => setCausesYear(e.target.value)}
+                        className="bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-lg px-3 py-1.5 outline-none hover:border-red-300 transition-all"
+                      >
+                        <option value="all">ทั้งหมด (All time)</option>
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                        <option value="2022">2022</option>
+                      </select>
+                    </>
                   )}
                   {activeGraph === 'monthly' && (
                     <>
@@ -266,36 +279,50 @@ export default function DeathGraph() {
                   )}
                 </div>
 
-                <div className="flex bg-gray-100 p-1 rounded-xl w-full lg:w-auto">
-                  {[
+                <GraphTabs
+                  activeTab={activeGraph}
+                  onTabChange={setActiveGraph}
+                  tabs={[
                     { key: 'causes', label: 'Causes', icon: faBiohazard, activeColor: 'text-red-600' },
                     { key: 'monthly', label: 'Monthly', icon: faChartBar, activeColor: 'text-violet-600' },
                     { key: 'hours', label: 'Hours', icon: faClock, activeColor: 'text-amber-600' },
                     { key: 'places', label: 'Places', icon: faChartPie, activeColor: 'text-blue-600' },
-                  ].map(tab => (
-                    <button key={tab.key} onClick={() => setActiveGraph(tab.key)} className={`flex-1 lg:flex-none px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeGraph === tab.key ? 'bg-white shadow-sm ' + tab.activeColor : 'text-gray-500 hover:text-gray-700'}`}>
-                      <FontAwesomeIcon icon={tab.icon} className="mr-2" />{tab.label}
-                    </button>
-                  ))}
-                </div>
+                  ]}
+                />
               </div>
 
               <div className="w-full relative flex-1 min-h-[400px]">
+                {activeGraph === 'causes' && causesData && (
+                  <div className="h-[500px] w-full relative">
+                    <ChartCanvas
+                      id="causesChart"
+                      type="bar"
+                      data={causesData}
+                      hideLegend={true}
+                      options={{
+                        indexAxis: 'y',
+                        maintainAspectRatio: false,
+                        layout: { padding: { left: 10, right: 30 } }
+                      }}
+                    />
+                  </div>
+                )}
                 {activeGraph === 'places' && placesPieConfig && (
-                  <div className="flex justify-center items-center h-full">
+                  <div className="flex justify-center items-center h-[450px]">
                     <div className="w-full max-w-2xl">
                       <ApexChart options={placesPieConfig.options} series={placesPieConfig.series} type="pie" height={380} />
                     </div>
                   </div>
                 )}
-                {activeGraph === 'causes' && causesConfig && (
-                  <ApexChart options={causesConfig.options} series={causesConfig.series} type="bar" height={500} />
+                {activeGraph === 'monthly' && monthlyData && (
+                  <div className="h-[450px] relative">
+                    <ChartCanvas id="monthlyDeathChart" type="line" data={monthlyData} hideLegend={true} options={{ maintainAspectRatio: false }} />
+                  </div>
                 )}
-                {activeGraph === 'monthly' && monthlyTrendConfig && (
-                  <ApexChart options={monthlyTrendConfig.options} series={monthlyTrendConfig.series} type="line" height={400} />
-                )}
-                {activeGraph === 'hours' && hoursConfig && (
-                  <ApexChart options={hoursConfig.options} series={hoursConfig.series} type="line" height={400} />
+                {activeGraph === 'hours' && hoursData && (
+                  <div className="h-[450px] relative">
+                    <ChartCanvas id="hoursChart" type="line" data={hoursData} hideLegend={true} options={{ maintainAspectRatio: false }} />
+                  </div>
                 )}
               </div>
             </GlassCard>
