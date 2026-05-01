@@ -112,11 +112,20 @@ export default function BedDashboard() {
     error: "bg-red-50 text-red-700 border border-red-200",
     neutral: "bg-gray-100 text-gray-600 border border-gray-200",
   };
+  // 1. เพิ่ม state
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // 2. เพิ่ม handler
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchBedData();
+    setTimeout(() => setIsRefreshing(false), 500);
+  };
 
   return (
     <div className="p-3 md:p-6 min-h-screen" style={{ fontFamily: "'Sarabun', sans-serif", background: 'linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)' }}>
-    <Helmet><title>Bed Summary - LCBH</title></Helmet>
-    <DashboardStyles />
+      <Helmet><title>Bed Summary - LCBH</title></Helmet>
+      <DashboardStyles />
 
       <div className="max-w-[1600px] mx-auto space-y-5 pb-20">
 
@@ -131,10 +140,11 @@ export default function BedDashboard() {
           </div>
           <div className="flex items-center gap-3 mt-4 md:mt-0">
             <button
-              onClick={fetchBedData}
-              className="p-2 bg-white/50 border border-gray-200 text-gray-500 rounded-xl hover:bg-white shadow-sm"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="p-2 bg-white/50 border border-gray-200 text-gray-500 rounded-xl hover:bg-white hover:text-blue-500 hover:border-blue-200 hover:scale-110 active:scale-95 transition-all duration-200 shadow-sm disabled:opacity-50"
             >
-              <FontAwesomeIcon icon={faRotateRight} />
+              <FontAwesomeIcon icon={faRotateRight} className={isRefreshing ? 'animate-spin' : ''} />
             </button>
 
             {/* Ward picker */}
@@ -150,8 +160,8 @@ export default function BedDashboard() {
 
             <div className="flex flex-col items-end whitespace-nowrap"><LiveClock /></div>
             <span className={`text-[10px] px-3 py-1 rounded-full uppercase font-bold tracking-wider ${status.type === 'success' ? 'bg-green-100 text-green-700' :
-                status.type === 'error' ? 'bg-red-100 text-red-700' :
-                  'bg-gray-100 text-gray-500'
+              status.type === 'error' ? 'bg-red-100 text-red-700' :
+                'bg-gray-100 text-gray-500'
               }`}>
               {status.text}
             </span>
@@ -273,8 +283,8 @@ export default function BedDashboard() {
               <button
                 onClick={() => { setSelectedWard("all"); setIsModalOpen(false); }}
                 className={`w-full text-left px-4 py-3 rounded-xl text-[14px] transition-all ${selectedWard === "all"
-                    ? "bg-blue-50 text-blue-700 font-semibold border border-blue-100"
-                    : "hover:bg-gray-50 text-gray-700 border border-transparent"
+                  ? "bg-blue-50 text-blue-700 font-semibold border border-blue-100"
+                  : "hover:bg-gray-50 text-gray-700 border border-transparent"
                   }`}
               >
                 ทั้งหมด
@@ -284,8 +294,8 @@ export default function BedDashboard() {
                   key={name}
                   onClick={() => { setSelectedWard(name); setIsModalOpen(false); }}
                   className={`w-full text-left px-4 py-3 rounded-xl text-[14px] transition-all ${selectedWard === name
-                      ? "bg-blue-50 text-blue-700 font-semibold border border-blue-100"
-                      : "hover:bg-gray-50 text-gray-700 border border-transparent"
+                    ? "bg-blue-50 text-blue-700 font-semibold border border-blue-100"
+                    : "hover:bg-gray-50 text-gray-700 border border-transparent"
                     }`}
                 >
                   {name}
