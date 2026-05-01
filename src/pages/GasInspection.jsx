@@ -31,7 +31,12 @@ export default function GasInspection() {
   const [statusText, setStatusText] = useState("Connecting...");
   const [statusColor, setStatusColor] = useState("bg-gray-100 text-gray-500");
   const [lastUpdated, setLastUpdated] = useState("รอข้อมูล...");
-  const [currentTime, setCurrentTime] = useState("");
+  const [currentTime, setCurrentTime] = useState(() =>
+  new Date().toLocaleString('th-TH', {
+    year: 'numeric', month: 'long', day: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  })
+);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const chartRef = useRef(null);
   const canvasRef = useRef(null);

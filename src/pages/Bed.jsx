@@ -2,6 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Helmet } from "react-helmet-async";
 import { apiGetInternal } from "../services/api";
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBed, faRotateRight } from '@fortawesome/free-solid-svg-icons';
+import { DashboardStyles } from '../components/DashboardUI';
+import { LiveClock } from '../components/ChartComponents';
+
 const AnimatedStat = ({ value, suffix = "", className = "" }) => {
   const [display, setDisplay] = useState("-");
   const frameRef = useRef(null);
@@ -104,39 +109,52 @@ export default function BedDashboard() {
 
   const statusStyles = {
     success: "bg-green-50 text-green-700 border border-green-200",
-    error:   "bg-red-50 text-red-700 border border-red-200",
+    error: "bg-red-50 text-red-700 border border-red-200",
     neutral: "bg-gray-100 text-gray-600 border border-gray-200",
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-6" style={{ fontFamily: "'Sarabun', sans-serif" }}>
-      <Helmet><title>Bed Summary - LCBH</title></Helmet>
+    <div className="p-3 md:p-6 min-h-screen" style={{ fontFamily: "'Sarabun', sans-serif", background: 'linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)' }}>
+    <Helmet><title>Bed Summary - LCBH</title></Helmet>
+    <DashboardStyles />
 
-      <div className="max-w-[1600px] mx-auto space-y-5">
+      <div className="max-w-[1600px] mx-auto space-y-5 pb-20">
 
         {/* Header */}
-        <div className="bg-white border border-gray-100 rounded-2xl px-5 py-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
+        <div className="flex flex-wrap justify-between items-center glass p-5 rounded-2xl soft-shadow border border-white/40">
           <div>
-            <h1 className="text-[21px] font-semibold text-gray-900 tracking-tight">
-              ภาพรวมเตียงผู้ป่วยใน (IPD)
+            <h1 className="text-2xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
+              <FontAwesomeIcon icon={faBed} className="text-blue-500" />
+              Bed Summary Dashboard
             </h1>
-            
+            <p className="text-gray-400 text-sm mt-1">ภาพรวมเตียงผู้ป่วยใน</p>
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            {/* Ward picker button — opens modal */}
+          <div className="flex items-center gap-3 mt-4 md:mt-0">
+            <button
+              onClick={fetchBedData}
+              className="p-2 bg-white/50 border border-gray-200 text-gray-500 rounded-xl hover:bg-white shadow-sm"
+            >
+              <FontAwesomeIcon icon={faRotateRight} />
+            </button>
+
+            {/* Ward picker */}
             <button
               onClick={() => setIsModalOpen(true)}
-              className="bg-white border border-gray-200 rounded-lg px-4 py-1.5 text-[13px] text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors flex items-center gap-2 max-w-[200px]"
+              className="bg-white/50 border border-gray-200 rounded-xl px-4 py-2 text-[13px] text-gray-700 shadow-sm hover:bg-white transition-colors flex items-center gap-2 max-w-[200px]"
             >
               <span className="truncate">{selectedWard === "all" ? "ดูทั้งหมด" : selectedWard}</span>
               <svg className="w-4 h-4 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
-            <span className={`text-[11px] font-medium px-3 py-1 rounded-full uppercase tracking-wide ${statusStyles[status.type]}`}>
+
+            <div className="flex flex-col items-end whitespace-nowrap"><LiveClock /></div>
+            <span className={`text-[10px] px-3 py-1 rounded-full uppercase font-bold tracking-wider ${status.type === 'success' ? 'bg-green-100 text-green-700' :
+                status.type === 'error' ? 'bg-red-100 text-red-700' :
+                  'bg-gray-100 text-gray-500'
+              }`}>
               {status.text}
             </span>
-            <span className="text-[12px] text-gray-400 tabular-nums">{currentTime || "--:--:--"}</span>
           </div>
         </div>
 
@@ -196,7 +214,7 @@ export default function BedDashboard() {
                   {filteredWards.map(([wardName, stats]) => {
                     const wardRate = stats.total > 0 ? Math.round((stats.occupied / stats.total) * 100) : 0;
                     const rateColor = wardRate >= 90 ? "text-rose-600" : wardRate >= 70 ? "text-amber-500" : "text-emerald-500";
-                    const barColor  = wardRate >= 90 ? "bg-rose-400"  : wardRate >= 70 ? "bg-amber-400"  : "bg-emerald-400";
+                    const barColor = wardRate >= 90 ? "bg-rose-400" : wardRate >= 70 ? "bg-amber-400" : "bg-emerald-400";
                     return (
                       <div key={wardName} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm hover:border-gray-200 transition-colors">
                         <p className="text-[15px] font-medium text-gray-800 mb-3 leading-snug line-clamp-2 min-h-[38px]" title={wardName}>
@@ -254,11 +272,10 @@ export default function BedDashboard() {
             <div className="overflow-y-auto p-3 space-y-1">
               <button
                 onClick={() => { setSelectedWard("all"); setIsModalOpen(false); }}
-                className={`w-full text-left px-4 py-3 rounded-xl text-[14px] transition-all ${
-                  selectedWard === "all"
+                className={`w-full text-left px-4 py-3 rounded-xl text-[14px] transition-all ${selectedWard === "all"
                     ? "bg-blue-50 text-blue-700 font-semibold border border-blue-100"
                     : "hover:bg-gray-50 text-gray-700 border border-transparent"
-                }`}
+                  }`}
               >
                 ทั้งหมด
               </button>
@@ -266,11 +283,10 @@ export default function BedDashboard() {
                 <button
                   key={name}
                   onClick={() => { setSelectedWard(name); setIsModalOpen(false); }}
-                  className={`w-full text-left px-4 py-3 rounded-xl text-[14px] transition-all ${
-                    selectedWard === name
+                  className={`w-full text-left px-4 py-3 rounded-xl text-[14px] transition-all ${selectedWard === name
                       ? "bg-blue-50 text-blue-700 font-semibold border border-blue-100"
                       : "hover:bg-gray-50 text-gray-700 border border-transparent"
-                  }`}
+                    }`}
                 >
                   {name}
                 </button>
