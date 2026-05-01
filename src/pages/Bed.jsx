@@ -179,7 +179,6 @@ export default function BedDashboard() {
         <div className="flex flex-wrap justify-between items-center glass p-5 rounded-2xl soft-shadow border border-white/40">
           <div>
             <h1 className="text-2xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
-              <FontAwesomeIcon icon={faBed} className="text-blue-500" />
               Bed Summary Dashboard
             </h1>
             <p className="text-gray-400 text-sm mt-1">ภาพรวมเตียงผู้ป่วยใน</p>
