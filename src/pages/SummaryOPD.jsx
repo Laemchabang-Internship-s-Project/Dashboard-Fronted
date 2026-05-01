@@ -121,7 +121,12 @@ const DepartmentBlock = ({ title, stats, theme }) => {
 
 export default function OPDDashboard() {
   const [isLoading, setIsLoading] = useState(true);
-  const [currentTime, setCurrentTime] = useState("");
+  const [currentTime, setCurrentTime] = useState(() =>
+  new Date().toLocaleString('th-TH', {
+    year: 'numeric', month: 'long', day: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  })
+);
   const [status, setStatus] = useState({ text: "Connecting...", color: "bg-gray-200 text-gray-800" });
 
   // Filter States
