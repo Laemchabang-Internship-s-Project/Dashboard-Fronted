@@ -58,29 +58,66 @@ export default function BedDashboard() {
       const response = await apiGetInternal("/api/beds/summary");
       if (response?.data) {
         const data = response.data;
-        const FIXED_WARD = "ผู้ป่วยอายุรกรรมหญิง";
-        const FIXED_TOTAL = 30;
-        const newByWard = { ...data.by_ward };
 
-        if (newByWard[FIXED_WARD]) {
-          const w = newByWard[FIXED_WARD];
-          newByWard[FIXED_WARD] = {
-            ...w,
-            total: FIXED_TOTAL,
-            available: Math.max(0, FIXED_TOTAL - w.occupied),
-          };
-        }
+        // กำหนดค่ายอดเตียงแบบ Fixed ตามที่คุณระบุ
+        const FIXED_WARDS = {
+          "ผู้ป่วยอายุรกรรมหญิง": 30,
+          "ผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4": 12,
+          "ER Observ": 5,
+          "ODS ward": 1,
+          "หน่วยไตเทียม": 1,
+          "มินิธัญญารักษ์": 1,
+          "หอผู้ป่วยวิกฤตทารกแรกเกิด": 1,
+          "หลังคลอด": 16,
+          "ผู้ป่วยศัลยชาย": 22,
+          "ผู้ป่วยศัลยหญิง": 20,
+          "ผู้ป่วยอายุรกรรมชาย": 30,
+          "ผู้ป่วยเด็ก": 20,
+          "หอผู้ป่วย ICU": 14
+        };
 
+        const newByWard = {};
+
+        // วนลูปกรองและจัดการข้อมูลทีละ Ward
+        Object.keys(data.by_ward).forEach(wardName => {
+          const nameCheck = String(wardName).trim().toLowerCase();
+
+          // ข้าม (ไม่นับรวม) ข้อมูลที่เป็น null, ว่าง, 'null', 'none' หรือ 'other'
+          if (!wardName || nameCheck === "other" || nameCheck === "null" || nameCheck === "none") {
+            return;
+          }
+
+          const w = { ...data.by_ward[wardName] };
+
+          // ถ้ารายชื่ออยู่ใน FIXED_WARDS ให้ทับยอด total ตามที่ฟิกซ์ไว้
+          // ถ้าไม่มี (เช่น ห้องคลอด, ER Observ) จะใช้ยอดตามจริงที่ได้จาก API
+          if (FIXED_WARDS[wardName] !== undefined) {
+            w.total = FIXED_WARDS[wardName];
+          }
+
+          // ไม่เอายอด other มาคิดในระดับวอร์ด
+          w.other = 0;
+
+          // คำนวณ available ใหม่ (total ลบ occupied) เผื่อค่า total ถูกเปลี่ยน
+          w.available = Math.max(0, (w.total || 0) - (w.occupied || 0));
+
+          newByWard[wardName] = w;
+        });
+
+        // สรุปยอดรวมทั้งหมดใหม่โดยไม่นำ other มารวม
         const totals = Object.values(newByWard).reduce(
           (acc, w) => {
             acc.total += w.total || 0;
             acc.available += w.available || 0;
             acc.occupied += w.occupied || 0;
-            acc.other += w.other || 0;
+            acc.other = 0; // ไม่นับรวม other
             return acc;
           },
           { total: 0, available: 0, occupied: 0, other: 0 }
         );
+
+        // ฟิกซ์ยอดรวมเตียงทั้งหมดในโรงพยาบาลไว้ที่ 150 เสมอ
+        totals.total = 150;
 
         setBedData({ ...data, ...totals, by_ward: newByWard });
         setStatus({ text: "LIVE", type: "success" });
@@ -100,9 +137,18 @@ export default function BedDashboard() {
   }, []);
 
   const wardEntries = Object.entries(bedData.by_ward || {});
-  const filteredWards = selectedWard === "all"
+  const filteredWards = (selectedWard === "all"
     ? wardEntries
-    : wardEntries.filter(([name]) => name === selectedWard);
+    : wardEntries.filter(([name]) => name === selectedWard))
+    .sort((a, b) => {
+      const rateA = a[1].total > 0 ? (a[1].occupied / a[1].total) * 100 : 0;
+      const rateB = b[1].total > 0 ? (b[1].occupied / b[1].total) * 100 : 0;
+
+      if (rateB !== rateA) {
+        return rateB - rateA; // เรียงตามอัตราครองเตียง มากไปน้อย
+      }
+      return b[1].total - a[1].total; // ถ้าอัตราครองเตียงเท่ากัน เรียงตามจำนวนเตียงทั้งหมด
+    });
 
   const occupancyRate = bedData.total > 0
     ? Math.round((bedData.occupied / bedData.total) * 100)
@@ -113,10 +159,9 @@ export default function BedDashboard() {
     error: "bg-red-50 text-red-700 border border-red-200",
     neutral: "bg-gray-100 text-gray-600 border border-gray-200",
   };
-  // 1. เพิ่ม state
+
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // 2. เพิ่ม handler
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await fetchBedData();
@@ -179,7 +224,7 @@ export default function BedDashboard() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1">
                 <span className="text-[12px] text-gray-400">เตียงทั้งหมด</span>
-                <AnimatedStat value={150} className="text-[30px] font-semibold leading-none text-blue-600" />
+                <AnimatedStat value={bedData.total} className="text-[30px] font-semibold leading-none text-blue-600" />
                 <span className="text-[11px] text-gray-300">Total beds</span>
               </div>
 
@@ -188,18 +233,9 @@ export default function BedDashboard() {
                 <AnimatedStat value={bedData.occupied} className="text-[30px] font-semibold leading-none text-rose-500" />
                 <span className="text-[11px] text-gray-300">Occupied</span>
                 <div className="h-1 bg-gray-100 rounded-full overflow-hidden mt-1">
-                  <div className="h-1 bg-rose-400 rounded-full transition-all duration-700" style={{ width: `${Math.round((bedData.occupied / bedData.total) * 100)}%` }} />
+                  <div className="h-1 bg-rose-400 rounded-full transition-all duration-700" style={{ width: `${Math.round((bedData.occupied / bedData.total) * 100) || 0}%` }} />
                 </div>
               </div>
-
-              {/* <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1">
-                <span className="text-[12px] text-gray-400">เตียงว่าง</span>
-                <AnimatedStat value={bedData.available} className="text-[30px] font-semibold leading-none text-emerald-500" />
-                <span className="text-[11px] text-gray-300">Available</span>
-                <div className="h-1 bg-gray-100 rounded-full overflow-hidden mt-1">
-                  <div className="h-1 bg-emerald-400 rounded-full transition-all duration-700" style={{ width: `${Math.round((bedData.available / bedData.total) * 100)}%` }} />
-                </div>
-              </div> */}
 
               <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1">
                 <span className="text-[12px] text-gray-400">อัตราครองเตียง</span>
@@ -236,13 +272,19 @@ export default function BedDashboard() {
                             <p className="text-[17px] font-semibold text-blue-700 leading-none">{stats.total}</p>
                             <p className="text-[10px] text-blue-400 mt-1">ทั้งหมด</p>
                           </div>
-                          <div className="bg-rose-50 rounded-xl px-2 py-2 text-center">
+
+                          <div className="bg-emerald-50 rounded-xl px-2 py-2 text-center">
+                            <p className="text-[17px] font-semibold text-emerald-600 leading-none">{stats.occupied}</p>
+                            <p className="text-[10px] text-emerald-400 mt-1">ใช้งาน</p>
+                          </div>
+                          <div className="bg-gray-100 rounded-xl px-2 py-2 text-center">
+                            <p className="text-[17px] font-semibold text-gray-600 leading-none">{stats.available}</p>
+                            <p className="text-[10px] text-gray-400 mt-1">คงเหลือ</p>
+                          </div>
+
+                          <div className="bg-rose-50 rounded-xl px-2 py-2 text-center col-start-2">
                             <p className={`text-[17px] font-semibold leading-none `}>{wardRate}%</p>
                             <p className="text-[10px] text-rose-300 mt-1">อัตราครองเตียง</p>
-                          </div>
-                          <div className="bg-emerald-50 rounded-xl px-2 py-2 text-center">
-                            <p className="text-[17px] font-semibold text-emerald-600 leading-none">{stats.available}</p>
-                            <p className="text-[10px] text-emerald-400 mt-1">คงเหลือ</p>
                           </div>
                         </div>
                         <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
