@@ -36,7 +36,7 @@ const AnimatedStat = ({ value, suffix = "", className = "" }) => {
   return <span className={className}>{display}{suffix}</span>;
 };
 
-export default function BedDashboard() {
+export default function IPD() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState("");
   const [status, setStatus] = useState({ text: "Connecting...", type: "neutral" });
@@ -137,17 +137,36 @@ export default function BedDashboard() {
   }, []);
 
   const wardEntries = Object.entries(bedData.by_ward || {});
+
+  const WARD_ORDER = [
+    "ห้องคลอด",
+    "หอผู้ป่วยวิกฤตทารกแรกเกิด",
+    "หลังคลอด",
+    "ผู้ป่วยเด็ก",
+    "ผู้ป่วยศัลยชาย",
+    "ผู้ป่วยศัลยหญิง",
+    "ผู้ป่วยอายุรกรรมชาย",
+    "ผู้ป่วยอายุรกรรมหญิง",
+    "ผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4",
+    "มินิธัญญารักษ์",
+    "หน่วยไตเทียม",
+    "ER Observ",
+    "หอผู้ป่วย ICU",
+    "ODS ward"
+  ];
+
   const filteredWards = (selectedWard === "all"
     ? wardEntries
     : wardEntries.filter(([name]) => name === selectedWard))
     .sort((a, b) => {
-      const rateA = a[1].total > 0 ? (a[1].occupied / a[1].total) * 100 : 0;
-      const rateB = b[1].total > 0 ? (b[1].occupied / b[1].total) * 100 : 0;
+      const indexA = WARD_ORDER.indexOf(a[0]);
+      const indexB = WARD_ORDER.indexOf(b[0]);
 
-      if (rateB !== rateA) {
-        return rateB - rateA; // เรียงตามอัตราครองเตียง มากไปน้อย
-      }
-      return b[1].total - a[1].total; // ถ้าอัตราครองเตียงเท่ากัน เรียงตามจำนวนเตียงทั้งหมด
+      // ถ้าไม่มีใน list ให้ไปท้าย
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+
+      return indexA - indexB;
     });
 
   const occupancyRate = bedData.total > 0
@@ -170,7 +189,7 @@ export default function BedDashboard() {
 
   return (
     <div className="p-3 md:p-6 min-h-screen" style={{ fontFamily: "'Sarabun', sans-serif", background: 'linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)' }}>
-      <Helmet><title>Bed Summary - LCBH</title></Helmet>
+      <Helmet><title>IPD Real-Time - LCBH</title></Helmet>
       <DashboardStyles />
 
       <div className="max-w-[1600px] mx-auto space-y-5 pb-20">
@@ -179,7 +198,7 @@ export default function BedDashboard() {
         <div className="flex flex-wrap justify-between items-center glass p-5 rounded-2xl soft-shadow border border-white/40">
           <div>
             <h1 className="text-2xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
-              Bed Summary Dashboard
+              IPD Real-Time
             </h1>
             <p className="text-gray-400 text-sm mt-1">ภาพรวมเตียงผู้ป่วยใน</p>
           </div>

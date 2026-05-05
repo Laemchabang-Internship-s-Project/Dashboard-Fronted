@@ -11,7 +11,7 @@ import Graph from './pages/Graph';
 import DentalGraph from './pages/DentalGraph';
 import DepressionGraph from './pages/DepressionGraph';
 import DeathGraph from './pages/DeathGraph';
-import BedDashboard from './pages/Bed';
+import IPD from './pages/IPD';
 import NotFound from './pages/NotFound';
 import { authLogin, authVerify } from './services/api';
 
@@ -191,9 +191,9 @@ function App() {
         <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : 
         <PasswordPrompt onAuthenticate={handleAuthenticate} />} />
 
-        <Route path="/beds" element={
+        <Route path="/ipd" element={
           <ProtectedRoute isAuthenticated={isAuthenticated} onAuthenticate={handleAuthenticate}>
-            <BedDashboard />
+            <IPD />
           </ProtectedRoute>
         } />
 
