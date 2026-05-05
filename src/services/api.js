@@ -25,6 +25,20 @@ const getAuthHeaders = () => {
 // ─── Generic Fetch Helper ─────────────────────────────────────────────────────
 const apiFetch = async (path, options = {}) => {
   const res = await fetch(`${API_URL}${path}`, options);
+
+  // 401 = token หมดอายุ → ล้าง session แล้ว reload
+  if (res.status === 401) {
+    sessionStorage.removeItem('dashboard_token');
+    window.location.href = '/';
+    return null;
+  }
+
+  // 404 = ไม่มีข้อมูล/endpoint → return null เงียบๆ (ไม่ redirect, ไม่ throw)
+  if (res.status === 404) {
+    console.warn(`[API] 404 Not Found: ${path}`);
+    return null;
+  }
+
   if (!res.ok) {
     const err = new Error(`API ${res.status}`);
     err.status = res.status;
