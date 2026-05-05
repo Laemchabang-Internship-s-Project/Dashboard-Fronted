@@ -202,3 +202,10 @@ nav a.active svg {
   filter: saturate(1.2);
 }
 
+.sidebar-google-font {
+  font-family: "Google Sans", "Sarabun", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+  font-variation-settings: "GRAD" 0;
+}

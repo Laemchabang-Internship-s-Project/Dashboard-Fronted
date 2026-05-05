@@ -37,7 +37,7 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
     <>
       {/* ======= Desktop Sidebar (md ขึ้นไป) ======= */}
       <aside
-        className={`hidden md:flex fixed top-0 left-0 h-screen bg-[#0f172a] text-slate-300 shadow-2xl transition-all duration-200 z-50 flex-col overflow-hidden font-['Sarabun'] ${isOpen ? 'w-64' : 'w-16'}`}
+        className={`hidden md:flex fixed top-0 left-0 h-screen bg-[#0f172a] text-slate-300 shadow-2xl transition-all duration-200 z-50 flex-col overflow-hidden sidebar-google-font ${isOpen ? 'w-64' : 'w-16'}`}
       >
         <div className="relative flex items-center h-16 px-4.5 border-b border-slate-800/50 mb-2">
           <div className="cursor-pointer hover:text-white transition-colors duration-200" onClick={() => setIsOpen(!isOpen)}>
@@ -83,7 +83,7 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
               <div className="w-5 flex justify-center items-center shrink-0">
                 <FontAwesomeIcon icon={faArrowRightFromBracket} className="text-base group-hover:text-red-400" />
               </div>
-              <span className={`ml-3 text-sm transition-all duration-200 whitespace-nowrap font-['Sarabun'] ${isOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
+              <span className={`ml-3 text-sm transition-all duration-200 whitespace-nowrap sidebar-google-font ${isOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
                 ออกจากระบบ
               </span>
             </button>
@@ -96,7 +96,7 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
               <div className="w-5 flex justify-center items-center shrink-0">
                 <FontAwesomeIcon icon={faArrowRightToBracket} className="text-base group-hover:text-blue-400" />
               </div>
-              <span className={`ml-3 text-sm transition-all duration-200 whitespace-nowrap font-['Sarabun'] ${isOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
+              <span className={`ml-3 text-sm transition-all duration-200 whitespace-nowrap sidebar-google-font ${isOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
                 เข้าสู่ระบบ
               </span>
             </NavLink>
@@ -107,7 +107,7 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
       {/* ======= Mobile Bottom Nav (< md) ======= */}
       {/* แก้ไขส่วนนี้: เปลี่ยน flex, ซ่อน scrollbar, เว้นระยะด้วย gap-2 */}
       {/* ======= Mobile Bottom Nav (< md) ======= */}
-      <nav className={`md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f172a] border-t border-slate-800 flex items-center h-16 px-4 safe-area-bottom font-['Sarabun'] ${isAuthenticated
+      <nav className={`md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f172a] border-t border-slate-800 flex items-center h-16 px-4 safe-area-bottom sidebar-google-font ${isAuthenticated
           ? "overflow-x-auto gap-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           : "justify-between"
         }`}>
@@ -127,7 +127,7 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
             {({ isActive }) => (
               <>
                 <FontAwesomeIcon icon={item.icon} className={`text-xl ${isActive ? 'text-blue-400' : ''}`} />
-                <span className="text-[10px] font-medium">{item.name}</span>
+                <span className="text-[10px] font-medium sidebar-google-font">{item.name}</span>
               </>
             )}
           </NavLink>
