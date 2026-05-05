@@ -22,12 +22,12 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
   const menuItems = [
     { path: '/dashboard', name: 'Overview', icon: faChartPie, public: true },
     { path: '/opd', name: 'OPD Real-time', icon: faNotesMedical, public: false },
+    { path: '/ipd', name: 'IPD Real-time', icon: faBed, public: false },
     { path: '/gas', name: 'Gas & Oil', icon: faGasPump, public: false },
     { path: '/graph', name: 'Doctor Ops', icon: faChartLine, public: false },
     { path: '/dental', name: 'Dental', icon: faTooth, public: false },
     { path: '/depression', name: 'Depression', icon: faBrain, public: false },
-    { path: '/death', name: 'Death', icon: faSkullCrossbones, public: false },
-    { path: '/beds', name: 'Beds', icon: faBed, public: false }
+    { path: '/death', name: 'Death', icon: faSkullCrossbones, public: false }
   ];
 
   // กรองเมนู: ถ้าล็อกอินแล้วเห็นทั้งหมด ถ้ายังให้เห็นแค่ public
