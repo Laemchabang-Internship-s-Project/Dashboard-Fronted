@@ -94,7 +94,7 @@ export const SectionHeader = ({ title, icon, colorClass, subtitle }) => (
  */
 export const DashboardHeader = ({ title, subtitle, icon, iconColorClass = "text-blue-500", statusColorClass = "bg-green-100 text-green-700", statusText = "LIVE", isRefreshing, onRefresh, children }) => (
   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 glass p-4 md:p-5 rounded-2xl soft-shadow border border-white/40">
-    
+
     {/* ส่วนที่ 1: หัวข้อ */}
     <div className={`flex-shrink-0 ${children ? 'md:w-[320px]' : 'flex-1'}`}>
       <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
@@ -119,7 +119,9 @@ export const DashboardHeader = ({ title, subtitle, icon, iconColorClass = "text-
         </button>
       )}
       <div className="flex flex-col items-end whitespace-nowrap"><LiveClock /></div>
-      <span className={`text-[10px] px-3 py-1 rounded-full uppercase font-bold tracking-wider ${statusColorClass} animate-pulse`}>{statusText}</span>
+      <span className={`inline-flex items-center justify-center text-center whitespace-nowrap min-w-[80px] text-[10px] px-3 py-1 rounded-full uppercase font-bold tracking-wider ${statusColorClass} animate-pulse`}>
+        {statusText}
+      </span>
     </div>
   </div>
 );
@@ -148,9 +150,9 @@ export const GraphTabs = ({ tabs, activeTab, onTabChange }) => (
     {tabs.map(tab => {
       const isActive = activeTab === tab.key;
       return (
-        <button 
-          key={tab.key} 
-          onClick={() => onTabChange(tab.key)} 
+        <button
+          key={tab.key}
+          onClick={() => onTabChange(tab.key)}
           className={`flex-1 lg:flex-none whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 
             ${isActive ? 'bg-white shadow-sm ' + (tab.activeColor || 'text-blue-600') : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'}`}
         >

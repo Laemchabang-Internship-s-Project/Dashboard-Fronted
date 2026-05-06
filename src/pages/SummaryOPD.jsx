@@ -122,11 +122,11 @@ const DepartmentBlock = ({ title, stats, theme }) => {
 export default function OPDDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(() =>
-  new Date().toLocaleString('th-TH', {
-    year: 'numeric', month: 'long', day: 'numeric',
-    hour: '2-digit', minute: '2-digit', second: '2-digit'
-  })
-);
+    new Date().toLocaleString('th-TH', {
+      year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    })
+  );
   const [status, setStatus] = useState({ text: "Connecting...", color: "bg-gray-200 text-gray-800" });
 
   // Filter States
@@ -136,7 +136,9 @@ export default function OPDDashboard() {
   const [secondaryState, setSecondaryState] = useState("normal"); // normal, filtered, hidden
 
   const [systemStats, setSystemStats] = useState({
-    opdTotal: "-", walkIn: "-", telemed: "-", drugDelivery: "-"
+    opdTotal: "-", walkIn: "-", telemed: "-", drugDelivery: "-",
+    drugDeliveryPostal: "-", 
+    drugDeliveryRider: "-",
   });
 
   const initialDepState = {
@@ -170,7 +172,9 @@ export default function OPDDashboard() {
       opdTotal: s?.total_OPD ?? "-",
       walkIn: s?.total_walkin ?? "-",
       telemed: s?.hos_telemed ?? "-",
-      drugDelivery: s?.total_drug_delivery ?? "-"
+      drugDelivery: s?.total_drug_delivery ?? "-",
+      drugDeliveryPostal: s?.total_drug_delivery_postal ?? "-",
+      drugDeliveryRider: s?.total_drug_delivery_rider ?? "-"
     });
 
     const mapDept = (code) => {
@@ -211,7 +215,9 @@ export default function OPDDashboard() {
         opdTotal: data.opd_total || 0,
         walkIn: data.walk_in || 0,
         telemed: data.telemed || 0,
-        drugDelivery: data.drug_delivery || 0
+        drugDelivery: data.drug_delivery || 0,
+        drugDeliveryPostal: data.total_drug_delivery_postal || 0,
+        drugDeliveryRider: data.total_drug_delivery_rider || 0
       });
       // เคลียร์ยอดแผนกให้เป็น "-" เพราะข้อมูลย้อนหลังปกติจะไม่มีส่วนนี้
       setStats010(initialDepState);
@@ -404,12 +410,46 @@ export default function OPDDashboard() {
                   </div>
                   <AnimatedStat value={systemStats.telemed} Component="h2" className="text-[2rem] md:text-[2.8rem] font-bold mt-auto" />
                 </div>
+                {/* Card 4: บริการส่งยา */}
+                {/* Card 4: บริการส่งยา */}
                 <div className="stat-card bg-gradient-to-br from-[#F5F3FF] to-[#EDE9FE] text-[#1e293b] p-4 md:p-5 rounded-[14px] shadow-sm flex flex-col justify-between min-h-[120px] md:min-h-[140px]">
-                  <div className="flex items-center gap-3 opacity-90 mb-2">
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" clipRule="evenodd" d="M11.7905 5.25H8.4594L7.7094 7.5H3V18H6.02658C6.20854 19.2721 7.30257 20.25 8.625 20.25C9.94743 20.25 11.0415 19.2721 11.2234 18H13.5266C13.7085 19.2721 14.8026 20.25 16.125 20.25C17.4474 20.25 18.5415 19.2721 18.7234 18H21V13.0986L18.5563 11.4695L16.1746 7.5H12.5405L11.7905 5.25ZM10.9594 7.5L10.7094 6.75H9.54053L9.29053 7.5H10.9594ZM18.4974 16.5H19.5V13.9014L17.7729 12.75H12V9H4.5V16.5H6.25261C6.67391 15.6131 7.57785 15 8.625 15C9.67215 15 10.5761 15.6131 10.9974 16.5H13.7526C14.1739 15.6131 15.0779 15 16.125 15C17.1721 15 18.0761 15.6131 18.4974 16.5ZM15.3254 9L16.6754 11.25H13.5V9H15.3254ZM9.75 17.625C9.75 18.2463 9.24632 18.75 8.625 18.75C8.00368 18.75 7.5 18.2463 7.5 17.625C7.5 17.0037 8.00368 16.5 8.625 16.5C9.24632 16.5 9.75 17.0037 9.75 17.625ZM17.25 17.625C17.25 18.2463 16.7463 18.75 16.125 18.75C15.5037 18.75 15 18.2463 15 17.625C15 17.0037 15.5037 16.5 16.125 16.5C16.7463 16.5 17.25 17.0037 17.25 17.625ZM7.5 9.75V11.25H6V12.75H7.5V14.25H9V12.75H10.5V11.25H9V9.75H7.5Z"></path></svg>
-                    <span className="text-xs md:text-sm font-medium">บริการส่งยา (Drug Delivery)</span>
+                  {/* Header */}
+                  <div className="flex items-center gap-3 opacity-90 mb-1">
+                    <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                      <path fillRule="evenodd" clipRule="evenodd" d="M11.7905 5.25H8.4594L7.7094 7.5H3V18H6.02658C6.20854 19.2721 7.30257 20.25 8.625 20.25C9.94743 20.25 11.0415 19.2721 11.2234 18H13.5266C13.7085 19.2721 14.8026 20.25 16.125 20.25C17.4474 20.25 18.5415 19.2721 18.7234 18H21V13.0986L18.5563 11.4695L16.1746 7.5H12.5405L11.7905 5.25ZM10.9594 7.5L10.7094 6.75H9.54053L9.29053 7.5H10.9594ZM18.4974 16.5H19.5V13.9014L17.7729 12.75H12V9H4.5V16.5H6.25261C6.67391 15.6131 7.57785 15 8.625 15C9.67215 15 10.5761 15.6131 10.9974 16.5H13.7526C14.1739 15.6131 15.0779 15 16.125 15C17.1721 15 18.0761 15.6131 18.4974 16.5ZM15.3254 9L16.6754 11.25H13.5V9H15.3254ZM9.75 17.625C9.75 18.2463 9.24632 18.75 8.625 18.75C8.00368 18.75 7.5 18.2463 7.5 17.625C7.5 17.0037 8.00368 16.5 8.625 16.5C9.24632 16.5 9.75 17.0037 9.75 17.625ZM17.25 17.625C17.25 18.2463 16.7463 18.75 16.125 18.75C15.5037 18.75 15 18.2463 15 17.625C15 17.0037 15.5037 16.5 16.125 16.5C16.7463 16.5 17.25 17.0037 17.25 17.625ZM7.5 9.75V11.25H6V12.75H7.5V14.25H9V12.75H10.5V11.25H9V9.75H7.5Z"></path>
+                    </svg>
+                    <span className="text-xs md:text-sm font-medium truncate">บริการส่งยา</span>
                   </div>
-                  <AnimatedStat value={systemStats.drugDelivery} Component="h2" className="text-[2rem] md:text-[2.8rem] font-bold mt-auto" />
+
+                  {/* Body: ตัวเลขรวม และ แยกประเภท */}
+                  <div className="flex items-end justify-between mt-auto gap-2">
+                    
+                    <AnimatedStat value={systemStats.drugDelivery} Component="h2" className="text-[2rem] md:text-[2.8rem] font-bold" />
+                    {/* ฝั่งขวา: ยอดแยก (ปรับขยายขนาดกล่อง ตัวหนังสือ และตัวเลข) */}
+                    <div className="flex flex-col gap-1.5 w-[45%] max-w-[150px] pb-1">
+
+                      {/* กล่อง ปณ. */}
+                      <div className="flex items-center justify-between bg-white/60 px-2 py-1 rounded-md shadow-sm border border-white/50">
+                        <span className="text-[11px] md:text-xs text-gray-700 font-medium tracking-wide">📦 ปณ.</span>
+                        <AnimatedStat
+                          value={systemStats.drugDeliveryPostal !== undefined ? systemStats.drugDeliveryPostal : "-"}
+                          Component="span"
+                          className="text-sm md:text-base font-bold text-indigo-700"
+                        />
+                      </div>
+
+                      {/* กล่อง Rider */}
+                      <div className="flex items-center justify-between bg-white/60 px-2 py-1 rounded-md shadow-sm border border-white/50">
+                        <span className="text-[11px] md:text-xs text-gray-700 font-medium tracking-wide">🛵 Rider</span>
+                        <AnimatedStat
+                          value={systemStats.drugDeliveryRider !== undefined ? systemStats.drugDeliveryRider : "-"}
+                          Component="span"
+                          className="text-sm md:text-base font-bold text-indigo-700"
+                        />
+                      </div>
+
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
