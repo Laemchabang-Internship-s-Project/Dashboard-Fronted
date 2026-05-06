@@ -137,7 +137,7 @@ export default function OPDDashboard() {
 
   const [systemStats, setSystemStats] = useState({
     opdTotal: "-", walkIn: "-", telemed: "-", drugDelivery: "-",
-    drugDeliveryPostal: "-", 
+    drugDeliveryPostal: "-",
     drugDeliveryRider: "-",
   });
 
@@ -148,6 +148,10 @@ export default function OPDDashboard() {
   };
   const [stats010, setStats010] = useState(initialDepState);
   const [stats062, setStats062] = useState(initialDepState);
+  const [stats109, setStats109] = useState(initialDepState);
+  const [stats110, setStats110] = useState(initialDepState);
+  const [stats111, setStats111] = useState(initialDepState);
+  const [stats108, setStats108] = useState(initialDepState);
 
   // --- Clock Effect ---
   useEffect(() => {
@@ -200,6 +204,10 @@ export default function OPDDashboard() {
 
     setStats010(mapDept("010"));
     setStats062(mapDept("062"));
+    setStats109(mapDept("109"));
+    setStats110(mapDept("110"));
+    setStats111(mapDept("111"));
+    setStats108(mapDept("108"));
   };
 
   // --- Filter Logic ---
@@ -222,6 +230,10 @@ export default function OPDDashboard() {
       // เคลียร์ยอดแผนกให้เป็น "-" เพราะข้อมูลย้อนหลังปกติจะไม่มีส่วนนี้
       setStats010(initialDepState);
       setStats062(initialDepState);
+      setStats109(initialDepState);
+      setStats110(initialDepState);
+      setStats111(initialDepState);
+      setStats108(initialDepState);
     } catch (err) { console.error("Filter error:", err); }
   };
 
@@ -411,7 +423,6 @@ export default function OPDDashboard() {
                   <AnimatedStat value={systemStats.telemed} Component="h2" className="text-[2rem] md:text-[2.8rem] font-bold mt-auto" />
                 </div>
                 {/* Card 4: บริการส่งยา */}
-                {/* Card 4: บริการส่งยา */}
                 <div className="stat-card bg-gradient-to-br from-[#F5F3FF] to-[#EDE9FE] text-[#1e293b] p-4 md:p-5 rounded-[14px] shadow-sm flex flex-col justify-between min-h-[120px] md:min-h-[140px]">
                   {/* Header */}
                   <div className="flex items-center gap-3 opacity-90 mb-1">
@@ -423,7 +434,7 @@ export default function OPDDashboard() {
 
                   {/* Body: ตัวเลขรวม และ แยกประเภท */}
                   <div className="flex items-end justify-between mt-auto gap-2">
-                    
+
                     <AnimatedStat value={systemStats.drugDelivery} Component="h2" className="text-[2rem] md:text-[2.8rem] font-bold" />
                     {/* ฝั่งขวา: ยอดแยก (ปรับขยายขนาดกล่อง ตัวหนังสือ และตัวเลข) */}
                     <div className="flex flex-col gap-1.5 w-[45%] max-w-[150px] pb-1">
@@ -454,37 +465,69 @@ export default function OPDDashboard() {
               </div>
             </div>
 
-            {/* Department Blocks - จะกลายเป็นสีเทาเมื่อ Filter */}
-            <div className={secondaryClasses}>
-              {/* grid-cols-1: ให้เรียงลงมาเป็นแถวเดียวเสมอตามโครงสร้างเดิม */}
-              <div className="grid grid-cols-1 gap-4 md:gap-6 w-full mx-auto">
+        {/* Department Blocks - จะกลายเป็นสีเทาเมื่อ Filter */}
+        <div className={secondaryClasses}>
+          {/* grid-cols-1: ให้เรียงลงมาเป็นแถวเดียวเสมอตามโครงสร้างเดิม */}
+          <div className="grid grid-cols-1 gap-4 md:gap-6 w-full mx-auto">
 
-                {/* w-full: เต็มจอในมือถือ 
+            {/* w-full: เต็มจอในมือถือ 
        md:max-w-[1000px]: ขนาดกว้างสูงสุดเมื่ออยู่บนจอคอม (ปรับตัวเลขตามความเหมาะสมของ 250 เดิมคุณ)
        mx-auto: จัดกึ่งกลาง
     */}
-                <div className="w-full md:max-w-[1000px] mx-auto px-2 md:px-0">
-                  <DepartmentBlock
-                    title="ผู้รับบริการ OPD (ทั่วไป)"
-                    stats={stats010}
-                    theme="blue"
-                  />
+            <div className="w-full md:max-w-[1000px] mx-auto px-2 md:px-0">
+              <DepartmentBlock
+                title="ผู้รับบริการ OPD (ทั่วไป)"
+                stats={stats010}
+                theme="blue"
+              />
 
-                  {/* เพิ่ม margin top เล็กน้อยเพื่อให้ห่างกันในมือถือ */}
-                  <div className="mt-4 md:mt-6">
-                    <DepartmentBlock
-                      title="ผู้รับบริการ OPD (นัด)"
-                      stats={stats062}
-                      theme="emerald"
-                    />
-                  </div>
-                </div>
+              {/* เพิ่ม margin top เล็กน้อยเพื่อให้ห่างกันในมือถือ */}
+              <div className="mt-4 md:mt-6">
+                <DepartmentBlock
+                  title="ผู้รับบริการ OPD (นัด)"
+                  stats={stats062}
+                  theme="emerald"
+                />
+              </div>
 
+              <div className="mt-4 md:mt-6">
+                <DepartmentBlock
+                  title="ผู้รับบริการสูติกรรม"
+                  stats={stats109}
+                  theme="blue"
+                />
+              </div>
+
+              <div className="mt-4 md:mt-6">
+                <DepartmentBlock
+                  title="ผู้รับบริการศัลยกรรม"
+                  stats={stats110}
+                  theme="emerald"
+                />
+              </div>
+
+              <div className="mt-4 md:mt-6">
+                <DepartmentBlock
+                  title="ผู้รับบริการอายุรกรรม"
+                  stats={stats111}
+                  theme="blue"
+                />
+              </div>
+
+              <div className="mt-4 md:mt-6">
+                <DepartmentBlock
+                  title="ผู้รับบริการกุมารเวชกรรม"
+                  stats={stats108}
+                  theme="emerald"
+                />
               </div>
             </div>
-          </>
+
+          </div>
+        </div>
+      </>
         )}
-      </div>
     </div>
+    </div >
   );
 }

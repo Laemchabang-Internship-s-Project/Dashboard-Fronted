@@ -5,6 +5,7 @@ import {
   faMoneyBillWave, faChartBar, faCalendarDays, faCalendar,
   faUsers, faIdCard, faCheckCircle, faTriangleExclamation,
   faCoins, faCreditCard, faFileInvoiceDollar, faLayerGroup,
+  faHeartPulse,
 } from '@fortawesome/free-solid-svg-icons';
 import { apiGetInternal } from '../services/api';
 import { HeaderSkeleton, ChartSkeleton } from '../components/Skeleton';
@@ -235,8 +236,8 @@ export default function FinanceGraph() {
     if (!monthlyRows.length) return null;
     return {
       labels: monthlyRows.map(r => {
-        const [y, m] = (r.month_year || '').split('-');
-        return `${MONTH_NAMES[parseInt(m, 10) - 1]} ${y?.slice(2)}`;
+        if (!r.year || !r.month) return '';
+        return `${MONTH_NAMES[parseInt(r.month, 10) - 1]} ${r.year.slice(2)}`;
       }),
       datasets: [
         {
@@ -265,6 +266,13 @@ export default function FinanceGraph() {
           legendColor: '#3b82f6',
           borderRadius: 4,
         },
+        {
+          label: 'ค้างชำระ',
+          data: monthlyRows.map(r => Math.round(r.unpaid_amount ?? 0)),
+          backgroundColor: 'rgba(245,158,11,0.7)',
+          legendColor: '#f59e0b',
+          borderRadius: 4,
+        },
       ],
     };
   }, [monthlyRows]);
@@ -272,7 +280,11 @@ export default function FinanceGraph() {
   const dailyChartData = useMemo(() => {
     if (!dailyRows.length) return null;
     return {
-      labels: dailyRows.map(r => r.date || r.day || ''),
+      labels: dailyRows.map(r => {
+        if (!r.date) return '';
+        const [y, m, d] = r.date.split('-');
+        return `${parseInt(d, 10)} ${MONTH_NAMES[parseInt(m, 10) - 1]}`;
+      }),
       datasets: [
         {
           label: 'ยอดรวม',
@@ -290,6 +302,20 @@ export default function FinanceGraph() {
           data: dailyRows.map(r => Math.round(r.cash_amount ?? 0)),
           backgroundColor: 'rgba(16,185,129,0.6)',
           legendColor: '#10b981',
+          borderRadius: 3,
+        },
+        {
+          label: 'เบิกสิทธิ์',
+          data: dailyRows.map(r => Math.round(r.debtor_amount ?? 0)),
+          backgroundColor: 'rgba(59,130,246,0.6)',
+          legendColor: '#3b82f6',
+          borderRadius: 3,
+        },
+        {
+          label: 'ค้างชำระ',
+          data: dailyRows.map(r => Math.round(r.unpaid_amount ?? 0)),
+          backgroundColor: 'rgba(245,158,11,0.6)',
+          legendColor: '#f59e0b',
           borderRadius: 3,
         },
       ],
@@ -416,8 +442,8 @@ export default function FinanceGraph() {
                   {activeTab === 'by_pttype' && (
                     <SectionHeader
                       title="รายรับแยกตามสิทธิ์ (ทั้งหมด)"
-                      icon={faIdCard}
-                      colorClass="bg-emerald-500"
+                      icon={faHeartPulse}
+                      colorClass="bg-emerald-100"
                       subtitle={`${sortedRows.length} สิทธิ์ เรียงจากรายรับมากไปน้อย`}
                     />
                   )}
