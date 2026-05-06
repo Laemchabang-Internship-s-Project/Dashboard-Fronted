@@ -53,6 +53,16 @@ export default function IPD() {
     return () => clearInterval(interval);
   }, []);
 
+  const ALLOWED_WARDS = [
+    "หลังคลอด",
+    "ผู้ป่วยเด็ก",
+    "ผู้ป่วยศัลยชาย",
+    "ผู้ป่วยศัลยหญิง",
+    "ผู้ป่วยอายุรกรรมชาย",
+    "ผู้ป่วยอายุรกรรมหญิง",
+    "ผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4"
+  ];
+
   const fetchBedData = async () => {
     try {
       const response = await apiGetInternal("/api/beds/summary");
@@ -76,6 +86,8 @@ export default function IPD() {
           "หอผู้ป่วย ICU": 14
         };
 
+
+
         const newByWard = {};
 
         // วนลูปกรองและจัดการข้อมูลทีละ Ward
@@ -95,29 +107,27 @@ export default function IPD() {
             w.total = FIXED_WARDS[wardName];
           }
 
-          // ไม่เอายอด other มาคิดในระดับวอร์ด
           w.other = 0;
 
-          // คำนวณ available ใหม่ (total ลบ occupied) เผื่อค่า total ถูกเปลี่ยน
-          w.available = Math.max(0, (w.total || 0) - (w.occupied || 0));
+          w.occupied = Math.min(w.occupied || 0, w.total || 0);
+          w.available = Math.max(0, (w.total || 0) - w.occupied);
 
           newByWard[wardName] = w;
         });
 
         // สรุปยอดรวมทั้งหมดใหม่โดยไม่นำ other มารวม
-        const totals = Object.values(newByWard).reduce(
-          (acc, w) => {
-            acc.total += w.total || 0;
-            acc.available += w.available || 0;
+        const totals = Object.entries(newByWard).reduce(
+          (acc, [wardName, w]) => {
+            if (!ALLOWED_WARDS.includes(wardName)) return acc;
+
             acc.occupied += w.occupied || 0;
-            acc.other = 0; // ไม่นับรวม other
             return acc;
           },
-          { total: 0, available: 0, occupied: 0, other: 0 }
+          { occupied: 0 }
         );
 
-        // ฟิกซ์ยอดรวมเตียงทั้งหมดในโรงพยาบาลไว้ที่ 150 เสมอ
         totals.total = 150;
+        totals.available = Math.max(0, 150 - totals.occupied);
 
         setBedData({ ...data, ...totals, by_ward: newByWard });
         setStatus({ text: "LIVE", type: "success" });
@@ -350,18 +360,20 @@ export default function IPD() {
               >
                 ทั้งหมด
               </button>
-              {wardEntries.map(([name]) => (
-                <button
-                  key={name}
-                  onClick={() => { setSelectedWard(name); setIsModalOpen(false); }}
-                  className={`w-full text-left px-4 py-3 rounded-xl text-[14px] transition-all ${selectedWard === name
-                    ? "bg-blue-50 text-blue-700 font-semibold border border-blue-100"
-                    : "hover:bg-gray-50 text-gray-700 border border-transparent"
-                    }`}
-                >
-                  {name}
-                </button>
-              ))}
+              {WARD_ORDER
+                .filter(name => bedData.by_ward[name])
+                .map(name => (
+                  <button
+                    key={name}
+                    onClick={() => { setSelectedWard(name); setIsModalOpen(false); }}
+                    className={`w-full text-left px-4 py-3 rounded-xl text-[14px] transition-all ${selectedWard === name
+                      ? "bg-blue-50 text-blue-700 font-semibold border border-blue-100"
+                      : "hover:bg-gray-50 text-gray-700 border border-transparent"
+                      }`}
+                  >
+                    {name}
+                  </button>
+                ))}
             </div>
           </div>
         </div>
