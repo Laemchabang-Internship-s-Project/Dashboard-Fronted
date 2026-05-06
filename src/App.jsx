@@ -11,6 +11,7 @@ import Graph from './pages/Graph';
 import DentalGraph from './pages/DentalGraph';
 import DepressionGraph from './pages/DepressionGraph';
 import DeathGraph from './pages/DeathGraph';
+import FinanceGraph from './pages/FinanceGraph';
 import IPD from './pages/IPD';
 import NotFound from './pages/NotFound';
 import { authLogin, authVerify } from './services/api';
@@ -226,6 +227,11 @@ function App() {
         <Route path="/death" element={
           <ProtectedRoute isAuthenticated={isAuthenticated} onAuthenticate={handleAuthenticate}>
             <DeathGraph />
+          </ProtectedRoute>
+        } />
+        <Route path="/finance" element={
+          <ProtectedRoute isAuthenticated={isAuthenticated} onAuthenticate={handleAuthenticate}>
+            <FinanceGraph />
           </ProtectedRoute>
         } />
       </Route>

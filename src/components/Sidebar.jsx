@@ -8,12 +8,13 @@ import {
   faChartPie,
   faChevronLeft,
   faArrowRightFromBracket,
-  faArrowRightToBracket, // เพิ่ม Icon สำหรับ Login
+  faArrowRightToBracket,
   faChartLine,
   faBed,
   faTooth,
   faBrain,
-  faSkullCrossbones
+  faSkullCrossbones,
+  faMoneyBillWave
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function Sidebar({ isAuthenticated, onLogout }) {
@@ -27,7 +28,8 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
     { path: '/graph', name: 'Doctor Ops', icon: faChartLine, public: false },
     { path: '/dental', name: 'Dental', icon: faTooth, public: false },
     { path: '/depression', name: 'Depression', icon: faBrain, public: false },
-    { path: '/death', name: 'Death', icon: faSkullCrossbones, public: false }
+    { path: '/death', name: 'Death', icon: faSkullCrossbones, public: false },
+    { path: '/finance', name: 'Finance', icon: faMoneyBillWave, public: false }
   ];
 
   // กรองเมนู: ถ้าล็อกอินแล้วเห็นทั้งหมด ถ้ายังให้เห็นแค่ public
