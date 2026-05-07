@@ -181,42 +181,65 @@ export default function OPDDashboard() {
       drugDeliveryRider: s?.total_drug_delivery_rider ?? "-"
     });
 
-    const mapDept = (code) => {
-      const room = rooms.find(r => r.room_code === code) || {};
-      const depSum = data.summary?.[`dep_${code}`] || {};
-      const deptSpecific = data.opd_clinics?.[`stats_${code}`] || {};
+    const mapDept = (mainCode, extraCodes = []) => {
+      const allCodes = [mainCode, ...extraCodes];
+
+      const roomTotals = allCodes.reduce((sum, code) => {
+        const room = rooms.find(r => r.room_code === code);
+        return sum + (room?.total || 0);
+      }, 0);
+
+      const mergedStats = allCodes.reduce((acc, code) => {
+        const deptSpecific = data.opd_clinics?.[`stats_${code}`] || {};
+
+        acc.waiting_screening += deptSpecific.waiting_screening || 0;
+        acc.waiting_exam += deptSpecific.waiting_exam || 0;
+        acc.waiting_lab += deptSpecific.waiting_lab || 0;
+        acc.waiting_xray += deptSpecific.waiting_xray || 0;
+        acc.waiting_drug += deptSpecific.waiting_drug || 0;
+        acc.waiting_payment += deptSpecific.waiting_payment || 0;
+        acc.finished += deptSpecific.finished || 0;
+
+        return acc;
+      }, {
+        waiting_screening: 0,
+        waiting_exam: 0,
+        waiting_lab: 0,
+        waiting_xray: 0,
+        waiting_drug: 0,
+        waiting_payment: 0,
+        finished: 0
+      });
+
+      const depSum = data.summary?.[`dep_${mainCode}`] || {};
 
       return {
-        // จำนวนผู้รับบริการทั้งหมด
-        total: room.total || 0,
+        total: roomTotals,
 
-        // waiting จริง
-        waitingScreening: deptSpecific.waiting_screening || 0,
-        waitingExamCount: deptSpecific.waiting_exam || 0,
-        waitingLab: deptSpecific.waiting_lab || 0,
-        waitingXray: deptSpecific.waiting_xray || 0,
+        waitingScreening: mergedStats.waiting_screening,
+        waitingExamCount: mergedStats.waiting_exam,
+        waitingLab: mergedStats.waiting_lab,
+        waitingXray: mergedStats.waiting_xray,
 
-        // average wait
         avgTotal: formatWaitTime(depSum.avg_total),
         avgWaitScreening: formatWaitTime(depSum.avg_wait_screening),
         avgWaitExam: formatWaitTime(depSum.avg_wait_exam),
         avgWaitDrug: formatWaitTime(depSum.avg_wait_drug),
 
-        // waiting จริง
-        waitingDrug: deptSpecific.waiting_drug || 0,
-        waitingPayment: deptSpecific.waiting_payment || 0,
+        waitingDrug: mergedStats.waiting_drug,
+        waitingPayment: mergedStats.waiting_payment,
 
-        // กลับบ้านจริง
-        goHome: deptSpecific.finished || 0
+        goHome: mergedStats.finished
       };
     };
 
     setStats010(mapDept("010"));
     setStats062(mapDept("062"));
-    setStats109(mapDept("109"));
-    setStats110(mapDept("110"));
-    setStats111(mapDept("111"));
-    setStats108(mapDept("108"));
+
+    setStats108(mapDept("108", ["069"]));
+    setStats109(mapDept("109", ["047"]));
+    setStats110(mapDept("110", ["059"]));
+    setStats111(mapDept("111", ["076"]));
   };
 
   // --- Filter Logic ---
