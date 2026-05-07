@@ -532,7 +532,7 @@ export default function FinanceGraph() {
                       <SectionHeader
                         title={`รายรับรายวัน เดือน ${filterMonth}`}
                         icon={faCalendarDays}
-                        colorClass="bg-violet-500"
+                        colorClass="bg-violet-100"
                       />
                       <select
                         value={filterMonth}

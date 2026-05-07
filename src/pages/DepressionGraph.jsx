@@ -152,7 +152,7 @@ export default function DepressionGraph() {
     return {
       series: [assessedCount, unassessedCount],
       options: {
-        chart: { type: 'donut' },
+        chart: { type: 'donut', toolbar: { show: false } },
         labels: ['ประเมินแล้ว', 'ยังไม่ได้ประเมิน'],
         colors: ['#10b981', '#f43f5e'],
         plotOptions: {
@@ -161,7 +161,7 @@ export default function DepressionGraph() {
               size: '70%',
               labels: {
                 show: true,
-                name: { show: true, fontFamily: "'Sarabun', sans-serif", fontSize: '14px', color: '#64748b' },
+                name: { show: true, fontFamily: "'Sarabun', sans-serif", fontSize: '14px', color: '#ffffffff' },
                 value: { show: true, fontFamily: "'Sarabun', sans-serif", fontSize: '24px', fontWeight: 'bold', formatter: (val) => Number(val).toLocaleString() },
                 total: { show: true, showAlways: true, label: 'ลงทะเบียนทั้งหมด', fontFamily: "'Sarabun', sans-serif", fontSize: '12px', formatter: () => totalCount.toLocaleString() }
               }
@@ -170,7 +170,7 @@ export default function DepressionGraph() {
         },
         dataLabels: {
           enabled: true,
-          style: { colors: ['#1e293b'], fontFamily: "'Sarabun', sans-serif", fontSize: '12px' },
+          style: { colors: ['#ffffffff'], fontFamily: "'Sarabun', sans-serif", fontSize: '12px' },
           dropShadow: { enabled: false }
         },
         stroke: { width: 0 },

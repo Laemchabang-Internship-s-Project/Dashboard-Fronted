@@ -169,12 +169,12 @@ export default function DeathGraph() {
     return {
       series: sortedPlaces.map(p => p.count),
       options: {
-        chart: { type: 'pie', toolbar: { show: true } },
+        chart: { type: 'pie', toolbar: { show: false } },
         labels: sortedPlaces.map(p => p.place_name),
         colors: MATERIAL_COLORS,
         dataLabels: {
           enabled: true,
-          style: { colors: ['#1e293b'], fontFamily: "'Sarabun', sans-serif", fontSize: '12px' },
+          style: { colors: ['#ffffffff'], fontFamily: "'Sarabun', sans-serif", fontSize: '12px' },
           dropShadow: { enabled: false }
         },
         //legend ตรง pie charts
@@ -188,7 +188,7 @@ export default function DeathGraph() {
           }
         },
         tooltip: {
-          theme: "light",
+          theme: "dark",
           y: { formatter: (val) => `${val.toLocaleString()} ราย` },
           style: { fontFamily: "'Sarabun', sans-serif" }
         },
