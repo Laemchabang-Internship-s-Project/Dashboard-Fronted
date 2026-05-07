@@ -21,7 +21,13 @@ import {
   GraphTabs
 } from '../components/DashboardUI';
 
-// ─── helper ───────────────────────────────────────────────────────────────────
+// ─── Dynamic year list (ปีปัจจุบัน → START_YEAR, ไม่ต้อง update เองทุกปี) ────
+const START_YEAR = 2022;
+const YEAR_OPTIONS = Array.from(
+  { length: new Date().getFullYear() - START_YEAR + 1 },
+  (_, i) => String(new Date().getFullYear() - i)
+);
+
 function extractOptions(dailyRows = []) {
   const months = [...new Set(dailyRows.map(d => d.date.substring(0, 7)))].sort((a, b) => b.localeCompare(a));
   const years = [...new Set(dailyRows.map(d => d.date.substring(0, 4)))].sort((a, b) => b.localeCompare(a));
@@ -320,10 +326,9 @@ export default function DepressionGraph() {
                           className="bg-amber-50 border border-amber-100 text-amber-700 text-sm font-bold rounded-lg px-3 py-1.5 outline-none hover:border-amber-300 transition-all"
                         >
                           <option value="all">ทั้งหมด (All time)</option>
-                          <option value="2026">2026</option>
-                          <option value="2025">2025</option>
-                          <option value="2024">2024</option>
-                          <option value="2023">2023</option>
+                          {YEAR_OPTIONS.map(y => (
+                            <option key={y} value={y}>{y}</option>
+                          ))}
                         </select>
                         <select
                           value={statusMonth}

@@ -28,6 +28,13 @@ const CAUSE_NAME_MAP = {
   'โรคระบบย่อยอาหาร รวมโรคในช่องปาก': ['โรคระบบย่อยอาหาร', 'รวมโรคในช่องปาก']
 };
 
+// ─── Dynamic year list (ปีปัจจุบัน → START_YEAR, ไม่ต้อง update เองทุกปี) ────
+const START_YEAR = 2022;
+const YEAR_OPTIONS = Array.from(
+  { length: new Date().getFullYear() - START_YEAR + 1 },
+  (_, i) => String(new Date().getFullYear() - i)
+);
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function DeathGraph() {
   const [activeGraph, setActiveGraph] = useState('causes');
@@ -289,11 +296,9 @@ export default function DeathGraph() {
                           className="bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-lg px-3 py-1.5 outline-none hover:border-red-300 transition-all"
                         >
                           <option value="all">ทั้งหมด (All time)</option>
-                          <option value="2026">2026</option>
-                          <option value="2025">2025</option>
-                          <option value="2024">2024</option>
-                          <option value="2023">2023</option>
-                          <option value="2022">2022</option>
+                          {YEAR_OPTIONS.map(y => (
+                            <option key={y} value={y}>{y}</option>
+                          ))}
                         </select>
                         <select
                           value={causesMonth}

@@ -20,7 +20,11 @@ import {
 const fmt = (n) => (n ?? 0).toLocaleString('th-TH');
 const fmtBaht = (n) => `฿${Math.round(n ?? 0).toLocaleString('th-TH')}`;
 
-const YEAR_OPTIONS = ['2026', '2025', '2024', '2023', '2022'];
+const START_YEAR = 2022;
+const YEAR_OPTIONS = Array.from(
+  { length: new Date().getFullYear() - START_YEAR + 1 },
+  (_, i) => String(new Date().getFullYear() - i)
+);
 const CURRENT_YEAR = new Date().getFullYear().toString();
 const CURRENT_MONTH = `${CURRENT_YEAR}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
 
@@ -107,6 +111,7 @@ export default function FinanceGraph() {
   const [activeTab, setActiveTab] = useState('by_pttype');
   const [kpi, setKpi] = useState(null);
   const [byPttypeRows, setByPttypeRows] = useState([]);
+  const [yearlyRows, setYearlyRows] = useState([]);
   const [monthlyRows, setMonthlyRows] = useState([]);
   const [dailyRows, setDailyRows] = useState([]);
 
@@ -135,14 +140,16 @@ export default function FinanceGraph() {
   const loadAll = useCallback(async () => {
     setLoading(true);
     setError('');
-    const [kpiData, ptypeData, monthlyData, dailyData] = await Promise.all([
+    const [kpiData, ptypeData, yearlyData, monthlyData, dailyData] = await Promise.all([
       fetchView('kpi'),
       fetchView('by_pttype'),
+      fetchView('yearly'),
       fetchView('monthly', { year: filterYear }),
       fetchView('daily', { month: filterMonth }),
     ]);
     if (kpiData) setKpi(kpiData);
     if (ptypeData) setByPttypeRows(ptypeData);
+    if (yearlyData) setYearlyRows(yearlyData);
     if (monthlyData) setMonthlyRows(monthlyData);
     if (dailyData) setDailyRows(dailyData);
     setLoading(false);
@@ -277,6 +284,48 @@ export default function FinanceGraph() {
     };
   }, [monthlyRows]);
 
+  const yearlyChartData = useMemo(() => {
+    if (!yearlyRows.length) return null;
+    return {
+      labels: yearlyRows.map(r => r.year || ''),
+      datasets: [
+        {
+          label: 'ยอดรวม',
+          data: yearlyRows.map(r => Math.round(r.total_amount ?? 0)),
+          borderColor: '#d946ef',
+          backgroundColor: 'rgba(217,70,239,0.15)',
+          borderWidth: 3,
+          tension: 0.4,
+          pointRadius: 4,
+          pointHoverRadius: 7,
+          fill: true,
+          type: 'line',
+        },
+        {
+          label: 'เงินสด',
+          data: yearlyRows.map(r => Math.round(r.cash_amount ?? 0)),
+          backgroundColor: 'rgba(16,185,129,0.7)',
+          legendColor: '#10b981',
+          borderRadius: 4,
+        },
+        {
+          label: 'เบิกสิทธิ์',
+          data: yearlyRows.map(r => Math.round(r.debtor_amount ?? 0)),
+          backgroundColor: 'rgba(59,130,246,0.7)',
+          legendColor: '#3b82f6',
+          borderRadius: 4,
+        },
+        {
+          label: 'ค้างชำระ',
+          data: yearlyRows.map(r => Math.round(r.unpaid_amount ?? 0)),
+          backgroundColor: 'rgba(245,158,11,0.7)',
+          legendColor: '#f59e0b',
+          borderRadius: 4,
+        },
+      ],
+    };
+  }, [yearlyRows]);
+
   const dailyChartData = useMemo(() => {
     if (!dailyRows.length) return null;
     return {
@@ -336,6 +385,7 @@ export default function FinanceGraph() {
   const TABS = [
     { key: 'by_pttype', label: 'แยกสิทธิ์', icon: faIdCard, activeColor: 'text-emerald-600' },
     { key: 'by_group', label: 'กลุ่มสิทธิ์', icon: faLayerGroup, activeColor: 'text-sky-600' },
+    { key: 'yearly', label: 'รายปี', icon: faChartBar, activeColor: 'text-fuchsia-600' },
     { key: 'monthly', label: 'รายเดือน', icon: faCalendar, activeColor: 'text-indigo-600' },
     { key: 'daily', label: 'รายวัน', icon: faCalendarDays, activeColor: 'text-violet-600' },
   ];
@@ -365,7 +415,6 @@ export default function FinanceGraph() {
               icon={faMoneyBillWave}
               iconColorClass="text-emerald-500"
               statusColorClass="bg-emerald-100 text-emerald-700"
-              statusText="CACHED"
               isRefreshing={isRefreshing}
               onRefresh={handleRefresh}
             />
@@ -441,7 +490,7 @@ export default function FinanceGraph() {
                 <div className="flex flex-wrap items-center gap-3">
                   {activeTab === 'by_pttype' && (
                     <SectionHeader
-                      title="รายรับแยกตามสิทธิ์ (ทั้งหมด)"
+                      title="รายรับแยกตามสิทธิ์ (365 วันล่าสุด)"
                       icon={faHeartPulse}
                       colorClass="bg-emerald-100"
                       subtitle={`${sortedRows.length} สิทธิ์ เรียงจากรายรับมากไปน้อย`}
@@ -449,10 +498,17 @@ export default function FinanceGraph() {
                   )}
                   {activeTab === 'by_group' && (
                     <SectionHeader
-                      title="แยกตามกลุ่มสิทธิ์"
+                      title="แยกตามกลุ่มสิทธิ์ (365 วันล่าสุด)"
                       icon={faLayerGroup}
                       colorClass="bg-sky-500"
                       subtitle="บัตรทอง / ข้าราชการ / ประกันสังคม / ชำระเอง / อื่นๆ"
+                    />
+                  )}
+                  {activeTab === 'yearly' && (
+                    <SectionHeader
+                      title="รายรับรายปี"
+                      icon={faChartBar}
+                      colorClass="bg-fuchsia-500"
                     />
                   )}
                   {activeTab === 'monthly' && (
@@ -484,8 +540,9 @@ export default function FinanceGraph() {
                         className="bg-violet-50 border border-violet-200 text-violet-700 text-sm font-bold rounded-lg px-3 py-1.5 outline-none hover:border-violet-400 transition-all"
                       >
                         {YEAR_OPTIONS.flatMap(y =>
-                          MONTH_NAMES.map((m, i) => {
-                            const val = `${y}-${String(i + 1).padStart(2, '0')}`;
+                          [...MONTH_NAMES].reverse().map((m, i) => {
+                            const monthNum = MONTH_NAMES.length - i; // 12 → 1
+                            const val = `${y}-${String(monthNum).padStart(2, '0')}`;
                             return <option key={val} value={val}>{m} {y}</option>;
                           })
                         )}
@@ -593,6 +650,33 @@ export default function FinanceGraph() {
                   </div>
                 )}
 
+                {activeTab === 'yearly' && (
+                  <div className="h-[450px] w-full">
+                    {yearlyChartData ? (
+                      <ChartCanvas
+                        id="finYearlyChart"
+                        type="bar"
+                        data={yearlyChartData}
+                        options={{
+                          maintainAspectRatio: false,
+                          scales: {
+                            y: {
+                              ticks: {
+                                callback: v => v >= 1_000_000
+                                  ? `${(v / 1_000_000).toFixed(1)}M`
+                                  : v >= 1_000 ? `${(v / 1_000).toFixed(0)}K` : v,
+                              },
+                            },
+                          },
+                          plugins: { datalabels: { display: false } },
+                        }}
+                      />
+                    ) : (
+                      <EmptyState />
+                    )}
+                  </div>
+                )}
+
                 {activeTab === 'daily' && (
                   <div className="h-[450px] w-full">
                     {dailyChartData ? (
@@ -626,7 +710,7 @@ export default function FinanceGraph() {
             {activeTab === 'by_pttype' && byPttypeRows.length > 0 && (
               <GlassCard className="animate-fade-up overflow-x-auto">
                 <SectionHeader
-                  title="ตารางสรุปแยกสิทธิ์"
+                  title="ตารางสรุปแยกสิทธิ์ (365 วันล่าสุด)"
                   icon={faFileInvoiceDollar}
                   colorClass="bg-teal-500"
                 />
