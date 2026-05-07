@@ -187,18 +187,27 @@ export default function OPDDashboard() {
       const deptSpecific = data.opd_clinics?.[`stats_${code}`] || {};
 
       return {
+        // จำนวนผู้รับบริการทั้งหมด
         total: room.total || 0,
-        waitingScreening: room.waiting || 0,
+
+        // waiting จริง
+        waitingScreening: deptSpecific.waiting_screening || 0,
         waitingExamCount: deptSpecific.waiting_exam || 0,
         waitingLab: deptSpecific.waiting_lab || 0,
         waitingXray: deptSpecific.waiting_xray || 0,
+
+        // average wait
         avgTotal: formatWaitTime(depSum.avg_total),
         avgWaitScreening: formatWaitTime(depSum.avg_wait_screening),
         avgWaitExam: formatWaitTime(depSum.avg_wait_exam),
         avgWaitDrug: formatWaitTime(depSum.avg_wait_drug),
-        waitingDrug: depSum.waiting_drug || 0,
-        waitingPayment: depSum.waiting_payment || 0,
-        goHome: room.finished || 0
+
+        // waiting จริง
+        waitingDrug: deptSpecific.waiting_drug || 0,
+        waitingPayment: deptSpecific.waiting_payment || 0,
+
+        // กลับบ้านจริง
+        goHome: deptSpecific.finished || 0
       };
     };
 
@@ -465,69 +474,69 @@ export default function OPDDashboard() {
               </div>
             </div>
 
-        {/* Department Blocks - จะกลายเป็นสีเทาเมื่อ Filter */}
-        <div className={secondaryClasses}>
-          {/* grid-cols-1: ให้เรียงลงมาเป็นแถวเดียวเสมอตามโครงสร้างเดิม */}
-          <div className="grid grid-cols-1 gap-4 md:gap-6 w-full mx-auto">
+            {/* Department Blocks - จะกลายเป็นสีเทาเมื่อ Filter */}
+            <div className={secondaryClasses}>
+              {/* grid-cols-1: ให้เรียงลงมาเป็นแถวเดียวเสมอตามโครงสร้างเดิม */}
+              <div className="grid grid-cols-1 gap-4 md:gap-6 w-full mx-auto">
 
-            {/* w-full: เต็มจอในมือถือ 
+                {/* w-full: เต็มจอในมือถือ 
        md:max-w-[1000px]: ขนาดกว้างสูงสุดเมื่ออยู่บนจอคอม (ปรับตัวเลขตามความเหมาะสมของ 250 เดิมคุณ)
        mx-auto: จัดกึ่งกลาง
     */}
-            <div className="w-full md:max-w-[1000px] mx-auto px-2 md:px-0">
-              <DepartmentBlock
-                title="ผู้รับบริการ OPD (ทั่วไป)"
-                stats={stats010}
-                theme="blue"
-              />
+                <div className="w-full md:max-w-[1000px] mx-auto px-2 md:px-0">
+                  <DepartmentBlock
+                    title="ผู้รับบริการ OPD (ทั่วไป)"
+                    stats={stats010}
+                    theme="blue"
+                  />
 
-              {/* เพิ่ม margin top เล็กน้อยเพื่อให้ห่างกันในมือถือ */}
-              <div className="mt-4 md:mt-6">
-                <DepartmentBlock
-                  title="ผู้รับบริการ OPD (นัด)"
-                  stats={stats062}
-                  theme="emerald"
-                />
-              </div>
+                  {/* เพิ่ม margin top เล็กน้อยเพื่อให้ห่างกันในมือถือ */}
+                  <div className="mt-4 md:mt-6">
+                    <DepartmentBlock
+                      title="ผู้รับบริการ OPD (นัด)"
+                      stats={stats062}
+                      theme="emerald"
+                    />
+                  </div>
 
-              <div className="mt-4 md:mt-6">
-                <DepartmentBlock
-                  title="ผู้รับบริการสูติกรรม"
-                  stats={stats109}
-                  theme="blue"
-                />
-              </div>
+                  <div className="mt-4 md:mt-6">
+                    <DepartmentBlock
+                      title="ผู้รับบริการสูติกรรม"
+                      stats={stats109}
+                      theme="blue"
+                    />
+                  </div>
 
-              <div className="mt-4 md:mt-6">
-                <DepartmentBlock
-                  title="ผู้รับบริการศัลยกรรม"
-                  stats={stats110}
-                  theme="emerald"
-                />
-              </div>
+                  <div className="mt-4 md:mt-6">
+                    <DepartmentBlock
+                      title="ผู้รับบริการศัลยกรรม"
+                      stats={stats110}
+                      theme="emerald"
+                    />
+                  </div>
 
-              <div className="mt-4 md:mt-6">
-                <DepartmentBlock
-                  title="ผู้รับบริการอายุรกรรม"
-                  stats={stats111}
-                  theme="blue"
-                />
-              </div>
+                  <div className="mt-4 md:mt-6">
+                    <DepartmentBlock
+                      title="ผู้รับบริการอายุรกรรม"
+                      stats={stats111}
+                      theme="blue"
+                    />
+                  </div>
 
-              <div className="mt-4 md:mt-6">
-                <DepartmentBlock
-                  title="ผู้รับบริการกุมารเวชกรรม"
-                  stats={stats108}
-                  theme="emerald"
-                />
+                  <div className="mt-4 md:mt-6">
+                    <DepartmentBlock
+                      title="ผู้รับบริการกุมารเวชกรรม"
+                      stats={stats108}
+                      theme="emerald"
+                    />
+                  </div>
+                </div>
+
               </div>
             </div>
-
-          </div>
-        </div>
-      </>
+          </>
         )}
-    </div>
+      </div>
     </div >
   );
 }
