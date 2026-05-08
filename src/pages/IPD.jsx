@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Helmet } from "react-helmet-async";
-import { apiGetInternal } from "../services/api";
+import { apiGetInternal, apiPostInternal } from "../services/api";
 import { DashboardHeader } from '../components/DashboardUI';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBed, faRotateRight } from '@fortawesome/free-solid-svg-icons';
+import { faBed, faRotateRight, faGear } from '@fortawesome/free-solid-svg-icons';
 import { DashboardStyles } from '../components/DashboardUI';
 import { LiveClock } from '../components/ChartComponents';
 
@@ -44,6 +44,18 @@ export default function IPD() {
   const [selectedWard, setSelectedWard] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [fixedWards, setFixedWards] = useState({});
+  const [allowedWards, setAllowedWards] = useState([
+    "หลังคลอด", "ผู้ป่วยเด็ก", "ผู้ป่วยศัลยชาย", "ผู้ป่วยศัลยหญิง",
+    "ผู้ป่วยอายุรกรรมชาย", "ผู้ป่วยอายุรกรรมหญิง", "ผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4", "มินิธัญญารักษ์"
+  ]);
+  const [totalBeds, setTotalBeds] = useState(150);
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [editConfig, setEditConfig] = useState({});
+  const [editAllowedWards, setEditAllowedWards] = useState([]);
+  const [editTotalBeds, setEditTotalBeds] = useState(150);
+  const [isSavingConfig, setIsSavingConfig] = useState(false);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date().toLocaleString('th-TH', {
@@ -53,41 +65,33 @@ export default function IPD() {
     return () => clearInterval(interval);
   }, []);
 
-  const ALLOWED_WARDS = [
-    "หลังคลอด",
-    "ผู้ป่วยเด็ก",
-    "ผู้ป่วยศัลยชาย",
-    "ผู้ป่วยศัลยหญิง",
-    "ผู้ป่วยอายุรกรรมชาย",
-    "ผู้ป่วยอายุรกรรมหญิง",
-    "ผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4",
-    "มินิธัญญารักษ์"
-  ];
-
   const fetchBedData = async () => {
     try {
-      const response = await apiGetInternal("/api/beds/summary");
-      if (response?.data) {
-        const data = response.data;
+      const [summaryRes, configRes] = await Promise.all([
+        apiGetInternal("/api/beds/summary"),
+        apiGetInternal("/api/beds/config")
+      ]);
 
-        // กำหนดค่ายอดเตียงแบบ Fixed ตามที่คุณระบุ
-        const FIXED_WARDS = {
-          "ผู้ป่วยอายุรกรรมหญิง": 30,
-          "ผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4": 12,
-          "ER Observ": 8,
-          "ODS ward": 6,
-          "หน่วยไตเทียม": 8,
-          "มินิธัญญารักษ์": 6,
-          "หอผู้ป่วยวิกฤตทารกแรกเกิด": 3,
-          "หลังคลอด": 6,
-          "ผู้ป่วยศัลยชาย": 22,
-          "ผู้ป่วยศัลยหญิง": 20,
-          "ผู้ป่วยอายุรกรรมชาย": 30,
-          "ผู้ป่วยเด็ก": 20,
-          "หอผู้ป่วย ICU": 10
-        };
+      let currentConfig = {};
+      let currentAllowed = allowedWards;
+      let currentTotalBeds = 150;
 
+      if (configRes?.data) {
+        if (configRes.data.wards) {
+          currentConfig = configRes.data.wards;
+          currentAllowed = configRes.data.allowed_wards || allowedWards;
+          currentTotalBeds = configRes.data.total_beds || 150;
+        } else {
+          currentConfig = configRes.data;
+        }
+        setFixedWards(currentConfig);
+        setAllowedWards(currentAllowed);
+        setTotalBeds(currentTotalBeds);
+      }
 
+      if (summaryRes?.data) {
+        const data = summaryRes.data;
+        const FIXED_WARDS = currentConfig;
 
         const newByWard = {};
 
@@ -119,7 +123,7 @@ export default function IPD() {
         // สรุปยอดรวมทั้งหมดใหม่โดยไม่นำ other มารวม
         const totals = Object.entries(newByWard).reduce(
           (acc, [wardName, w]) => {
-            if (!ALLOWED_WARDS.includes(wardName)) return acc;
+            if (!currentAllowed.includes(wardName)) return acc;
 
             acc.occupied += w.occupied || 0;
             return acc;
@@ -127,8 +131,8 @@ export default function IPD() {
           { occupied: 0 }
         );
 
-        totals.total = 150;
-        totals.available = 150 - totals.occupied;
+        totals.total = currentTotalBeds;
+        totals.available = currentTotalBeds - totals.occupied;
 
         setBedData({ ...data, ...totals, by_ward: newByWard });
         setStatus({ text: "LIVE", type: "success" });
@@ -198,6 +202,51 @@ export default function IPD() {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
+  const handleOpenConfig = () => {
+    setEditConfig({ ...fixedWards });
+    setEditAllowedWards([...allowedWards]);
+    setEditTotalBeds(totalBeds);
+    setIsConfigModalOpen(true);
+  };
+
+  const handleConfigChange = (ward, value) => {
+    const num = parseInt(value, 10);
+    setEditConfig(prev => ({
+      ...prev,
+      [ward]: isNaN(num) ? "" : num
+    }));
+  };
+
+  const toggleAllowedWard = (ward) => {
+    setEditAllowedWards(prev => 
+      prev.includes(ward) 
+        ? prev.filter(w => w !== ward) 
+        : [...prev, ward]
+    );
+  };
+
+  const handleSaveConfig = async () => {
+    setIsSavingConfig(true);
+    try {
+      const payload = {};
+      Object.keys(editConfig).forEach(k => {
+        payload[k] = parseInt(editConfig[k], 10) || 0;
+      });
+      await apiPostInternal("/api/beds/config", { 
+        wards: payload,
+        allowed_wards: editAllowedWards,
+        total_beds: parseInt(editTotalBeds, 10) || 150
+      });
+      setIsConfigModalOpen(false);
+      fetchBedData();
+    } catch (error) {
+      console.error("Error saving config:", error);
+      alert("ไม่สามารถบันทึกการตั้งค่าได้");
+    } finally {
+      setIsSavingConfig(false);
+    }
+  };
+
   return (
     <div className="p-3 md:p-6 min-h-screen" style={{ fontFamily: "'Sarabun', sans-serif", background: 'linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)' }}>
       <Helmet><title>IPD Real-Time - LCBH</title></Helmet>
@@ -220,6 +269,14 @@ export default function IPD() {
               className="p-2 bg-white/50 border border-gray-200 text-gray-500 rounded-xl hover:bg-white hover:text-blue-500 hover:border-blue-200 hover:scale-110 active:scale-95 transition-all duration-200 shadow-sm disabled:opacity-50"
             >
               <FontAwesomeIcon icon={faRotateRight} className={isRefreshing ? 'animate-spin' : ''} />
+            </button>
+
+            <button
+              onClick={handleOpenConfig}
+              className="p-2 bg-white/50 border border-gray-200 text-gray-500 rounded-xl hover:bg-white hover:text-blue-500 hover:border-blue-200 hover:scale-110 active:scale-95 transition-all duration-200 shadow-sm"
+              title="ตั้งค่าจำนวนเตียง"
+            >
+              <FontAwesomeIcon icon={faGear} />
             </button>
 
             {/* Ward picker */}
@@ -375,6 +432,99 @@ export default function IPD() {
                     {name}
                   </button>
                 ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Config Modal */}
+      {isConfigModalOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          style={{ fontFamily: "'Sarabun', sans-serif" }}
+        >
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+              <h3 className="text-[16px] font-semibold text-gray-800 flex items-center gap-2">
+                <FontAwesomeIcon icon={faGear} className="text-blue-500" />
+                ตั้งค่าจำนวนเตียงสูงสุด
+              </h3>
+              <button
+                onClick={() => setIsConfigModalOpen(false)}
+                className="text-gray-400 hover:text-red-500 transition-colors focus:outline-none"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="overflow-y-auto p-5 space-y-5 flex-1">
+              {/* ส่วนตั้งค่าเตียงรวม */}
+              <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                <h4 className="text-[14px] font-semibold text-blue-800 mb-3">ยอดรวมเตียงทั้งหมด (Total Beds)</h4>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    min="0"
+                    value={editTotalBeds}
+                    onChange={(e) => setEditTotalBeds(e.target.value)}
+                    className="w-32 px-3 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                  />
+                  <span className="text-sm text-gray-500">เตียง</span>
+                </div>
+              </div>
+
+              {/* ส่วนตั้งค่ารายวอร์ด */}
+              <div>
+                <h4 className="text-[14px] font-semibold text-gray-700 mb-3 border-b pb-2">ตั้งค่าเตียงแยกตามหอผู้ป่วย</h4>
+                <div className="space-y-2">
+                  {Object.keys(editConfig).sort((a, b) => {
+                    const indexA = WARD_ORDER.indexOf(a);
+                    const indexB = WARD_ORDER.indexOf(b);
+                    if (indexA === -1) return 1;
+                    if (indexB === -1) return -1;
+                    return indexA - indexB;
+                  }).map(ward => (
+                    <div key={ward} className="flex flex-wrap items-center justify-between bg-gray-50/50 p-3 rounded-xl border border-gray-100 gap-3">
+                      <div className="flex items-center gap-3 flex-1 min-w-[200px]">
+                        <input 
+                          type="checkbox"
+                          checked={editAllowedWards.includes(ward)}
+                          onChange={() => toggleAllowedWard(ward)}
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
+                          title="นำยอดไปคิดรวมในยอดเตียงทั้งหมด"
+                        />
+                        <span className={`text-sm font-medium ${editAllowedWards.includes(ward) ? 'text-gray-800' : 'text-gray-400 line-through'}`}>{ward}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-gray-400">จำนวน:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editConfig[ward]}
+                          onChange={(e) => handleConfigChange(ward, e.target.value)}
+                          className="w-20 px-2 py-1.5 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+              <button
+                onClick={() => setIsConfigModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-200 bg-gray-100 rounded-xl transition-colors"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleSaveConfig}
+                disabled={isSavingConfig}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {isSavingConfig ? "กำลังบันทึก..." : "บันทึกการตั้งค่า"}
+              </button>
             </div>
           </div>
         </div>

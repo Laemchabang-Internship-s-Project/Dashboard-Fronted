@@ -63,6 +63,15 @@ export const apiGetInternal = async (path) => {
   });
 };
 
+// ─── POST (Internal — API Key + JWT Bearer) ──────────────────────────────────
+export const apiPostInternal = async (path, body) => {
+  return apiFetch(path, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(body),
+  });
+};
+
 // ─── Auth API ─────────────────────────────────────────────────────────────────
 export const authLogin = async (password) => {
   return apiFetch("/api/auth/login", {
