@@ -60,7 +60,8 @@ export default function IPD() {
     "ผู้ป่วยศัลยหญิง",
     "ผู้ป่วยอายุรกรรมชาย",
     "ผู้ป่วยอายุรกรรมหญิง",
-    "ผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4"
+    "ผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4",
+    "มินิธัญญารักษ์"
   ];
 
   const fetchBedData = async () => {
@@ -73,17 +74,17 @@ export default function IPD() {
         const FIXED_WARDS = {
           "ผู้ป่วยอายุรกรรมหญิง": 30,
           "ผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4": 12,
-          "ER Observ": 5,
-          "ODS ward": 1,
-          "หน่วยไตเทียม": 1,
-          "มินิธัญญารักษ์": 1,
-          "หอผู้ป่วยวิกฤตทารกแรกเกิด": 1,
-          "หลังคลอด": 16,
+          "ER Observ": 8,
+          "ODS ward": 6,
+          "หน่วยไตเทียม": 8,
+          "มินิธัญญารักษ์": 6,
+          "หอผู้ป่วยวิกฤตทารกแรกเกิด": 3,
+          "หลังคลอด": 6,
           "ผู้ป่วยศัลยชาย": 22,
           "ผู้ป่วยศัลยหญิง": 20,
           "ผู้ป่วยอายุรกรรมชาย": 30,
           "ผู้ป่วยเด็ก": 20,
-          "หอผู้ป่วย ICU": 14
+          "หอผู้ป่วย ICU": 10
         };
 
 
@@ -109,7 +110,7 @@ export default function IPD() {
 
           w.other = 0;
 
-          w.occupied = Math.min(w.occupied || 0, w.total || 0);
+          w.occupied = w.occupied || 0;
           w.available = Math.max(0, (w.total || 0) - w.occupied);
 
           newByWard[wardName] = w;
@@ -127,7 +128,7 @@ export default function IPD() {
         );
 
         totals.total = 150;
-        totals.available = Math.max(0, 150 - totals.occupied);
+        totals.available = 150 - totals.occupied;
 
         setBedData({ ...data, ...totals, by_ward: newByWard });
         setStatus({ text: "LIVE", type: "success" });
