@@ -47,6 +47,8 @@ export default function Graph() {
   const [statsYear, setStatsYear] = useState(new Date().getFullYear().toString());
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [doctorDrilldownRows, setDoctorDrilldownRows] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [dailyDrilldownRows, setDailyDrilldownRows] = useState([]);
 
   // ui
   const [loading, setLoading] = useState(true);
@@ -62,6 +64,17 @@ export default function Graph() {
       return res.data;
     } catch (err) {
       setError('โหลดข้อมูลไม่สำเร็จ: ' + err.message);
+      return null;
+    }
+  }, []);
+
+  const fetchDailyDrilldown = useCallback(async (dateStr) => {
+    try {
+      const params = new URLSearchParams({ date_str: dateStr });
+      const res = await apiGetInternal(`/api/graph/doctor-operations/daily-drilldown?${params}`);
+      if (!res || res.status !== 'success') throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
+      return res.data;
+    } catch (err) {
       return null;
     }
   }, []);
@@ -107,6 +120,18 @@ export default function Graph() {
     }
   }, [activeGraph, monthlyRows.length, statsYear, fetchView]);
 
+  // ── Reset drilldown state เมื่อเปลี่ยน tab ────────────────────────────────
+  useEffect(() => {
+    if (activeGraph !== 'daily') {
+      setSelectedDate(null);
+      setDailyDrilldownRows([]);
+    }
+    if (activeGraph !== 'doctors') {
+      setSelectedDoctor(null);
+      setDoctorDrilldownRows([]);
+    }
+  }, [activeGraph]);
+
   // ── Drilldown Fetch ────────────────────────────────────────────────────────
   useEffect(() => {
     if (activeGraph === 'doctors' && selectedDoctor) {
@@ -115,6 +140,14 @@ export default function Graph() {
       });
     }
   }, [activeGraph, selectedDoctor, statsYear, fetchView]);
+
+  useEffect(() => {
+    if (activeGraph === 'daily' && selectedDate) {
+      fetchDailyDrilldown(selectedDate).then(data => {
+        if (data) setDailyDrilldownRows(data);
+      });
+    }
+  }, [activeGraph, selectedDate, fetchDailyDrilldown]);
 
   // ── Refresh ────────────────────────────────────────────────────────────────
   const handleRefresh = async () => {
@@ -237,13 +270,21 @@ export default function Graph() {
     }]
   }), [doctorDrilldownRows]);
 
-  // Debugging logs
-  if (['operations', 'doctors', 'departments'].includes(activeGraph)) {
-    console.log(`[Debug] Active Graph: ${activeGraph}`);
-    console.log('[Debug] Operations Rows:', operationsRows);
-    console.log('[Debug] Doctors Rows:', doctorsRows);
-    console.log('[Debug] Departments Rows:', departmentsRows);
-  }
+  const dailyDrilldownData = useMemo(() => {
+    const top10 = dailyDrilldownRows.slice(0, 10);
+    return {
+      labels: top10.map(r => r.name || 'ไม่ระบุ'),
+      datasets: [{
+        label: 'จำนวนครั้ง',
+        data: top10.map(r => r.total_count),
+        backgroundColor: top10.map((_, i) => i === 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(52, 211, 153, 0.5)'),
+        borderColor: top10.map((_, i) => i === 0 ? 'rgb(5, 150, 105)' : 'rgb(16, 185, 129)'),
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    };
+  }, [dailyDrilldownRows]);
+
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -381,13 +422,8 @@ export default function Graph() {
               </div>
 
               {/* Graph Content Area */}
-              <div className="w-full relative flex-1 h-[350px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px]">
-                {activeGraph === 'daily' && (
-                  <ChartCanvas id="dailyChart" type="bar" data={dailyData} hideLegend={true} options={{
-                    maintainAspectRatio: false,
-                    scales: { x: { ticks: { maxTicksLimit: 31 } } }
-                  }} />
-                )}
+              <div className="w-full relative flex-1 flex flex-col h-[400px] md:h-[500px] lg:h-[700px] xl:h-[800px]">
+
                 {activeGraph === 'monthly' && (
                   monthlyRows.length === 0
                     ? <div className="flex items-center justify-center h-full text-gray-400">กำลังโหลด...</div>
@@ -396,23 +432,93 @@ export default function Graph() {
                 {activeGraph === 'yoy' && (
                   <ChartCanvas id="yoyChart" type="line" data={yoyData} hideLegend={false} options={{ maintainAspectRatio: false }} />
                 )}
+                {activeGraph === 'daily' && (
+                  <div className="flex flex-col h-full gap-4">
+                    <div className="flex-1 min-h-[300px]">
+                      {dailyRows.length === 0
+                        ? <div className="flex items-center justify-center h-full text-gray-400">ไม่พบข้อมูล หรือกำลังประมวลผล กรุณารอสักครู่แล้วกด Refresh 🔄</div>
+                        : <ChartCanvas
+                          id="dailyChart"
+                          type="bar"
+                          data={dailyData}
+                          hideLegend={true}
+                          options={{
+                            maintainAspectRatio: false,
+                            scales: { x: { ticks: { maxTicksLimit: 31 } } },
+                            onHover: (event, chartElement) => {
+                              event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                            },
+                            onClick: (event, elements) => {
+                              if (elements.length > 0) {
+                                const index = elements[0].index;
+                                const dateStr = filteredDaily[index].op_date;
+                                setSelectedDate(dateStr);
+                              }
+                            }
+                          }}
+                        />
+                      }
+                    </div>
+                    {selectedDate && (
+                      <div className="border-t-2 border-gray-100 pt-4 relative">
+                        <button
+                          onClick={() => setSelectedDate(null)}
+                          className="absolute top-4 right-2 text-gray-400 hover:text-red-500 text-sm z-10 font-bold bg-white/80 px-2 py-1 rounded"
+                        >
+                          ✕ ปิด
+                        </button>
+                        <h3 className="text-md font-bold text-gray-700 mb-3">
+                          <FontAwesomeIcon icon={faChartBar} className="text-emerald-500 mr-2" />
+                          รายละเอียดหัตถการ วันที่: <span className="text-emerald-600">{selectedDate}</span>
+                          <span className="ml-3 text-sm font-normal text-gray-400">({dailyDrilldownRows.length} รายการ)</span>
+                        </h3>
+                        {dailyDrilldownRows.length === 0
+                          ? <div className="flex items-center justify-center h-[200px] text-gray-400">ไม่พบข้อมูลหัตถการในวันนี้...</div>
+                          : <div className="overflow-y-auto max-h-[350px] rounded-xl border border-gray-100">
+                            <table className="w-full text-sm">
+                              <thead className="sticky top-0 bg-emerald-50 text-emerald-700">
+                                <tr>
+                                  <th className="text-left px-3 py-2 font-bold">#</th>
+                                  <th className="text-left px-3 py-2 font-bold">ชื่อหัตถการ</th>
+                                  <th className="text-right px-3 py-2 font-bold">จำนวน</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {dailyDrilldownRows.map((row, i) => (
+                                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                    <td className="px-3 py-1.5 text-gray-400 text-xs">{i + 1}</td>
+                                    <td className="px-3 py-1.5 text-gray-700">{row.name}</td>
+                                    <td className="px-3 py-1.5 text-right font-bold text-emerald-600">{row.total_count.toLocaleString()}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        }
+                      </div>
+                    )}
+                  </div>
+                )}
                 {activeGraph === 'operations' && (
                   operationsRows.length === 0
                     ? <div className="flex items-center justify-center h-full text-gray-400">ไม่พบข้อมูล หรือกำลังประมวลผล กรุณารอสักครู่แล้วกด Refresh 🔄</div>
-                    : <ChartCanvas id="operationsChart" type="bar" data={operationsData} hideLegend={true} options={{ maintainAspectRatio: false, indexAxis: 'y' }} />
+                    : <div className="flex-1 min-h-[300px]">
+                      <ChartCanvas id="operationsChart" type="bar" data={operationsData} hideLegend={true} options={{ maintainAspectRatio: false, indexAxis: 'y' }} />
+                    </div>
                 )}
                 {activeGraph === 'doctors' && (
                   <div className="flex flex-col h-full gap-4">
                     <div className="flex-1 min-h-[300px]">
                       {doctorsRows.length === 0
                         ? <div className="flex items-center justify-center h-full text-gray-400">ไม่พบข้อมูล หรือกำลังประมวลผล กรุณารอสักครู่แล้วกด Refresh 🔄</div>
-                        : <ChartCanvas 
-                            id="doctorsChart" 
-                            type="bar" 
-                            data={doctorsData} 
-                            hideLegend={true} 
-                            options={{ 
-                              maintainAspectRatio: false, 
+                        : <div className="flex-1 min-h-[350px]">
+                          <ChartCanvas
+                            id="doctorsChart"
+                            type="bar"
+                            data={doctorsData}
+                            hideLegend={true}
+                            options={{
+                              maintainAspectRatio: false,
                               indexAxis: 'y',
                               onHover: (event, chartElement) => {
                                 event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
@@ -424,27 +530,46 @@ export default function Graph() {
                                   setSelectedDoctor(doctorName);
                                 }
                               }
-                            }} 
+                            }}
                           />
+                        </div>
                       }
                     </div>
                     {selectedDoctor && (
-                      <div className="flex-1 min-h-[300px] border-t-2 border-gray-100 pt-4 relative">
-                        <button 
+                      <div className="border-t-2 border-gray-100 pt-4 relative">
+                        <button
                           onClick={() => setSelectedDoctor(null)}
-                          className="absolute top-4 right-2 text-gray-400 hover:text-red-500 text-sm z-10 font-bold bg-white/80 px-2 py-1 rounded"
+                          className="absolute top-4 right-2 text-gray-400 hover:text-red-500 text-sm z-10 font-bold bg-white/80 px-2 py-1 rounded whitespace-nowrap"
                         >
                           ✕ ปิด
                         </button>
-                        <h3 className="text-md font-bold text-gray-600 mb-2">
+                        <h3 className="text-md font-bold text-gray-700 mb-3">
                           <FontAwesomeIcon icon={faChartBar} className="text-blue-500 mr-2" />
-                          Top 10 หัตถการของ: <span className="text-blue-600">{selectedDoctor}</span>
+                          หัตถการของ: <span className="text-blue-600">{selectedDoctor}</span>
+                          <span className="ml-3 text-sm font-normal text-gray-400">({doctorDrilldownRows.length} รายการ)</span>
                         </h3>
-                        {doctorDrilldownRows.length === 0 
+                        {doctorDrilldownRows.length === 0
                           ? <div className="flex items-center justify-center h-[200px] text-gray-400">ไม่พบข้อมูล...</div>
-                          : <div className="h-[250px]">
-                              <ChartCanvas id="drilldownChart" type="bar" data={drilldownData} hideLegend={true} options={{ maintainAspectRatio: false, indexAxis: 'y' }} />
-                            </div>
+                          : <div className="overflow-y-auto max-h-[350px] rounded-xl border border-gray-100">
+                            <table className="w-full text-sm">
+                              <thead className="sticky top-0 bg-blue-50 text-blue-700">
+                                <tr>
+                                  <th className="text-left px-3 py-2 font-bold">#</th>
+                                  <th className="text-left px-3 py-2 font-bold">ชื่อหัตถการ</th>
+                                  <th className="text-right px-3 py-2 font-bold">จำนวน</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {doctorDrilldownRows.map((row, i) => (
+                                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                    <td className="px-3 py-1.5 text-gray-400 text-xs">{i + 1}</td>
+                                    <td className="px-3 py-1.5 text-gray-700">{row.name}</td>
+                                    <td className="px-3 py-1.5 text-right font-bold text-blue-600">{row.total_count.toLocaleString()}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
                         }
                       </div>
                     )}
@@ -453,7 +578,9 @@ export default function Graph() {
                 {activeGraph === 'departments' && (
                   departmentsRows.length === 0
                     ? <div className="flex items-center justify-center h-full text-gray-400">ไม่พบข้อมูล หรือกำลังประมวลผล กรุณารอสักครู่แล้วกด Refresh 🔄</div>
-                    : <ChartCanvas id="departmentsChart" type="bar" data={departmentsData} hideLegend={true} options={{ maintainAspectRatio: false, indexAxis: 'y' }} />
+                    : <div className="flex-1 min-h-[350px]">
+                      <ChartCanvas id="departmentsChart" type="bar" data={departmentsData} hideLegend={true} options={{ maintainAspectRatio: false, indexAxis: 'y' }} />
+                    </div>
                 )}
               </div>
             </GlassCard>
