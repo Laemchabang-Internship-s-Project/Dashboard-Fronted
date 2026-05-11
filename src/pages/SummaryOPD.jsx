@@ -154,6 +154,10 @@ export default function OPDDashboard() {
   const [stats108, setStats108] = useState(initialDepState);
   const [stats011, setStats011] = useState(initialDepState);
   const [stats075, setStats075] = useState(initialDepState);
+  const [stats044, setStats044] = useState(initialDepState);
+  const [stats033, setStats033] = useState(initialDepState);
+  const [stats072, setStats072] = useState(initialDepState);
+  const [stats063, setStats063] = useState(initialDepState);
 
   // --- Clock Effect ---
   useEffect(() => {
@@ -235,13 +239,18 @@ export default function OPDDashboard() {
     setStats010(mapDept("010"));
     setStats062(mapDept("062"));
 
-    
+
     setStats108(mapDept("108", ["069"]));
     setStats109(mapDept("109", ["047"]));
     setStats110(mapDept("110", ["059"]));
     setStats111(mapDept("111", ["076"]));
     setStats011(mapDept("011"));
+
     setStats075(mapDept("075"));
+    setStats044(mapDept("044"));
+    setStats033(mapDept("033"));
+    setStats072(mapDept("072"));
+    setStats063(mapDept("063"));
   };
 
   // --- Filter Logic ---
@@ -270,6 +279,10 @@ export default function OPDDashboard() {
       setStats108(initialDepState);
       setStats011(initialDepState);
       setStats075(initialDepState);
+      setStats044(initialDepState);
+      setStats033(initialDepState);
+      setStats072(initialDepState);
+      setStats063(initialDepState);
     } catch (err) { console.error("Filter error:", err); }
   };
 
@@ -570,6 +583,38 @@ export default function OPDDashboard() {
                     <DepartmentBlock
                       title="อาชีวเวชกรรม"
                       stats={stats075}
+                      theme="emerald"
+                    />
+                  </div>
+
+                  <div className="mt-4 md:mt-6">
+                    <DepartmentBlock
+                      title="วัคซีนเด็ก (จุดซักประวัติ PCU)"
+                      stats={stats044}
+                      theme="blue"
+                    />
+                  </div>
+
+                  <div className="mt-4 md:mt-6">
+                    <DepartmentBlock
+                      title="คลีนิกโรคหัวใจ"
+                      stats={stats033}
+                      theme="emerald"
+                    />
+                  </div>
+
+                  <div className="mt-4 md:mt-6">
+                    <DepartmentBlock
+                      title="คลีนิก Warfarin"
+                      stats={stats072}
+                      theme="blue"
+                    />
+                  </div>
+
+                  <div className="mt-4 md:mt-6">
+                    <DepartmentBlock
+                      title="คลีนิกโรคไต"
+                      stats={stats063}
                       theme="emerald"
                     />
                   </div>
