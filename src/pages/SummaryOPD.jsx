@@ -152,6 +152,8 @@ export default function OPDDashboard() {
   const [stats110, setStats110] = useState(initialDepState);
   const [stats111, setStats111] = useState(initialDepState);
   const [stats108, setStats108] = useState(initialDepState);
+  const [stats011, setStats011] = useState(initialDepState);
+  const [stats075, setStats075] = useState(initialDepState);
 
   // --- Clock Effect ---
   useEffect(() => {
@@ -184,11 +186,6 @@ export default function OPDDashboard() {
     const mapDept = (mainCode, extraCodes = []) => {
       const allCodes = [mainCode, ...extraCodes];
 
-      const roomTotals = allCodes.reduce((sum, code) => {
-        const room = rooms.find(r => r.room_code === code);
-        return sum + (room?.total || 0);
-      }, 0);
-
       const mergedStats = allCodes.reduce((acc, code) => {
         const deptSpecific = data.opd_clinics?.[`stats_${code}`] || {};
 
@@ -199,9 +196,11 @@ export default function OPDDashboard() {
         acc.waiting_drug += deptSpecific.waiting_drug || 0;
         acc.waiting_payment += deptSpecific.waiting_payment || 0;
         acc.finished += deptSpecific.finished || 0;
+        acc.total += deptSpecific.total || 0;
 
         return acc;
       }, {
+        total: 0,
         waiting_screening: 0,
         waiting_exam: 0,
         waiting_lab: 0,
@@ -214,7 +213,7 @@ export default function OPDDashboard() {
       const depSum = data.summary?.[`dep_${mainCode}`] || {};
 
       return {
-        total: roomTotals,
+        total: mergedStats.total,
 
         waitingScreening: mergedStats.waiting_screening,
         waitingExamCount: mergedStats.waiting_exam,
@@ -236,10 +235,13 @@ export default function OPDDashboard() {
     setStats010(mapDept("010"));
     setStats062(mapDept("062"));
 
+    
     setStats108(mapDept("108", ["069"]));
     setStats109(mapDept("109", ["047"]));
     setStats110(mapDept("110", ["059"]));
     setStats111(mapDept("111", ["076"]));
+    setStats011(mapDept("011"));
+    setStats075(mapDept("075"));
   };
 
   // --- Filter Logic ---
@@ -266,6 +268,8 @@ export default function OPDDashboard() {
       setStats110(initialDepState);
       setStats111(initialDepState);
       setStats108(initialDepState);
+      setStats011(initialDepState);
+      setStats075(initialDepState);
     } catch (err) { console.error("Filter error:", err); }
   };
 
@@ -550,6 +554,22 @@ export default function OPDDashboard() {
                     <DepartmentBlock
                       title="ผู้รับบริการกุมารเวชกรรม"
                       stats={stats108}
+                      theme="emerald"
+                    />
+                  </div>
+
+                  <div className="mt-4 md:mt-6">
+                    <DepartmentBlock
+                      title="ER Room"
+                      stats={stats011}
+                      theme="blue"
+                    />
+                  </div>
+
+                  <div className="mt-4 md:mt-6">
+                    <DepartmentBlock
+                      title="อาชีวเวชกรรม"
+                      stats={stats075}
                       theme="emerald"
                     />
                   </div>
