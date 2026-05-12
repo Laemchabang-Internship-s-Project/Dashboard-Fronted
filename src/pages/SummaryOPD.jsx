@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { apiGet, apiGetInternal, createInternalEventSource } from "../services/api";
 import { HeaderSkeleton, StatCardSkeleton, DepartmentBlockSkeleton } from '../components/Skeleton';
 import { DashboardHeader } from '../components/DashboardUI';
+import { TechnicalServicesCard } from '../components/TechnicalServicesCard';
 
 // --- Helper: แปลงนาทีเป็น ชม./นาที ---
 function formatWaitTime(minutes) {
@@ -134,6 +135,7 @@ export default function OPDDashboard() {
   const [startDate, setStartDate] = useState(getToday());
   const [endDate, setEndDate] = useState(getToday());
   const [secondaryState, setSecondaryState] = useState("normal"); // normal, filtered, hidden
+  const [techServices, setTechServices] = useState(null);
 
   const [systemStats, setSystemStats] = useState({
     opdTotal: "-", walkIn: "-", telemed: "-", drugDelivery: "-",
@@ -158,7 +160,9 @@ export default function OPDDashboard() {
   const [stats033, setStats033] = useState(initialDepState);
   const [stats072, setStats072] = useState(initialDepState);
   const [stats063, setStats063] = useState(initialDepState);
-
+  const [stats005, setStats005] = useState(initialDepState);
+  const [stats042, setStats042] = useState(initialDepState);
+  const [stats041, setStats041] = useState(initialDepState);
   // --- Clock Effect ---
   useEffect(() => {
     const interval = setInterval(() => {
@@ -174,6 +178,10 @@ export default function OPDDashboard() {
   const processData = (data) => {
     // บล็อกข้อมูล Real-time ไม่ให้มาทับยอดถ้ากำลังอยู่ในโหมด Filter
     if (!data || isFilterMode) return;
+
+    if (data.technical_services) {
+      setTechServices(data.technical_services);
+    }
 
     const s = data.system;
     const rooms = data.opd_clinics?.rooms || [];
@@ -251,6 +259,10 @@ export default function OPDDashboard() {
     setStats033(mapDept("033"));
     setStats072(mapDept("072"));
     setStats063(mapDept("063"));
+
+    setStats005(mapDept("005"));
+    setStats042(mapDept("042"));
+    setStats041(mapDept("041"));
   };
 
   // --- Filter Logic ---
@@ -283,6 +295,9 @@ export default function OPDDashboard() {
       setStats033(initialDepState);
       setStats072(initialDepState);
       setStats063(initialDepState);
+      setStats005(initialDepState);
+      setStats042(initialDepState);
+      setStats041(initialDepState);
     } catch (err) { console.error("Filter error:", err); }
   };
 
@@ -589,7 +604,7 @@ export default function OPDDashboard() {
 
                   <div className="mt-4 md:mt-6">
                     <DepartmentBlock
-                      title="วัคซีนเด็ก (จุดซักประวัติ PCU)"
+                      title="จุดซักประวัติ PCU (วันจันทร์ ฝากครรภ์) (วันอังคาร ฉีดวัคซีน) (วันพุธ ...)"
                       stats={stats044}
                       theme="blue"
                     />
@@ -618,10 +633,34 @@ export default function OPDDashboard() {
                       theme="emerald"
                     />
                   </div>
-                </div>
 
+                  <div className="mt-4 md:mt-6">
+                    <DepartmentBlock
+                      title="คลินิกทันตกรรม"
+                      stats={stats005}
+                      theme="blue"
+                    />
+                  </div>
+
+                  <div className="mt-4 md:mt-6">
+                    <DepartmentBlock
+                      title="กายภาพ"
+                      stats={stats042}
+                      theme="emerald"
+                    />
+                  </div>
+
+                  <div className="mt-4 md:mt-6">
+                    <DepartmentBlock
+                      title="แพทย์แผนไทย"
+                      stats={stats041}
+                      theme="blue"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
+            <TechnicalServicesCard data={techServices} />
           </>
         )}
       </div>
