@@ -119,7 +119,7 @@ export const DashboardHeader = ({ title, subtitle, icon, iconColorClass = "text-
         </button>
       )}
       <div className="flex flex-col items-end shrink-0"><LiveClock /></div>
-      <span className={`hidden sm:inline-flex items-center justify-center text-center whitespace-nowrap min-w-[60px] text-[10px] px-2 py-1 rounded-full uppercase font-bold tracking-wider ${statusColorClass} animate-pulse shrink-0`}>
+      <span className={`inline-flex items-center justify-center text-center whitespace-nowrap min-w-[60px] text-[10px] px-2 py-1 rounded-full uppercase font-bold tracking-wider ${statusColorClass} animate-pulse shrink-0`}>
         {statusText}
       </span>
     </div>
