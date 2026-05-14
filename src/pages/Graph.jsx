@@ -45,14 +45,23 @@ export default function Graph() {
   const [doctorsRows, setDoctorsRows] = useState([]);
   const [departmentsRows, setDepartmentsRows] = useState([]);
   const [statsYear, setStatsYear] = useState(new Date().getFullYear().toString());
+  // drilldown — doctor
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [doctorDrilldownRows, setDoctorDrilldownRows] = useState([]);
+  // drilldown — operation → doctors
+  const [selectedOperation, setSelectedOperation] = useState(null);
+  const [operationDrilldownRows, setOperationDrilldownRows] = useState([]);
+  // drilldown — dept → operations
+  const [selectedDept, setSelectedDept] = useState(null);
+  const [deptDrilldownRows, setDeptDrilldownRows] = useState([]);
+  // drilldown — daily
   const [selectedDate, setSelectedDate] = useState(null);
   const [dailyDrilldownRows, setDailyDrilldownRows] = useState([]);
 
   // ui
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [status, setStatus] = useState({ text: "Connecting...", color: "bg-gray-200 text-gray-800" });
 
   // ── Fetch: ดึงเฉพาะ view ที่ใช้งาน ────────────────────────────────────────
@@ -122,14 +131,10 @@ export default function Graph() {
 
   // ── Reset drilldown state เมื่อเปลี่ยน tab ────────────────────────────────
   useEffect(() => {
-    if (activeGraph !== 'daily') {
-      setSelectedDate(null);
-      setDailyDrilldownRows([]);
-    }
-    if (activeGraph !== 'doctors') {
-      setSelectedDoctor(null);
-      setDoctorDrilldownRows([]);
-    }
+    if (activeGraph !== 'daily') { setSelectedDate(null); setDailyDrilldownRows([]); }
+    if (activeGraph !== 'doctors') { setSelectedDoctor(null); setDoctorDrilldownRows([]); }
+    if (activeGraph !== 'operations') { setSelectedOperation(null); setOperationDrilldownRows([]); }
+    if (activeGraph !== 'departments') { setSelectedDept(null); setDeptDrilldownRows([]); }
   }, [activeGraph]);
 
   // ── Drilldown Fetch ────────────────────────────────────────────────────────
@@ -140,6 +145,22 @@ export default function Graph() {
       });
     }
   }, [activeGraph, selectedDoctor, statsYear, fetchView]);
+
+  useEffect(() => {
+    if (activeGraph === 'operations' && selectedOperation) {
+      fetchView('operation_drilldown', { year: statsYear, operation_name: selectedOperation }).then(data => {
+        if (data) setOperationDrilldownRows(data);
+      });
+    }
+  }, [activeGraph, selectedOperation, statsYear, fetchView]);
+
+  useEffect(() => {
+    if (activeGraph === 'departments' && selectedDept) {
+      fetchView('dept_drilldown', { year: statsYear, dept_name: selectedDept }).then(data => {
+        if (data) setDeptDrilldownRows(data);
+      });
+    }
+  }, [activeGraph, selectedDept, statsYear, fetchView]);
 
   useEffect(() => {
     if (activeGraph === 'daily' && selectedDate) {
@@ -269,6 +290,30 @@ export default function Graph() {
       borderRadius: 4,
     }]
   }), [doctorDrilldownRows]);
+
+  const operationDrilldownData = useMemo(() => ({
+    labels: operationDrilldownRows.map(r => r.name || 'ไม่ระบุ'),
+    datasets: [{
+      label: 'จำนวนครั้ง',
+      data: operationDrilldownRows.map(r => r.total_count),
+      backgroundColor: operationDrilldownRows.map((_, i) => i === 0 ? 'rgba(245, 158, 11, 0.85)' : 'rgba(251, 191, 36, 0.45)'),
+      borderColor: operationDrilldownRows.map((_, i) => i === 0 ? 'rgb(217, 119, 6)' : 'rgb(245, 158, 11)'),
+      borderWidth: 1,
+      borderRadius: 4,
+    }]
+  }), [operationDrilldownRows]);
+
+  const deptDrilldownData = useMemo(() => ({
+    labels: deptDrilldownRows.map(r => r.name || 'ไม่ระบุ'),
+    datasets: [{
+      label: 'จำนวนครั้ง',
+      data: deptDrilldownRows.map(r => r.total_count),
+      backgroundColor: deptDrilldownRows.map((_, i) => i === 0 ? 'rgba(139, 92, 246, 0.85)' : 'rgba(167, 139, 250, 0.45)'),
+      borderColor: deptDrilldownRows.map((_, i) => i === 0 ? 'rgb(109, 40, 217)' : 'rgb(139, 92, 246)'),
+      borderWidth: 1,
+      borderRadius: 4,
+    }]
+  }), [deptDrilldownRows]);
 
   const dailyDrilldownData = useMemo(() => {
     const top10 = dailyDrilldownRows.slice(0, 10);
@@ -504,10 +549,71 @@ export default function Graph() {
                   </div>
                 )}
                 {activeGraph === 'operations' && (
-                  <div className="h-[400px] md:h-[500px] w-full">
-                    {operationsRows.length === 0
-                      ? <div className="flex items-center justify-center h-full text-gray-400">ไม่พบข้อมูล หรือกำลังประมวลผล กรุณารอสักครู่แล้วกด Refresh 🔄</div>
-                      : <ChartCanvas id="operationsChart" type="bar" data={operationsData} hideLegend={true} options={{ maintainAspectRatio: false, indexAxis: 'y' }} />}
+                  <div className="flex flex-col gap-4">
+                    <div className="h-[350px] md:h-[450px] w-full">
+                      {operationsRows.length === 0
+                        ? <div className="flex items-center justify-center h-full text-gray-400">ไม่พบข้อมูล หรือกำลังประมวลผล กรุณารอสักครู่แล้วกด Refresh 🔄</div>
+                        : <ChartCanvas
+                            id="operationsChart"
+                            type="bar"
+                            data={operationsData}
+                            hideLegend={true}
+                            options={{
+                              maintainAspectRatio: false,
+                              indexAxis: 'y',
+                              onHover: (event, chartElement) => {
+                                event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                              },
+                              onClick: (event, elements, chart) => {
+                                if (elements.length > 0) {
+                                  const index = elements[0].index;
+                                  const opName = chart.data.labels[index];
+                                  setSelectedOperation(prev => prev === opName ? null : opName);
+                                  setOperationDrilldownRows([]);
+                                }
+                              }
+                            }}
+                          />
+                      }
+                    </div>
+                    {selectedOperation && (
+                      <div className="border-t-2 border-amber-100 pt-4 relative">
+                        <button
+                          onClick={() => { setSelectedOperation(null); setOperationDrilldownRows([]); }}
+                          className="absolute top-4 right-2 text-gray-400 hover:text-red-500 text-sm z-10 font-bold bg-white/80 px-2 py-1 rounded"
+                        >
+                          ✕ ปิด
+                        </button>
+                        <h3 className="text-md font-bold text-gray-700 mb-3">
+                          <FontAwesomeIcon icon={faChartBar} className="text-amber-500 mr-2" />
+                          แพทย์ที่ทำหัตถการ: <span className="text-amber-600">{selectedOperation}</span>
+                          <span className="ml-3 text-sm font-normal text-gray-400">({operationDrilldownRows.length} คน)</span>
+                        </h3>
+                        {operationDrilldownRows.length === 0
+                          ? <div className="flex items-center justify-center h-[120px] text-gray-400 text-sm">กำลังโหลด...</div>
+                          : <div className="overflow-y-auto max-h-[300px] rounded-xl border border-gray-100">
+                            <table className="w-full text-sm">
+                              <thead className="sticky top-0 bg-amber-50 text-amber-700">
+                                <tr>
+                                  <th className="text-left px-3 py-2 font-bold">#</th>
+                                  <th className="text-left px-3 py-2 font-bold">ชื่อแพทย์</th>
+                                  <th className="text-right px-3 py-2 font-bold">จำนวน</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {operationDrilldownRows.map((row, i) => (
+                                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                    <td className="px-3 py-1.5 text-gray-400 text-xs">{i + 1}</td>
+                                    <td className="px-3 py-1.5 text-gray-700">{row.name}</td>
+                                    <td className="px-3 py-1.5 text-right font-bold text-amber-600">{row.total_count.toLocaleString()}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        }
+                      </div>
+                    )}
                   </div>
                 )}
                 {activeGraph === 'doctors' && (
@@ -578,10 +684,71 @@ export default function Graph() {
                   </div>
                 )}
                 {activeGraph === 'departments' && (
-                  <div className="h-[400px] md:h-[500px] w-full">
-                    {departmentsRows.length === 0
-                      ? <div className="flex items-center justify-center h-full text-gray-400">ไม่พบข้อมูล หรือกำลังประมวลผล กรุณารอสักครู่แล้วกด Refresh 🔄</div>
-                      : <ChartCanvas id="departmentsChart" type="bar" data={departmentsData} hideLegend={true} options={{ maintainAspectRatio: false, indexAxis: 'y' }} />}
+                  <div className="flex flex-col gap-4">
+                    <div className="h-[350px] md:h-[450px] w-full">
+                      {departmentsRows.length === 0
+                        ? <div className="flex items-center justify-center h-full text-gray-400">ไม่พบข้อมูล หรือกำลังประมวลผล กรุณารอสักครู่แล้วกด Refresh 🔄</div>
+                        : <ChartCanvas
+                            id="departmentsChart"
+                            type="bar"
+                            data={departmentsData}
+                            hideLegend={true}
+                            options={{
+                              maintainAspectRatio: false,
+                              indexAxis: 'y',
+                              onHover: (event, chartElement) => {
+                                event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                              },
+                              onClick: (event, elements, chart) => {
+                                if (elements.length > 0) {
+                                  const index = elements[0].index;
+                                  const deptName = chart.data.labels[index];
+                                  setSelectedDept(prev => prev === deptName ? null : deptName);
+                                  setDeptDrilldownRows([]);
+                                }
+                              }
+                            }}
+                          />
+                      }
+                    </div>
+                    {selectedDept && (
+                      <div className="border-t-2 border-violet-100 pt-4 relative">
+                        <button
+                          onClick={() => { setSelectedDept(null); setDeptDrilldownRows([]); }}
+                          className="absolute top-4 right-2 text-gray-400 hover:text-red-500 text-sm z-10 font-bold bg-white/80 px-2 py-1 rounded"
+                        >
+                          ✕ ปิด
+                        </button>
+                        <h3 className="text-md font-bold text-gray-700 mb-3">
+                          <FontAwesomeIcon icon={faChartBar} className="text-violet-500 mr-2" />
+                          หัตถการยอดนิยมของ: <span className="text-violet-600">{selectedDept}</span>
+                          <span className="ml-3 text-sm font-normal text-gray-400">({deptDrilldownRows.length} รายการ)</span>
+                        </h3>
+                        {deptDrilldownRows.length === 0
+                          ? <div className="flex items-center justify-center h-[120px] text-gray-400 text-sm">กำลังโหลด...</div>
+                          : <div className="overflow-y-auto max-h-[300px] rounded-xl border border-gray-100">
+                            <table className="w-full text-sm">
+                              <thead className="sticky top-0 bg-violet-50 text-violet-700">
+                                <tr>
+                                  <th className="text-left px-3 py-2 font-bold">#</th>
+                                  <th className="text-left px-3 py-2 font-bold">ชื่อหัตถการ</th>
+                                  <th className="text-right px-3 py-2 font-bold">จำนวน</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {deptDrilldownRows.map((row, i) => (
+                                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                    <td className="px-3 py-1.5 text-gray-400 text-xs">{i + 1}</td>
+                                    <td className="px-3 py-1.5 text-gray-700">{row.name}</td>
+                                    <td className="px-3 py-1.5 text-right font-bold text-violet-600">{row.total_count.toLocaleString()}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        }
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
