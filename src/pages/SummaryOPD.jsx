@@ -200,6 +200,7 @@ export default function OPDDashboard() {
 
       const mergedStats = allCodes.reduce((acc, code) => {
         const deptSpecific = data.opd_clinics?.[`stats_${code}`] || {};
+        const room = rooms.find(r => r.room_code === code) || {};
 
         acc.waiting_screening += deptSpecific.waiting_screening || 0;
         acc.waiting_exam += deptSpecific.waiting_exam || 0;
@@ -208,7 +209,7 @@ export default function OPDDashboard() {
         acc.waiting_drug += deptSpecific.waiting_drug || 0;
         acc.waiting_payment += deptSpecific.waiting_payment || 0;
         acc.finished += deptSpecific.finished || 0;
-        acc.total += deptSpecific.total || 0;
+        acc.total += room.total || 0;
 
         return acc;
       }, {
