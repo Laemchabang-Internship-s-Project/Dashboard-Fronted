@@ -61,7 +61,9 @@ const getToday = () => {
 // ปรับปรุงคอมโพเนนต์ DepartmentBlock ใน SummaryOPD.jsx
 const DepartmentBlockBowin = ({ title, stats, theme }) => {
   const isBlue = theme === 'blue';
-  const containerBg = isBlue ? "bg-gradient-to-br from-blue-50 to-indigo-100" : "bg-gradient-to-br from-emerald-50 to-teal-100";
+  const containerBg = isBlue
+  ? "bg-gradient-to-br from-cyan-50 to-blue-100"
+  : "bg-gradient-to-br from-lime-50 to-emerald-100";
   const borderColor = isBlue ? "border-blue-200" : "border-emerald-200";
   const titleBarColor = isBlue ? "bg-blue-600" : "bg-emerald-600";
   const timeBoxText = isBlue ? "text-blue-900" : "text-emerald-900";
@@ -236,6 +238,7 @@ export default function OPDDashboard() {
   const [stats005, setStats005] = useState(initialDepState);
   const [stats042, setStats042] = useState(initialDepState);
   const [stats041, setStats041] = useState(initialDepState);
+  const [stats074, setStats074] = useState(initialDepState);
   const [statsBowinAll, setStatsBowinAll] = useState(initialDepState);
   // --- Clock Effect ---
   useEffect(() => {
@@ -339,8 +342,8 @@ export default function OPDDashboard() {
     setStats005(mapDept("005"));
     setStats042(mapDept("042"));
     setStats041(mapDept("041"));
-
-    setStatsBowinAll(mapDept("901", ["902", "903", "904", "905"],true));
+    setStats074(mapDept("074", [], true));
+    setStatsBowinAll(mapDept("901", ["902", "903", "904", "905"], true));
   };
 
   // --- Filter Logic ---
@@ -371,6 +374,7 @@ export default function OPDDashboard() {
       setStats075(initialDepState);
       setStats044(initialDepState);
       setStats033(initialDepState);
+      setStats074(initialDepState);
       setStats072(initialDepState);
       setStats063(initialDepState);
       setStats005(initialDepState);
@@ -736,11 +740,21 @@ export default function OPDDashboard() {
                     />
                   </div>
 
-                  <DepartmentBlockBowin
-                    title="สรุปยอดบริการ (สาขาบ่อวิน)"
-                    stats={statsBowinAll}
-                    theme="blue"
-                  />
+                  <div className="mt-4 md:mt-6">
+                    <DepartmentBlock
+                      title="หน่วยไตเทียม"
+                      stats={stats074}
+                      theme="emerald"
+                    />
+                  </div>
+
+                  <div className="border-t border-gray-300 pt-10  mt-10">
+                    <DepartmentBlockBowin
+                      title="สรุปยอดบริการ (สาขาบ่อวิน)"
+                      stats={statsBowinAll}
+                      theme="blue"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
