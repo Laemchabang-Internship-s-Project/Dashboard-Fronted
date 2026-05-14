@@ -46,8 +46,14 @@ export default function IPD() {
 
   const [fixedWards, setFixedWards] = useState({});
   const [allowedWards, setAllowedWards] = useState([
-    "หลังคลอด", "ผู้ป่วยเด็ก", "ผู้ป่วยศัลยชาย", "ผู้ป่วยศัลยหญิง",
-    "ผู้ป่วยอายุรกรรมชาย", "ผู้ป่วยอายุรกรรมหญิง", "ผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4", "มินิธัญญารักษ์"
+    "หอผู้ป่วยหลังคลอด",
+    "หอผู้ป่วยเด็ก",
+    "หอผู้ป่วยศัลยกรรม กระดูกและข้อชาย",
+    "หอผู้ป่วยศัลยกรรม กระดูกและข้อหญิง",
+    "หอผู้ป่วยอายุรกรรมชาย",
+    "หอผู้ป่วยอายุรกรรมหญิง",
+    "หอผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4",
+    "มินิธัญญารักษ์"
   ]);
   const WARD_NAME_MAP = {
     "ห้องคลอด": "ห้องคลอด",
@@ -94,7 +100,8 @@ export default function IPD() {
       if (configRes?.data) {
         if (configRes.data.wards) {
           currentConfig = configRes.data.wards;
-          currentAllowed = configRes.data.allowed_wards || allowedWards;
+          currentAllowed = (configRes.data.allowed_wards || allowedWards)
+            .map(name => WARD_NAME_MAP[name] || name);
           currentTotalBeds = configRes.data.total_beds || 150;
         } else {
           currentConfig = configRes.data;
