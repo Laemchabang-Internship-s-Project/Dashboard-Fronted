@@ -422,19 +422,23 @@ export default function Graph() {
               </div>
 
               {/* Graph Content Area */}
-              <div className="w-full relative flex-1 flex flex-col h-[400px] md:h-[500px] lg:h-[700px] xl:h-[800px]">
+              <div className="w-full relative flex flex-col">
 
                 {activeGraph === 'monthly' && (
-                  monthlyRows.length === 0
-                    ? <div className="flex items-center justify-center h-full text-gray-400">กำลังโหลด...</div>
-                    : <ChartCanvas id="monthlyChart" type="bar" data={monthlyData} hideLegend={true} options={{ maintainAspectRatio: false }} />
+                  <div className="h-[400px] md:h-[500px] w-full">
+                    {monthlyRows.length === 0
+                      ? <div className="flex items-center justify-center h-full text-gray-400">กำลังโหลด...</div>
+                      : <ChartCanvas id="monthlyChart" type="bar" data={monthlyData} hideLegend={true} options={{ maintainAspectRatio: false }} />}
+                  </div>
                 )}
                 {activeGraph === 'yoy' && (
-                  <ChartCanvas id="yoyChart" type="line" data={yoyData} hideLegend={false} options={{ maintainAspectRatio: false }} />
+                  <div className="h-[400px] md:h-[500px] w-full">
+                    <ChartCanvas id="yoyChart" type="line" data={yoyData} hideLegend={false} options={{ maintainAspectRatio: false }} />
+                  </div>
                 )}
                 {activeGraph === 'daily' && (
-                  <div className="flex flex-col h-full gap-4">
-                    <div className="flex-1 min-h-[300px]">
+                  <div className="flex flex-col gap-4">
+                    <div className="h-[350px] md:h-[450px] w-full">
                       {dailyRows.length === 0
                         ? <div className="flex items-center justify-center h-full text-gray-400">ไม่พบข้อมูล หรือกำลังประมวลผล กรุณารอสักครู่แล้วกด Refresh 🔄</div>
                         : <ChartCanvas
@@ -500,19 +504,18 @@ export default function Graph() {
                   </div>
                 )}
                 {activeGraph === 'operations' && (
-                  operationsRows.length === 0
-                    ? <div className="flex items-center justify-center h-full text-gray-400">ไม่พบข้อมูล หรือกำลังประมวลผล กรุณารอสักครู่แล้วกด Refresh 🔄</div>
-                    : <div className="flex-1 min-h-[300px]">
-                      <ChartCanvas id="operationsChart" type="bar" data={operationsData} hideLegend={true} options={{ maintainAspectRatio: false, indexAxis: 'y' }} />
-                    </div>
+                  <div className="h-[400px] md:h-[500px] w-full">
+                    {operationsRows.length === 0
+                      ? <div className="flex items-center justify-center h-full text-gray-400">ไม่พบข้อมูล หรือกำลังประมวลผล กรุณารอสักครู่แล้วกด Refresh 🔄</div>
+                      : <ChartCanvas id="operationsChart" type="bar" data={operationsData} hideLegend={true} options={{ maintainAspectRatio: false, indexAxis: 'y' }} />}
+                  </div>
                 )}
                 {activeGraph === 'doctors' && (
-                  <div className="flex flex-col h-full gap-4">
-                    <div className="flex-1 min-h-[300px]">
+                  <div className="flex flex-col gap-4">
+                    <div className="h-[350px] md:h-[450px] w-full">
                       {doctorsRows.length === 0
                         ? <div className="flex items-center justify-center h-full text-gray-400">ไม่พบข้อมูล หรือกำลังประมวลผล กรุณารอสักครู่แล้วกด Refresh 🔄</div>
-                        : <div className="flex-1 min-h-[350px]">
-                          <ChartCanvas
+                        : <ChartCanvas
                             id="doctorsChart"
                             type="bar"
                             data={doctorsData}
@@ -532,7 +535,6 @@ export default function Graph() {
                               }
                             }}
                           />
-                        </div>
                       }
                     </div>
                     {selectedDoctor && (
@@ -576,11 +578,11 @@ export default function Graph() {
                   </div>
                 )}
                 {activeGraph === 'departments' && (
-                  departmentsRows.length === 0
-                    ? <div className="flex items-center justify-center h-full text-gray-400">ไม่พบข้อมูล หรือกำลังประมวลผล กรุณารอสักครู่แล้วกด Refresh 🔄</div>
-                    : <div className="flex-1 min-h-[350px]">
-                      <ChartCanvas id="departmentsChart" type="bar" data={departmentsData} hideLegend={true} options={{ maintainAspectRatio: false, indexAxis: 'y' }} />
-                    </div>
+                  <div className="h-[400px] md:h-[500px] w-full">
+                    {departmentsRows.length === 0
+                      ? <div className="flex items-center justify-center h-full text-gray-400">ไม่พบข้อมูล หรือกำลังประมวลผล กรุณารอสักครู่แล้วกด Refresh 🔄</div>
+                      : <ChartCanvas id="departmentsChart" type="bar" data={departmentsData} hideLegend={true} options={{ maintainAspectRatio: false, indexAxis: 'y' }} />}
+                  </div>
                 )}
               </div>
             </GlassCard>

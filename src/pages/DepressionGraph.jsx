@@ -393,27 +393,37 @@ export default function DepressionGraph() {
                 />
               </div>
 
-              <div className="w-full relative flex-1 min-h-[400px]">
+              <div className="w-full relative flex-1">
                 {activeGraph === 'status' && (
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
-                    <div className="lg:col-span-1 h-[350px]">
-                      <h3 className="text-center font-bold text-gray-600 mb-2">ภาพรวมความครอบคลุม</h3>
-                      {coveragePieConfig && <ApexChart options={coveragePieConfig.options} series={coveragePieConfig.series} type="donut" height={300} />}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                    <div className="lg:col-span-1">
+                      <h3 className="text-center font-bold text-gray-600 mb-4">ภาพรวมความครอบคลุม</h3>
+                      <div className="h-[400px] flex items-center justify-center">
+                        {coveragePieConfig && <ApexChart options={coveragePieConfig.options} series={coveragePieConfig.series} type="donut" height={380} width="100%" />}
+                      </div>
                     </div>
-                    <div className="lg:col-span-2 h-[400px]">
-                      <h3 className="text-center font-bold text-gray-600 mb-2">รายละเอียดกลุ่มที่ประเมินแล้ว</h3>
-                      {statusData && <ChartCanvas id="statusBarChart" type="bar" data={statusData} hideLegend={true} options={{ indexAxis: 'y', maintainAspectRatio: false }} />}
+                    <div className="lg:col-span-2">
+                      <h3 className="text-center font-bold text-gray-600 mb-4">รายละเอียดกลุ่มที่ประเมินแล้ว</h3>
+                      <div className="h-[400px] w-full">
+                        {statusData && <ChartCanvas id="statusBarChart" type="bar" data={statusData} hideLegend={true} options={{ indexAxis: 'y', maintainAspectRatio: false }} />}
+                      </div>
                     </div>
                   </div>
                 )}
                 {activeGraph === 'daily' && dailyData && (
-                  <ChartCanvas id="dailyChart" type="bar" data={dailyData} hideLegend={true} options={{ maintainAspectRatio: false }} />
+                  <div className="h-[400px] w-full">
+                    <ChartCanvas id="dailyChart" type="bar" data={dailyData} hideLegend={true} options={{ maintainAspectRatio: false }} />
+                  </div>
                 )}
                 {activeGraph === 'monthly' && monthlyData && (
-                  <ChartCanvas id="monthlyChart" type="bar" data={monthlyData} hideLegend={true} options={{ maintainAspectRatio: false }} />
+                  <div className="h-[400px] w-full">
+                    <ChartCanvas id="monthlyChart" type="bar" data={monthlyData} hideLegend={true} options={{ maintainAspectRatio: false }} />
+                  </div>
                 )}
                 {activeGraph === 'yoy' && yoyData && (
-                  <ChartCanvas id="depressionYoyChart" type="line" data={yoyData} hideLegend={false} options={{ maintainAspectRatio: false }} />
+                  <div className="h-[400px] w-full">
+                    <ChartCanvas id="depressionYoyChart" type="line" data={yoyData} hideLegend={false} options={{ maintainAspectRatio: false }} />
+                  </div>
                 )}
               </div>
             </GlassCard>

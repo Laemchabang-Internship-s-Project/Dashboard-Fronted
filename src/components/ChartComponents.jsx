@@ -280,16 +280,24 @@ export const ChartCanvas = ({ id, type, data, options, hideLegend = false }) => 
 // ─── LiveClock ────────────────────────────────────────────────────────────────
 
 export const LiveClock = () => {
-  const [currentTime, setCurrentTime] = useState('');
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
   useEffect(() => {
-    const opts = {
-      year: 'numeric', month: 'long', day: 'numeric',
-      hour: '2-digit', minute: '2-digit', second: '2-digit',
+    const dateOpts = { year: 'numeric', month: 'long', day: 'numeric' };
+    const timeOpts = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+    const tick = () => {
+      const now = new Date();
+      setDate(now.toLocaleString('th-TH', dateOpts));
+      setTime(now.toLocaleString('th-TH', timeOpts));
     };
-    const tick = () => setCurrentTime(new Date().toLocaleString('th-TH', opts));
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
-  return <p className="text-gray-600 font-semibold text-sm leading-tight">{currentTime}</p>;
+  return (
+    <div className="text-right">
+      <p className="text-gray-600 font-semibold text-xs leading-tight hidden sm:block">{date}</p>
+      <p className="text-gray-500 font-medium text-xs leading-tight">{time}</p>
+    </div>
+  );
 };

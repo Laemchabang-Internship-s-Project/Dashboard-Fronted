@@ -93,33 +93,33 @@ export const SectionHeader = ({ title, icon, colorClass, subtitle }) => (
  * Supports optional children in the center for filters.
  */
 export const DashboardHeader = ({ title, subtitle, icon, iconColorClass = "text-blue-500", statusColorClass = "bg-green-100 text-green-700", statusText = "LIVE", isRefreshing, onRefresh, children }) => (
-  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 glass p-4 md:p-5 rounded-2xl soft-shadow border border-white/40">
+  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 glass p-4 md:p-5 rounded-2xl soft-shadow border border-white/40 overflow-hidden">
 
     {/* ส่วนที่ 1: หัวข้อ */}
-    <div className={`flex-shrink-0 ${children ? 'md:w-[320px]' : 'flex-1'}`}>
-      <h1 className="text-xl md:text-2xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
-        {icon && <FontAwesomeIcon icon={icon} className={iconColorClass} />}
-        {title}
+    <div className={`min-w-0 flex-shrink-0 ${children ? 'md:w-[280px]' : 'flex-1'}`}>
+      <h1 className="text-lg md:text-2xl font-bold text-gray-800 tracking-tight flex items-center gap-2 truncate">
+        {icon && <FontAwesomeIcon icon={icon} className={`${iconColorClass} shrink-0`} />}
+        <span className="truncate">{title}</span>
       </h1>
-      <p className="text-gray-400 text-sm mt-1">{subtitle}</p>
+      <p className="text-gray-400 text-xs md:text-sm mt-1 truncate">{subtitle}</p>
     </div>
 
     {/* ส่วนที่ 2: Filter (Optional) */}
     {children && (
-      <div className="flex-1 flex justify-center w-full md:w-auto">
+      <div className="flex-1 flex justify-center w-full md:w-auto min-w-0">
         {children}
       </div>
     )}
 
     {/* ส่วนที่ 3: เวลา และสถานะ */}
-    <div className={`flex items-center justify-end gap-3 flex-shrink-0 ${children ? 'md:w-[320px]' : ''}`}>
+    <div className={`flex items-center justify-end gap-2 flex-shrink-0 ${children ? 'md:w-[280px]' : ''}`}>
       {onRefresh && (
-        <button onClick={onRefresh} disabled={isRefreshing} className="p-2 bg-white/50 border border-gray-200 text-gray-500 rounded-xl hover:bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 active:scale-95">
+        <button onClick={onRefresh} disabled={isRefreshing} className="p-2 bg-white/50 border border-gray-200 text-gray-500 rounded-xl hover:bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 active:scale-95 shrink-0">
           <FontAwesomeIcon icon={faRotateRight} className={isRefreshing ? 'animate-spin text-blue-500' : ''} />
         </button>
       )}
-      <div className="flex flex-col items-end whitespace-nowrap"><LiveClock /></div>
-      <span className={`inline-flex items-center justify-center text-center whitespace-nowrap min-w-[80px] text-[10px] px-3 py-1 rounded-full uppercase font-bold tracking-wider ${statusColorClass} animate-pulse`}>
+      <div className="flex flex-col items-end shrink-0"><LiveClock /></div>
+      <span className={`hidden sm:inline-flex items-center justify-center text-center whitespace-nowrap min-w-[60px] text-[10px] px-2 py-1 rounded-full uppercase font-bold tracking-wider ${statusColorClass} animate-pulse shrink-0`}>
         {statusText}
       </span>
     </div>
