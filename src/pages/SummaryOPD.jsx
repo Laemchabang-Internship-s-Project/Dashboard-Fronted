@@ -58,7 +58,70 @@ const getToday = () => {
   return `${year}-${month}-${day}`;
 };
 
-// --- คอมโพเนนต์รายแผนก (010, 062) ---
+// ปรับปรุงคอมโพเนนต์ DepartmentBlock ใน SummaryOPD.jsx
+const DepartmentBlockBowin = ({ title, stats, theme }) => {
+  const isBlue = theme === 'blue';
+  const containerBg = isBlue ? "bg-gradient-to-br from-blue-50 to-indigo-100" : "bg-gradient-to-br from-emerald-50 to-teal-100";
+  const borderColor = isBlue ? "border-blue-200" : "border-emerald-200";
+  const titleBarColor = isBlue ? "bg-blue-600" : "bg-emerald-600";
+  const timeBoxText = isBlue ? "text-blue-900" : "text-emerald-900";
+
+  return (
+    <div className={`p-5 rounded-[28px] shadow-md border ${borderColor} mb-6 ${containerBg} relative overflow-hidden`}>
+      <h2 className="text-xl font-bold text-gray-800 mb-5 flex items-center gap-3">
+        <div className={`w-2.5 h-7 ${titleBarColor} rounded-full shadow-sm`}></div>
+        {title}
+      </h2>
+
+      {/* แถวแรก: ปรับเหลือ 3 ช่องหลัก (OPD, ซักประวัติ, รอตรวจ) */}
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        {[
+          { label: "ผู้รับบริการ OPD", val: stats.total },
+          { label: "ซักประวัติ", val: stats.waitingScreening },
+          { label: "รอตรวจ", val: stats.waitingExamCount },
+        ].map((item, i) => (
+          <div key={i} className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl text-center shadow-sm border border-white/50">
+            <p className="text-[11px] font-bold text-gray-500 mb-1 uppercase tracking-tight leading-none">{item.label}</p>
+            <AnimatedStat value={item.val} Component="p" className="text-2xl md:text-3xl font-extrabold text-gray-800" />
+          </div>
+        ))}
+      </div>
+
+      {/* แถวสอง: ระยะเวลารอคอย (4 ช่อง) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        {[
+          { label: "ระยะเวลารอคอย เฉลี่ยรวม", val: stats.avgTotal },
+          { label: "ระยะเวลา รอซักประวัติ", val: stats.avgWaitScreening },
+          { label: "ระยะเวลา รอพบแพทย์", val: stats.avgWaitExam },
+          { label: "ระยะเวลา รอรับยา", val: stats.avgWaitDrug },
+        ].map((item, i) => (
+          <div key={i} className="bg-white/30 p-3 rounded-2xl flex flex-col items-center justify-center text-center min-h-[80px] border border-white/20">
+            <p className="text-[11px] font-semibold text-gray-600 mb-1 leading-tight">{item.label}</p>
+            <p className={`text-lg font-black ${timeBoxText}`}>{item.val}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* แถวสุดท้าย: สถานะปลายทาง (รอรับยา, รอจ่ายเงิน, กลับบ้าน) */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className={`${isBlue ? 'bg-blue-200/50' : 'bg-emerald-200/50'} p-4 rounded-2xl text-center border border-white/40`}>
+          <p className={`text-sm font-bold ${isBlue ? 'text-blue-800' : 'text-emerald-800'} mb-1`}>รอรับยา</p>
+          <AnimatedStat value={stats.waitingDrug} className="text-2xl md:text-3xl font-black text-gray-800" />
+        </div>
+        <div className="bg-orange-100/60 p-4 rounded-2xl text-center border border-white/40">
+          <p className="text-sm font-bold text-orange-800 mb-1">รอจ่ายเงิน</p>
+          <AnimatedStat value={stats.waitingPayment} className="text-2xl md:text-3xl font-black text-gray-800" />
+        </div>
+        <div className="bg-purple-100/60 p-4 rounded-2xl text-center border border-white/40">
+          <p className="text-sm font-bold text-purple-800 mb-1">กลับบ้าน</p>
+          <AnimatedStat value={stats.goHome} className="text-2xl md:text-3xl font-black text-gray-800" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// แก้ไขคอมโพเนนต์ DepartmentBlock ในไฟล์ SummaryOPD.jsx
 const DepartmentBlock = ({ title, stats, theme }) => {
   const isBlue = theme === 'blue';
   const containerBg = isBlue ? "bg-gradient-to-br from-blue-50 to-indigo-100" : "bg-gradient-to-br from-emerald-50 to-teal-100";
@@ -73,7 +136,8 @@ const DepartmentBlock = ({ title, stats, theme }) => {
         {title}
       </h2>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+      {/* แถวแรก: 5 ช่องหลัก */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
         {[
           { label: "ผู้รับบริการ OPD", val: stats.total },
           { label: "ซักประวัติ", val: stats.waitingScreening },
@@ -82,12 +146,21 @@ const DepartmentBlock = ({ title, stats, theme }) => {
           { label: "X-ray", val: stats.waitingXray },
         ].map((item, i) => (
           <div key={i} className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl text-center shadow-sm border border-white/50">
-            <p className="text-[11px] font-bold text-gray-500 mb-1 uppercase tracking-tight leading-none">{item.label}</p>
+            <p className="text-[12px] font-bold text-gray-500 mb-1 uppercase tracking-tight leading-none">{item.label}</p>
             <AnimatedStat value={item.val} Component="p" className="text-2xl md:text-3xl font-extrabold text-gray-800" />
           </div>
         ))}
       </div>
 
+      {/* แถวที่เพิ่มใหม่: ส่งต่อ / อื่น ๆ (อยู่ตรงกลาง) */}
+      <div className="flex justify-center mb-6">
+        <div className="bg-white/40 backdrop-blur-sm px-6 py-2 rounded-xl text-center shadow-sm border border-white/40 flex items-center gap-3">
+          <p className="text-[13px] font-bold text-gray-500 uppercase tracking-widest leading-none">ส่งต่อ / อื่น ๆ</p>
+          <AnimatedStat value={stats.redirected} Component="p" className="text-xl font-extrabold text-blue-600" />
+        </div>
+      </div>
+
+      {/* ส่วนเวลาเฉลี่ย และยอดสรุปด้านล่างเหมือนเดิม */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
         {[
           { label: "ระยะเวลารอคอย เฉลี่ยรวม", val: stats.avgTotal },
@@ -163,6 +236,7 @@ export default function OPDDashboard() {
   const [stats005, setStats005] = useState(initialDepState);
   const [stats042, setStats042] = useState(initialDepState);
   const [stats041, setStats041] = useState(initialDepState);
+  const [statsBowinAll, setStatsBowinAll] = useState(initialDepState);
   // --- Clock Effect ---
   useEffect(() => {
     const interval = setInterval(() => {
@@ -195,7 +269,8 @@ export default function OPDDashboard() {
       drugDeliveryRider: s?.total_drug_delivery_rider ?? "-"
     });
 
-    const mapDept = (mainCode, extraCodes = []) => {
+    // แก้ไขเฉพาะฟังก์ชัน mapDept ภายใน OPDDashboard -> processData
+    const mapDept = (mainCode, extraCodes = [], useHosTotal = false) => {
       const allCodes = [mainCode, ...extraCodes];
 
       const mergedStats = allCodes.reduce((acc, code) => {
@@ -209,38 +284,38 @@ export default function OPDDashboard() {
         acc.waiting_drug += deptSpecific.waiting_drug || 0;
         acc.waiting_payment += deptSpecific.waiting_payment || 0;
         acc.finished += deptSpecific.finished || 0;
-        acc.total += room.total || 0;
+
+        // --- จุดที่แก้ไข: ถ้า useHosTotal เป็น true ให้ใช้ยอดจาก HOS (deptSpecific.total) ---
+        // ถ้าเป็น false (ค่าเริ่มต้น) ให้ใช้ยอดจาก NeoQ (room.total) เหมือนเดิม
+        acc.total += useHosTotal ? (deptSpecific.total || 0) : (room.total || 0);
 
         return acc;
       }, {
-        total: 0,
-        waiting_screening: 0,
-        waiting_exam: 0,
-        waiting_lab: 0,
-        waiting_xray: 0,
-        waiting_drug: 0,
-        waiting_payment: 0,
-        finished: 0
+        total: 0, waiting_screening: 0, waiting_exam: 0, waiting_lab: 0,
+        waiting_xray: 0, waiting_drug: 0, waiting_payment: 0, finished: 0
       });
 
+      const sumHOSStates = mergedStats.waiting_screening + mergedStats.waiting_exam +
+        mergedStats.waiting_lab + mergedStats.waiting_xray +
+        mergedStats.waiting_drug + mergedStats.waiting_payment +
+        mergedStats.finished;
+
+      const redirected = Math.max(0, mergedStats.total - sumHOSStates);
       const depSum = data.summary?.[`dep_${mainCode}`] || {};
 
       return {
         total: mergedStats.total,
-
         waitingScreening: mergedStats.waiting_screening,
         waitingExamCount: mergedStats.waiting_exam,
         waitingLab: mergedStats.waiting_lab,
         waitingXray: mergedStats.waiting_xray,
-
+        redirected: redirected,
         avgTotal: formatWaitTime(depSum.avg_total),
         avgWaitScreening: formatWaitTime(depSum.avg_wait_screening),
         avgWaitExam: formatWaitTime(depSum.avg_wait_exam),
         avgWaitDrug: formatWaitTime(depSum.avg_wait_drug),
-
         waitingDrug: mergedStats.waiting_drug,
         waitingPayment: mergedStats.waiting_payment,
-
         goHome: mergedStats.finished
       };
     };
@@ -264,6 +339,8 @@ export default function OPDDashboard() {
     setStats005(mapDept("005"));
     setStats042(mapDept("042"));
     setStats041(mapDept("041"));
+
+    setStatsBowinAll(mapDept("901", ["902", "903", "904", "905"],true));
   };
 
   // --- Filter Logic ---
@@ -658,6 +735,12 @@ export default function OPDDashboard() {
                       theme="blue"
                     />
                   </div>
+
+                  <DepartmentBlockBowin
+                    title="สรุปยอดบริการ (สาขาบ่อวิน)"
+                    stats={statsBowinAll}
+                    theme="blue"
+                  />
                 </div>
               </div>
             </div>
