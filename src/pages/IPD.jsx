@@ -49,6 +49,21 @@ export default function IPD() {
     "หลังคลอด", "ผู้ป่วยเด็ก", "ผู้ป่วยศัลยชาย", "ผู้ป่วยศัลยหญิง",
     "ผู้ป่วยอายุรกรรมชาย", "ผู้ป่วยอายุรกรรมหญิง", "ผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4", "มินิธัญญารักษ์"
   ]);
+  const WARD_NAME_MAP = {
+    "ห้องคลอด": "ห้องคลอด",
+    "วิกฤตทารกแรกเกิด": "หอผู้ป่วยวิกฤตทารกแรกเกิด",
+    "หลังคลอด": "หอผู้ป่วยหลังคลอด",
+    "ผู้ป่วยเด็ก": "หอผู้ป่วยเด็ก",
+    "ผู้ป่วยศัลยชาย": "หอผู้ป่วยศัลยกรรม กระดูกและข้อชาย",
+    "ผู้ป่วยศัลยหญิง": "หอผู้ป่วยศัลยกรรม กระดูกและข้อหญิง",
+    "ผู้ป่วยอายุรกรรมชาย": "หอผู้ป่วยอายุรกรรมชาย",
+    "ผู้ป่วยอายุรกรรมหญิง": "หอผู้ป่วยอายุรกรรมหญิง",
+    "ผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4": "หอผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4",
+    "มินิธัญญารักษ์": "มินิธัญญารักษ์",
+    "หน่วยไตเทียม": "หน่วยไตเทียม",
+    "ER Observ": "ER Observ",
+    "ICU": "หอผู้ป่วย ICU"
+  };
   const [totalBeds, setTotalBeds] = useState(150);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [editConfig, setEditConfig] = useState({});
@@ -94,30 +109,27 @@ export default function IPD() {
         const FIXED_WARDS = currentConfig;
 
         const newByWard = {};
-
-        // วนลูปกรองและจัดการข้อมูลทีละ Ward
         Object.keys(data.by_ward).forEach(wardName => {
-          const nameCheck = String(wardName).trim().toLowerCase();
+          const displayNames = WARD_NAME_MAP[wardName] || wardName; // ใช้ชื่อใหม่ถ้ามี
+          const nameCheck = String(displayNames).trim().toLowerCase(); // เช็คจากชื่อใหม่
 
-          // ข้าม (ไม่นับรวม) ข้อมูลที่เป็น null, ว่าง, 'null', 'none' หรือ 'other'
-          if (!wardName || nameCheck === "other" || nameCheck === "null" || nameCheck === "none") {
+          // แก้ไขเงื่อนไขการข้าม (ข้าม ODS ward ตามที่ต้องการ)
+          if (!displayNames || nameCheck === "other" || nameCheck === "null" || nameCheck === "none" || nameCheck === "ods ward") {
             return;
           }
 
           const w = { ...data.by_ward[wardName] };
 
-          // ถ้ารายชื่ออยู่ใน FIXED_WARDS ให้ทับยอด total ตามที่ฟิกซ์ไว้
-          // ถ้าไม่มี (เช่น ห้องคลอด, ER Observ) จะใช้ยอดตามจริงที่ได้จาก API
-          if (FIXED_WARDS[wardName] !== undefined) {
-            w.total = FIXED_WARDS[wardName];
+          // เปลี่ยนเป็น displayNames เพื่อให้แมปกับ FIXED_WARDS และ newByWard ถูกต้อง
+          if (FIXED_WARDS[displayNames] !== undefined) {
+            w.total = FIXED_WARDS[displayNames];
           }
 
           w.other = 0;
-
           w.occupied = w.occupied || 0;
           w.available = Math.max(0, (w.total || 0) - w.occupied);
 
-          newByWard[wardName] = w;
+          newByWard[displayNames] = w; // เก็บด้วยชื่อใหม่
         });
 
         // สรุปยอดรวมทั้งหมดใหม่โดยไม่นำ other มารวม
@@ -156,18 +168,17 @@ export default function IPD() {
   const WARD_ORDER = [
     "ห้องคลอด",
     "หอผู้ป่วยวิกฤตทารกแรกเกิด",
-    "หลังคลอด",
-    "ผู้ป่วยเด็ก",
-    "ผู้ป่วยศัลยชาย",
-    "ผู้ป่วยศัลยหญิง",
-    "ผู้ป่วยอายุรกรรมชาย",
-    "ผู้ป่วยอายุรกรรมหญิง",
-    "ผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4",
+    "หอผู้ป่วยหลังคลอด",
+    "หอผู้ป่วยเด็ก",
+    "หอผู้ป่วยศัลยกรรม กระดูกและข้อชาย",
+    "หอผู้ป่วยศัลยกรรม กระดูกและข้อหญิง",
+    "หอผู้ป่วยอายุรกรรมชาย",
+    "หอผู้ป่วยอายุรกรรมหญิง",
+    "หอผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4",
     "มินิธัญญารักษ์",
     "หน่วยไตเทียม",
     "ER Observ",
-    "หอผู้ป่วย ICU",
-    "ODS ward"
+    "หอผู้ป่วย ICU"
   ];
 
   const filteredWards = (selectedWard === "all"
@@ -218,9 +229,9 @@ export default function IPD() {
   };
 
   const toggleAllowedWard = (ward) => {
-    setEditAllowedWards(prev => 
-      prev.includes(ward) 
-        ? prev.filter(w => w !== ward) 
+    setEditAllowedWards(prev =>
+      prev.includes(ward)
+        ? prev.filter(w => w !== ward)
         : [...prev, ward]
     );
   };
@@ -232,7 +243,7 @@ export default function IPD() {
       Object.keys(editConfig).forEach(k => {
         payload[k] = parseInt(editConfig[k], 10) || 0;
       });
-      await apiPostInternal("/api/beds/config", { 
+      await apiPostInternal("/api/beds/config", {
         wards: payload,
         allowed_wards: editAllowedWards,
         total_beds: parseInt(editTotalBeds, 10) || 150
@@ -487,7 +498,7 @@ export default function IPD() {
                   }).map(ward => (
                     <div key={ward} className="flex flex-wrap items-center justify-between bg-gray-50/50 p-3 rounded-xl border border-gray-100 gap-3">
                       <div className="flex items-center gap-3 flex-1 min-w-[200px]">
-                        <input 
+                        <input
                           type="checkbox"
                           checked={editAllowedWards.includes(ward)}
                           onChange={() => toggleAllowedWard(ward)}
