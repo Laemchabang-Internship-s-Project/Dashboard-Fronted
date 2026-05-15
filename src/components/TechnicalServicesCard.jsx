@@ -14,11 +14,21 @@ const COLOR_MAP = {
   purple: { bar: "bg-purple-500", bg: "bg-purple-50", done: "text-purple-700", wait: "text-orange-600" },
 };
 
+const formatWaitTime = (minutes) => {
+  if (minutes == null || isNaN(minutes)) return "0 นาที";
+  if (minutes < 60) return `${Math.round(minutes)} นาที`;
+  const hrs = Math.floor(minutes / 60);
+  const mins = Math.round(minutes % 60);
+  return `${hrs} ชม. ${mins} น.`;
+};
+
 const ServiceItem = ({ serviceKey, data }) => {
   const cfg = SERVICE_CONFIG[serviceKey] || { label: serviceKey, icon: "🔧", color: "blue" };
   const col = COLOR_MAP[cfg.color];
-  const { all = 0, finished = 0, waiting = 0 } = data;
+  const { all = 0, finished = 0, waiting = 0, avg_wait_minutes = 0 } = data;
   const pct = all > 0 ? Math.round((finished / all) * 100) : 0;
+  
+  const formattedTime = formatWaitTime(avg_wait_minutes);
 
   return (
     <div className={`${col.bg} rounded-2xl p-4 border border-white/40`}>
@@ -34,6 +44,11 @@ const ServiceItem = ({ serviceKey, data }) => {
         <span className={col.done}>✓ {finished} เสร็จ</span>
         <span className={col.wait}>⏳ {waiting} รอ</span>
       </div>
+      {formattedTime && (
+        <div className="mt-2 text-[11px] text-gray-600 font-medium flex items-center justify-center bg-white/50 py-1 rounded-md">
+          ⏱️ รอเฉลี่ย: {formattedTime}
+        </div>
+      )}
     </div>
   );
 };
