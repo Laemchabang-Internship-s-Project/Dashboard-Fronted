@@ -58,7 +58,6 @@ const getToday = () => {
   return `${year}-${month}-${day}`;
 };
 
-// ปรับปรุงคอมโพเนนต์ DepartmentBlock ใน SummaryOPD.jsx
 const DepartmentBlockBowin = ({ title, stats, theme }) => {
   const isBlue = theme === 'blue';
   const containerBg = isBlue
@@ -75,36 +74,55 @@ const DepartmentBlockBowin = ({ title, stats, theme }) => {
         {title}
       </h2>
 
-      {/* แถวแรก: ปรับเหลือ 3 ช่องหลัก (OPD, ซักประวัติ, รอตรวจ) */}
+      {/* แถวแรก: ปรับช่องรอตรวจให้แสดง 2 บรรทัด */}
       <div className="grid grid-cols-3 gap-3 mb-6">
-        {[
-          { label: "ผู้รับบริการ OPD", val: stats.total },
-          { label: "ซักประวัติ", val: stats.waitingScreening },
-          { label: "รอตรวจ", val: stats.waitingExamCount },
-        ].map((item, i) => (
-          <div key={i} className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl text-center shadow-sm border border-white/50">
-            <p className="text-[11px] font-bold text-gray-500 mb-1 uppercase tracking-tight leading-none">{item.label}</p>
-            <AnimatedStat value={item.val} Component="p" className="text-2xl md:text-3xl font-extrabold text-gray-800" />
+        <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl text-center shadow-sm border border-white/50">
+          <p className="text-[13px] font-bold text-gray-500 mb-1 uppercase tracking-tight">ผู้รับบริการ OPD</p>
+          <AnimatedStat value={stats.total} Component="p" className="text-2xl md:text-3xl font-extrabold text-gray-800" />
+        </div>
+        <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl text-center shadow-sm border border-white/50">
+          <p className="text-[13px] font-bold text-gray-500 mb-1 uppercase tracking-tight">ซักประวัติ</p>
+          <AnimatedStat value={stats.waitingScreening} Component="p" className="text-2xl md:text-3xl font-extrabold text-gray-800" />
+        </div>
+        <div className="bg-white/60 backdrop-blur-sm p-3 rounded-2xl shadow-sm border border-white/50">
+          <p className="text-[13px] font-bold text-gray-500 mb-1 uppercase tracking-tight text-center">รอตรวจ (ทั่วไป/ฟัน)</p>
+          <div className="flex flex-col gap-0">
+             <div className="flex justify-between items-baseline px-2 border-b border-gray-100">
+                <span className="text-[12px] text-gray-400">OPD:</span>
+                <AnimatedStat value={stats.waitingExamCount} className="text-xl font-bold text-blue-600" />
+             </div>
+             <div className="flex justify-between items-baseline px-2">
+                <span className="text-[12px] text-gray-400">ทันตกรรม:</span>
+                <AnimatedStat value={stats.waitingDental} className="text-xl font-bold text-emerald-600" />
+             </div>
           </div>
-        ))}
+        </div>
       </div>
 
-      {/* แถวสอง: ระยะเวลารอคอย (4 ช่อง) */}
+      {/* แถวสอง: ระยะเวลารอคอย (แยก ทั่วไป / ฟัน ในช่องรอพบแพทย์) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        {[
-          { label: "ระยะเวลารอคอย เฉลี่ยรวม", val: stats.avgTotal },
-          { label: "ระยะเวลา รอซักประวัติ", val: stats.avgWaitScreening },
-          { label: "ระยะเวลา รอพบแพทย์", val: stats.avgWaitExam },
-          { label: "ระยะเวลา รอรับยา", val: stats.avgWaitDrug },
-        ].map((item, i) => (
-          <div key={i} className="bg-white/30 p-3 rounded-2xl flex flex-col items-center justify-center text-center min-h-[80px] border border-white/20">
-            <p className="text-[11px] font-semibold text-gray-600 mb-1 leading-tight">{item.label}</p>
-            <p className={`text-lg font-black ${timeBoxText}`}>{item.val}</p>
+        <div className="bg-white/30 p-3 rounded-2xl flex flex-col items-center justify-center text-center border border-white/20">
+          <p className="text-[11px] font-semibold text-gray-600 mb-1">เฉลี่ยรวม</p>
+          <p className={`text-lg font-black ${timeBoxText}`}>{stats.avgTotal}</p>
+        </div>
+        <div className="bg-white/30 p-3 rounded-2xl flex flex-col items-center justify-center text-center border border-white/20">
+          <p className="text-[11px] font-semibold text-gray-600 mb-1">รอซักประวัติ</p>
+          <p className={`text-lg font-black ${timeBoxText}`}>{stats.avgWaitScreening}</p>
+        </div>
+        <div className="bg-white/30 p-3 rounded-2xl flex flex-col items-center justify-center border border-white/20">
+          <p className="text-[11px] font-semibold text-gray-600 mb-1">รอพบแพทย์</p>
+          <div className="w-full text-[12px] font-bold text-right space-y-0.5">
+             <div className="flex justify-between"><span className="text-gray-400 font-normal">OPD:</span> <span className={timeBoxText}>{stats.avgWaitExam}</span></div>
+             <div className="flex justify-between"><span className="text-gray-400 font-normal">ทันตกรรม:</span> <span className="text-emerald-800">{stats.avgWaitDental}</span></div>
           </div>
-        ))}
+        </div>
+        <div className="bg-white/30 p-3 rounded-2xl flex flex-col items-center justify-center text-center border border-white/20">
+          <p className="text-[11px] font-semibold text-gray-600 mb-1">รอรับยา</p>
+          <p className={`text-lg font-black ${timeBoxText}`}>{stats.avgWaitDrug}</p>
+        </div>
       </div>
 
-      {/* แถวสุดท้าย: สถานะปลายทาง (รอรับยา, รอจ่ายเงิน, กลับบ้าน) */}
+      {/* แถวสุดท้ายเหมือนเดิม */}
       <div className="grid grid-cols-3 gap-3">
         <div className={`${isBlue ? 'bg-blue-200/50' : 'bg-emerald-200/50'} p-4 rounded-2xl text-center border border-white/40`}>
           <p className={`text-sm font-bold ${isBlue ? 'text-blue-800' : 'text-emerald-800'} mb-1`}>รอรับยา</p>
@@ -356,7 +374,17 @@ export default function OPDDashboard() {
     setStats042(mapDept("042"));
     setStats041(mapDept("041"));
     setStats074(mapDept("074"));
-    setStatsBowinAll(mapDept("901", ["902", "903", "904", "905"]));
+    
+    const bowinMed = mapDept("903", ["901", "902", "904"]);
+    const bowinDental = mapDept("905");
+
+    setStatsBowinAll({
+      ...bowinMed,
+      waitingExamCount: bowinMed.waitingExamCount, // ของห้อง 903
+      waitingDental: bowinDental.waitingExamCount, // เพิ่ม field ของห้อง 905
+      avgWaitExam: bowinMed.avgWaitExam,           // ของห้อง 903
+      avgWaitDental: bowinDental.avgWaitExam       // เพิ่ม field ของห้อง 905
+    });
   };
 
   // --- Filter Logic ---
