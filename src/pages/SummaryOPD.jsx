@@ -87,14 +87,14 @@ const DepartmentBlockBowin = ({ title, stats, theme }) => {
         <div className="bg-white/60 backdrop-blur-sm p-3 rounded-2xl shadow-sm border border-white/50">
           <p className="text-[13px] font-bold text-gray-500 mb-1 uppercase tracking-tight text-center">รอตรวจ (ทั่วไป/ฟัน)</p>
           <div className="flex flex-col gap-0">
-             <div className="flex justify-between items-baseline px-2 border-b border-gray-100">
-                <span className="text-[12px] text-gray-400">OPD:</span>
-                <AnimatedStat value={stats.waitingExamCount} className="text-xl font-bold text-blue-600" />
-             </div>
-             <div className="flex justify-between items-baseline px-2">
-                <span className="text-[12px] text-gray-400">ทันตกรรม:</span>
-                <AnimatedStat value={stats.waitingDental} className="text-xl font-bold text-emerald-600" />
-             </div>
+            <div className="flex justify-between items-baseline px-2 border-b border-gray-100">
+              <span className="text-[12px] text-gray-400">OPD:</span>
+              <AnimatedStat value={stats.waitingExamCount} className="text-xl font-bold text-blue-600" />
+            </div>
+            <div className="flex justify-between items-baseline px-2">
+              <span className="text-[12px] text-gray-400">ทันตกรรม:</span>
+              <AnimatedStat value={stats.waitingDental} className="text-xl font-bold text-emerald-600" />
+            </div>
           </div>
         </div>
       </div>
@@ -112,8 +112,8 @@ const DepartmentBlockBowin = ({ title, stats, theme }) => {
         <div className="bg-white/30 p-3 rounded-2xl flex flex-col items-center justify-center border border-white/20">
           <p className="text-[11px] font-semibold text-gray-600 mb-1">รอพบแพทย์</p>
           <div className="w-full text-[12px] font-bold text-right space-y-0.5">
-             <div className="flex justify-between"><span className="text-gray-400 font-normal">OPD:</span> <span className={timeBoxText}>{stats.avgWaitExam}</span></div>
-             <div className="flex justify-between"><span className="text-gray-400 font-normal">ทันตกรรม:</span> <span className="text-emerald-800">{stats.avgWaitDental}</span></div>
+            <div className="flex justify-between"><span className="text-gray-400 font-normal">OPD:</span> <span className={timeBoxText}>{stats.avgWaitExam}</span></div>
+            <div className="flex justify-between"><span className="text-gray-400 font-normal">ทันตกรรม:</span> <span className="text-emerald-800">{stats.avgWaitDental}</span></div>
           </div>
         </div>
         <div className="bg-white/30 p-3 rounded-2xl flex flex-col items-center justify-center text-center border border-white/20">
@@ -374,16 +374,30 @@ export default function OPDDashboard() {
     setStats042(mapDept("042"));
     setStats041(mapDept("041"));
     setStats074(mapDept("074"));
-    
-    const bowinMed = mapDept("903", ["901", "902", "904"]);
-    const bowinDental = mapDept("905");
+
+    const stats901 = mapDept("901");
+    const stats902 = mapDept("902");
+    const stats903 = mapDept("903");
+    const stats904 = mapDept("904");
+    const stats905 = mapDept("905");
 
     setStatsBowinAll({
-      ...bowinMed,
-      waitingExamCount: bowinMed.waitingExamCount, // ของห้อง 903
-      waitingDental: bowinDental.waitingExamCount, // เพิ่ม field ของห้อง 905
-      avgWaitExam: bowinMed.avgWaitExam,           // ของห้อง 903
-      avgWaitDental: bowinDental.avgWaitExam       // เพิ่ม field ของห้อง 905
+      total: stats901.total + stats902.total + stats903.total + stats904.total + stats905.total,
+      waitingScreening: stats902.waitingScreening,
+      waitingExamCount: stats903.waitingExamCount,
+      waitingDental: stats905.waitingExamCount,
+      waitingDrug: stats904.waitingDrug,
+      waitingPayment: stats903.waitingPayment + stats905.waitingPayment,
+      goHome: stats901.goHome + stats902.goHome + stats903.goHome + stats904.goHome + stats905.goHome,
+
+      
+      avgTotal: stats902.avgTotal,
+      avgWaitScreening: stats902.avgWaitScreening,
+      avgWaitExam: stats902.avgWaitExam,       // ← เปลี่ยนจาก stats903 เป็น stats902
+      avgWaitDental: stats905.avgWaitExam,
+      avgWaitDrug: stats902.avgWaitDrug,       // ← เปลี่ยนจาก stats904 เป็น stats902
+
+      redirected: 0,
     });
   };
 
