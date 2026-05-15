@@ -62,8 +62,8 @@ const getToday = () => {
 const DepartmentBlockBowin = ({ title, stats, theme }) => {
   const isBlue = theme === 'blue';
   const containerBg = isBlue
-  ? "bg-gradient-to-br from-cyan-50 to-blue-100"
-  : "bg-gradient-to-br from-lime-50 to-emerald-100";
+    ? "bg-gradient-to-br from-cyan-50 to-blue-100"
+    : "bg-gradient-to-br from-lime-50 to-emerald-100";
   const borderColor = isBlue ? "border-blue-200" : "border-emerald-200";
   const titleBarColor = isBlue ? "bg-blue-600" : "bg-emerald-600";
   const timeBoxText = isBlue ? "text-blue-900" : "text-emerald-900";
@@ -272,8 +272,10 @@ export default function OPDDashboard() {
       drugDeliveryRider: s?.total_drug_delivery_rider ?? "-"
     });
 
-    // แก้ไขเฉพาะฟังก์ชัน mapDept ภายใน OPDDashboard -> processData
-    const mapDept = (mainCode, extraCodes = [], useHosTotal = false) => {
+    // dept ที่ใช้ HosXP เป็น total (NeoQ นับได้ไม่ครบ)
+    const HOS_TOTAL_DEPTS = new Set(["062", "072", "063", "033", "044"]);
+
+    const mapDept = (mainCode, extraCodes = []) => {
       const allCodes = [mainCode, ...extraCodes];
 
       const mergedStats = allCodes.reduce((acc, code) => {
@@ -288,22 +290,33 @@ export default function OPDDashboard() {
         acc.waiting_payment += deptSpecific.waiting_payment || 0;
         acc.finished += deptSpecific.finished || 0;
 
-        // --- จุดที่แก้ไข: ถ้า useHosTotal เป็น true ให้ใช้ยอดจาก HOS (deptSpecific.total) ---
-        // ถ้าเป็น false (ค่าเริ่มต้น) ให้ใช้ยอดจาก NeoQ (room.total) เหมือนเดิม
-        acc.total += useHosTotal ? (deptSpecific.total || 0) : (room.total || 0);
+        const hosTotal = deptSpecific.total || 0;
+        const neoqTotal = room.total || 0;
+
+        // ถ้า dept อยู่ใน HOS_TOTAL_DEPTS ให้ใช้ HosXP เสมอ
+        // ถ้าไม่ใช่ → NeoQ ก่อน ถ้า 0 fallback HosXP
+        const useHos = HOS_TOTAL_DEPTS.has(code);
+        acc.total += useHos ? hosTotal : (neoqTotal > 0 ? neoqTotal : hosTotal);
+        acc.hos_total += hosTotal;
 
         return acc;
       }, {
-        total: 0, waiting_screening: 0, waiting_exam: 0, waiting_lab: 0,
+        total: 0, hos_total: 0,
+        waiting_screening: 0, waiting_exam: 0, waiting_lab: 0,
         waiting_xray: 0, waiting_drug: 0, waiting_payment: 0, finished: 0
       });
 
-      const sumHOSStates = mergedStats.waiting_screening + mergedStats.waiting_exam +
-        mergedStats.waiting_lab + mergedStats.waiting_xray +
-        mergedStats.waiting_drug + mergedStats.waiting_payment +
+      const sumHOSStates =
+        mergedStats.waiting_screening +
+        mergedStats.waiting_exam +
+        mergedStats.waiting_lab +
+        mergedStats.waiting_xray +
+        mergedStats.waiting_drug +
+        mergedStats.waiting_payment +
         mergedStats.finished;
 
       const redirected = Math.max(0, mergedStats.total - sumHOSStates);
+
       const depSum = data.summary?.[`dep_${mainCode}`] || {};
 
       return {
@@ -342,8 +355,8 @@ export default function OPDDashboard() {
     setStats005(mapDept("005"));
     setStats042(mapDept("042"));
     setStats041(mapDept("041"));
-    setStats074(mapDept("074", [], true));
-    setStatsBowinAll(mapDept("901", ["902", "903", "904", "905"], true));
+    setStats074(mapDept("074"));
+    setStatsBowinAll(mapDept("901", ["902", "903", "904", "905"]));
   };
 
   // --- Filter Logic ---
