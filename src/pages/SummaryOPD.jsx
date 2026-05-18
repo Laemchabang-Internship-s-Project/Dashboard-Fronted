@@ -387,7 +387,7 @@ export default function OPDDashboard() {
       waitingExamCount: stats903.waitingExamCount,
       waitingDental: stats905.waitingExamCount,
       waitingDrug: stats904.waitingDrug,
-      waitingPayment: stats903.waitingPayment + stats905.waitingPayment,
+      waitingPayment: stats902.waitingPayment +stats903.waitingPayment + stats905.waitingPayment,
       goHome: stats901.goHome + stats902.goHome + stats903.goHome + stats904.goHome + stats905.goHome,
 
       
