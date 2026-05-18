@@ -45,31 +45,7 @@ export default function IPD() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [fixedWards, setFixedWards] = useState({});
-  const [allowedWards, setAllowedWards] = useState([
-    "หอผู้ป่วยหลังคลอด",
-    "หอผู้ป่วยเด็ก",
-    "หอผู้ป่วยศัลยกรรม กระดูกและข้อชาย",
-    "หอผู้ป่วยศัลยกรรม กระดูกและข้อหญิง",
-    "หอผู้ป่วยอายุรกรรมชาย",
-    "หอผู้ป่วยอายุรกรรมหญิง",
-    "หอผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4",
-    "มินิธัญญารักษ์"
-  ]);
-  const WARD_NAME_MAP = {
-    "ห้องคลอด": "ห้องคลอด",
-    "วิกฤตทารกแรกเกิด": "หอผู้ป่วยวิกฤตทารกแรกเกิด",
-    "หลังคลอด": "หอผู้ป่วยหลังคลอด",
-    "ผู้ป่วยเด็ก": "หอผู้ป่วยเด็ก",
-    "ผู้ป่วยศัลยชาย": "หอผู้ป่วยศัลยกรรม กระดูกและข้อชาย",
-    "ผู้ป่วยศัลยหญิง": "หอผู้ป่วยศัลยกรรม กระดูกและข้อหญิง",
-    "ผู้ป่วยอายุรกรรมชาย": "หอผู้ป่วยอายุรกรรมชาย",
-    "ผู้ป่วยอายุรกรรมหญิง": "หอผู้ป่วยอายุรกรรมหญิง",
-    "ผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4": "หอผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4",
-    "มินิธัญญารักษ์": "มินิธัญญารักษ์",
-    "หน่วยไตเทียม": "หน่วยไตเทียม",
-    "ER Observ": "ER Observ",
-    "ICU": "หอผู้ป่วย ICU"
-  };
+  const [allowedWards, setAllowedWards] = useState([]);
   const [totalBeds, setTotalBeds] = useState(150);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [editConfig, setEditConfig] = useState({});
@@ -100,8 +76,7 @@ export default function IPD() {
       if (configRes?.data) {
         if (configRes.data.wards) {
           currentConfig = configRes.data.wards;
-          currentAllowed = (configRes.data.allowed_wards || allowedWards)
-            .map(name => WARD_NAME_MAP[name] || name);
+          currentAllowed = configRes.data.allowed_wards || [];
           currentTotalBeds = configRes.data.total_beds || 150;
         } else {
           currentConfig = configRes.data;
@@ -112,51 +87,8 @@ export default function IPD() {
       }
 
       if (summaryRes?.data) {
-        const data = summaryRes.data;
-        const FIXED_WARDS = currentConfig;
-
-        const newByWard = {};
-        Object.keys(data.by_ward).forEach(wardName => {
-          const displayNames = WARD_NAME_MAP[wardName] || wardName;
-          const nameCheck = String(displayNames).trim().toLowerCase();
-
-          // ข้าม ODS ward และหน่วยไตเทียมตามที่ต้องการ
-          if (!displayNames || nameCheck === "other" || nameCheck === "null" || nameCheck === "none" || nameCheck === "ods ward" || nameCheck === "หน่วยไตเทียม") {
-            return;
-          }
-
-          const w = { ...data.by_ward[wardName] };
-
-          // ✅ แก้ไข: ดึงค่า Fixed จากคีย์ดั้งเดิม (wardName) ที่เก็บอยู่บนระบบหลังบ้าน
-          if (FIXED_WARDS[wardName] !== undefined) {
-            w.total = FIXED_WARDS[wardName];
-          } else if (FIXED_WARDS[displayNames] !== undefined) {
-            // รองรับเผื่อกรณีที่มีการกดบันทึก Config จากหน้า Modal ด้วยชื่อยาว
-            w.total = FIXED_WARDS[displayNames];
-          }
-
-          w.other = 0;
-          w.occupied = w.occupied || 0;
-          w.available = Math.max(0, (w.total || 0) - w.occupied);
-
-          newByWard[displayNames] = w;
-        });
-
-        // สรุปยอดรวมทั้งหมดใหม่โดยไม่นำ other มารวม
-        const totals = Object.entries(newByWard).reduce(
-          (acc, [wardName, w]) => {
-            if (!currentAllowed.includes(wardName)) return acc;
-
-            acc.occupied += w.occupied || 0;
-            return acc;
-          },
-          { occupied: 0 }
-        );
-
-        totals.total = currentTotalBeds;
-        totals.available = currentTotalBeds - totals.occupied;
-
-        setBedData({ ...data, ...totals, by_ward: newByWard });
+        // Backend ทำการคำนวณและแปลงชื่อวอร์ดมาให้เรียบร้อยแล้ว
+        setBedData(summaryRes.data);
         setStatus({ text: "LIVE", type: "success" });
       }
     } catch (error) {
@@ -174,6 +106,22 @@ export default function IPD() {
   }, []);
 
   const wardEntries = Object.entries(bedData.by_ward || {});
+
+  const WARD_NAME_MAP = {
+    "ห้องคลอด": "ห้องคลอด",
+    "วิกฤตทารกแรกเกิด": "หอผู้ป่วยวิกฤตทารกแรกเกิด",
+    "หลังคลอด": "หอผู้ป่วยหลังคลอด",
+    "ผู้ป่วยเด็ก": "หอผู้ป่วยเด็ก",
+    "ผู้ป่วยศัลยชาย": "หอผู้ป่วยศัลยกรรม กระดูกและข้อชาย",
+    "ผู้ป่วยศัลยหญิง": "หอผู้ป่วยศัลยกรรม กระดูกและข้อหญิง",
+    "ผู้ป่วยอายุรกรรมชาย": "หอผู้ป่วยอายุรกรรมชาย",
+    "ผู้ป่วยอายุรกรรมหญิง": "หอผู้ป่วยอายุรกรรมหญิง",
+    "ผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4": "หอผู้ป่วยพิเศษอาคารอ่าวอุดม ชั้น 4",
+    "มินิธัญญารักษ์": "มินิธัญญารักษ์",
+    "หน่วยไตเทียม": "หน่วยไตเทียม",
+    "ER Observ": "ER Observ",
+    "ICU": "หอผู้ป่วย ICU"
+  };
 
   const WARD_ORDER = [
     "ห้องคลอด",
@@ -500,8 +448,10 @@ export default function IPD() {
                 <h4 className="text-[14px] font-semibold text-gray-700 mb-3 border-b pb-2">ตั้งค่าเตียงแยกตามหอผู้ป่วย</h4>
                 <div className="space-y-2">
                   {Object.keys(editConfig).sort((a, b) => {
-                    const indexA = WARD_ORDER.indexOf(a);
-                    const indexB = WARD_ORDER.indexOf(b);
+                    const nameA = WARD_NAME_MAP[a] || a;
+                    const nameB = WARD_NAME_MAP[b] || b;
+                    const indexA = WARD_ORDER.indexOf(nameA);
+                    const indexB = WARD_ORDER.indexOf(nameB);
                     if (indexA === -1) return 1;
                     if (indexB === -1) return -1;
                     return indexA - indexB;
@@ -510,12 +460,12 @@ export default function IPD() {
                       <div className="flex items-center gap-3 flex-1 min-w-[200px]">
                         <input
                           type="checkbox"
-                          checked={editAllowedWards.includes(ward)}
+                          checked={editAllowedWards.includes(ward) || editAllowedWards.includes(WARD_NAME_MAP[ward])}
                           onChange={() => toggleAllowedWard(ward)}
                           className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
                           title="นำยอดไปคิดรวมในยอดเตียงทั้งหมด"
                         />
-                        <span className={`text-sm font-medium ${editAllowedWards.includes(ward) ? 'text-gray-800' : 'text-gray-400 line-through'}`}>{ward}</span>
+                        <span className={`text-sm font-medium ${(editAllowedWards.includes(ward) || editAllowedWards.includes(WARD_NAME_MAP[ward])) ? 'text-gray-800' : 'text-gray-400 line-through'}`}>{WARD_NAME_MAP[ward] || ward}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-[11px] text-gray-400">จำนวน:</span>
