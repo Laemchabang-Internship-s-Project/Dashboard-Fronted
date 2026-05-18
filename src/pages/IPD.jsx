@@ -121,7 +121,7 @@ export default function IPD() {
           const nameCheck = String(displayNames).trim().toLowerCase(); // เช็คจากชื่อใหม่
 
           // แก้ไขเงื่อนไขการข้าม (ข้าม ODS ward ตามที่ต้องการ)
-          if (!displayNames || nameCheck === "other" || nameCheck === "null" || nameCheck === "none" || nameCheck === "ods ward") {
+          if (!displayNames || nameCheck === "other" || nameCheck === "null" || nameCheck === "none" || nameCheck === "ods ward" || nameCheck === "หน่วยไตเทียม"){
             return;
           }
 
