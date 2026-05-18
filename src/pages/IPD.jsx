@@ -117,18 +117,21 @@ export default function IPD() {
 
         const newByWard = {};
         Object.keys(data.by_ward).forEach(wardName => {
-          const displayNames = WARD_NAME_MAP[wardName] || wardName; // ใช้ชื่อใหม่ถ้ามี
-          const nameCheck = String(displayNames).trim().toLowerCase(); // เช็คจากชื่อใหม่
+          const displayNames = WARD_NAME_MAP[wardName] || wardName;
+          const nameCheck = String(displayNames).trim().toLowerCase();
 
-          // แก้ไขเงื่อนไขการข้าม (ข้าม ODS ward ตามที่ต้องการ)
-          if (!displayNames || nameCheck === "other" || nameCheck === "null" || nameCheck === "none" || nameCheck === "ods ward" || nameCheck === "หน่วยไตเทียม"){
+          // ข้าม ODS ward และหน่วยไตเทียมตามที่ต้องการ
+          if (!displayNames || nameCheck === "other" || nameCheck === "null" || nameCheck === "none" || nameCheck === "ods ward" || nameCheck === "หน่วยไตเทียม") {
             return;
           }
 
           const w = { ...data.by_ward[wardName] };
 
-          // เปลี่ยนเป็น displayNames เพื่อให้แมปกับ FIXED_WARDS และ newByWard ถูกต้อง
-          if (FIXED_WARDS[displayNames] !== undefined) {
+          // ✅ แก้ไข: ดึงค่า Fixed จากคีย์ดั้งเดิม (wardName) ที่เก็บอยู่บนระบบหลังบ้าน
+          if (FIXED_WARDS[wardName] !== undefined) {
+            w.total = FIXED_WARDS[wardName];
+          } else if (FIXED_WARDS[displayNames] !== undefined) {
+            // รองรับเผื่อกรณีที่มีการกดบันทึก Config จากหน้า Modal ด้วยชื่อยาว
             w.total = FIXED_WARDS[displayNames];
           }
 
@@ -136,7 +139,7 @@ export default function IPD() {
           w.occupied = w.occupied || 0;
           w.available = Math.max(0, (w.total || 0) - w.occupied);
 
-          newByWard[displayNames] = w; // เก็บด้วยชื่อใหม่
+          newByWard[displayNames] = w;
         });
 
         // สรุปยอดรวมทั้งหมดใหม่โดยไม่นำ other มารวม
