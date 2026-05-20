@@ -504,7 +504,7 @@ export default function OPDDashboard() {
         waitingScreening: b902.waiting_screening || 0,
         waitingExamCount: b903.waiting_exam || 0,
         waitingDental: b905.waiting_exam || 0,
-        waitingDrug: b904.waiting_drug || 0,
+        waitingDrug: (b904.waiting_drug || 0) + (b902.waiting_drug || 0),
         waitingPayment: (b902.waiting_payment || 0) + (b903.waiting_payment || 0) + (b905.waiting_payment || 0),
         goHome: (b901.go_home || 0) + (b902.go_home || 0) + (b903.go_home || 0) + (b904.go_home || 0) + (b905.go_home || 0),
         avgTotal: formatWaitTime(b902.avg_wait_total),
