@@ -15,6 +15,7 @@ import FinanceGraph from './pages/FinanceGraph';
 import IPD from './pages/IPD';
 import NotFound from './pages/NotFound';
 import { authLogin, authVerify } from './services/api';
+import OperationRooms from './pages/OperationRooms';
 
 // ─── Token Helpers ───────────────────────────────────────────────────────────
 const TOKEN_KEY = 'dashboard_token';
@@ -207,6 +208,11 @@ function App() {
         <Route path="/opd" element={
           <ProtectedRoute isAuthenticated={isAuthenticated} onAuthenticate={handleAuthenticate}>
             <SummarOPD />
+          </ProtectedRoute>
+        } />
+        <Route path="/operation-rooms" element={
+          <ProtectedRoute isAuthenticated={isAuthenticated} onAuthenticate={handleAuthenticate}>
+            <OperationRooms />
           </ProtectedRoute>
         } />
         <Route path="/graph" element={
