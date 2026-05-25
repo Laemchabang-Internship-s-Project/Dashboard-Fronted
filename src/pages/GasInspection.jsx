@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Chart from 'chart.js/auto';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRotateRight, faChartSimple, faChartLine } from '@fortawesome/free-solid-svg-icons';
+import { faRotateRight, faChartSimple, faChartLine, faFilter, faSync } from '@fortawesome/free-solid-svg-icons';
 import FuelSummaryCard from '../components/FuelSummaryCard';
 import { Helmet } from "react-helmet-async";
 import { apiGet, createInternalEventSource } from "../services/api";
@@ -32,11 +32,11 @@ export default function GasInspection() {
   const [status, setStatus] = useState({ text: "Connecting...", color: "bg-gray-200 text-gray-800" });
   const [lastUpdated, setLastUpdated] = useState("รอข้อมูล...");
   const [currentTime, setCurrentTime] = useState(() =>
-  new Date().toLocaleString('th-TH', {
-    year: 'numeric', month: 'long', day: 'numeric',
-    hour: '2-digit', minute: '2-digit', second: '2-digit'
-  })
-);
+    new Date().toLocaleString('th-TH', {
+      year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    })
+  );
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -97,7 +97,7 @@ export default function GasInspection() {
       const currentLength = allRecords.length;
       const data = await apiGet(`/api/fuel/history?limit=100&offset=${currentLength}`);
       const newRecords = data.records || [];
-      
+
       if (newRecords.length < 100) {
         setHasMore(false);
       }
@@ -397,15 +397,15 @@ export default function GasInspection() {
                   </tbody>
                 </table>
               </div>
-              
+
               {hasMore && (
                 <div className="mt-6 flex justify-center pb-4">
                   <button
                     onClick={loadMoreRecords}
                     disabled={isLoadingMore}
                     className={`px-6 py-2.5 rounded-full font-medium shadow-sm transition-all duration-200 border
-                      ${isLoadingMore 
-                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
+                      ${isLoadingMore
+                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                         : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50 hover:shadow hover:-translate-y-0.5'}`}
                   >
                     {isLoadingMore ? (
