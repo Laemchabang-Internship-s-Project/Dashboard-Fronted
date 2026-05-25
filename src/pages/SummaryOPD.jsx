@@ -229,7 +229,9 @@ export default function OPDDashboard() {
   const [endDate, setEndDate] = useState(getToday());
   const [secondaryState, setSecondaryState] = useState("normal"); // normal, filtered, hidden
   const [techServices, setTechServices] = useState(null);
-
+  // Filter States (เพิ่มชุดใหม่แยกจากเดิม)
+  const [isDeptFilterMode, setIsDeptFilterMode] = useState(false);
+  const [deptFilterDate, setDeptFilterDate] = useState(getToday());
   const [systemStats, setSystemStats] = useState({
     opdTotal: "-", walkIn: "-", telemed: "-", drugDelivery: "-",
     drugDeliveryPostal: "-",
@@ -272,7 +274,7 @@ export default function OPDDashboard() {
   // --- Main Data Process ---
   const processData = (data) => {
     // บล็อกข้อมูล Real-time ไม่ให้มาทับยอดถ้ากำลังอยู่ในโหมด Filter
-    if (!data || isFilterMode) return;
+    if (!data || isFilterMode || isDeptFilterMode) return;
 
     if (data.technical_services) {
       setTechServices(data.technical_services);
@@ -386,11 +388,11 @@ export default function OPDDashboard() {
       waitingScreening: stats902.waitingScreening,
       waitingExamCount: stats903.waitingExamCount,
       waitingDental: stats905.waitingExamCount,
-      waitingDrug: stats904.waitingDrug,
-      waitingPayment: stats903.waitingPayment + stats905.waitingPayment,
+      waitingDrug: stats904.waitingDrug + stats902.waitingDrug,
+      waitingPayment: stats902.waitingPayment + stats903.waitingPayment + stats905.waitingPayment,
       goHome: stats901.goHome + stats902.goHome + stats903.goHome + stats904.goHome + stats905.goHome,
 
-      
+
       avgTotal: stats902.avgTotal,
       avgWaitScreening: stats902.avgWaitScreening,
       avgWaitExam: stats902.avgWaitExam,       // ← เปลี่ยนจาก stats903 เป็น stats902
@@ -400,53 +402,151 @@ export default function OPDDashboard() {
       redirected: 0,
     });
   };
-
-  // --- Filter Logic ---
   const applyDateFilter = async () => {
-    if (!startDate || !endDate) return alert("กรุณาเลือกวันที่ให้ครบถ้วน");
+    if (!startDate || !endDate) {
+      return alert("กรุณาเลือกช่วงเวลา");
+    }
+
     setIsFilterMode(true);
-    setSecondaryState("filtered"); // ทำให้ส่วนล่างเป็นสีเทา
-    setStatus({ text: "FILTERED (HISTORY)", color: "bg-purple-100 text-purple-700 font-bold" });
+    setSecondaryState("filtered");
+
     try {
-      const resp = await apiGet(`/api/dashboard/summary-range?start_date=${startDate}&end_date=${endDate}`);
-      const data = resp.data;
+      const resp = await apiGet(
+        `/api/dashboard/summary-range?start_date=${startDate}&end_date=${endDate}`
+      );
+
+      const d = resp.data || {};
+
       setSystemStats({
-        opdTotal: data.opd_total || 0,
-        walkIn: data.walk_in || 0,
-        telemed: data.telemed || 0,
-        drugDelivery: data.drug_delivery || 0,
-        drugDeliveryPostal: data.total_drug_delivery_postal || 0,
-        drugDeliveryRider: data.total_drug_delivery_rider || 0
+        opdTotal: d.opd_total ?? "-",
+        walkIn: d.walk_in ?? "-",
+        telemed: d.telemed ?? "-",
+        drugDelivery: d.drug_delivery ?? "-",
+        drugDeliveryPostal: d.total_drug_delivery_postal ?? "-",
+        drugDeliveryRider: d.total_drug_delivery_rider ?? "-"
       });
-      // เคลียร์ยอดแผนกให้เป็น "-" เพราะข้อมูลย้อนหลังปกติจะไม่มีส่วนนี้
-      setStats010(initialDepState);
-      setStats062(initialDepState);
-      setStats109(initialDepState);
-      setStats110(initialDepState);
-      setStats111(initialDepState);
-      setStats108(initialDepState);
-      setStats011(initialDepState);
-      setStats075(initialDepState);
-      setStats044(initialDepState);
-      setStats033(initialDepState);
-      setStats074(initialDepState);
-      setStats072(initialDepState);
-      setStats063(initialDepState);
-      setStats005(initialDepState);
-      setStats042(initialDepState);
-      setStats041(initialDepState);
-    } catch (err) { console.error("Filter error:", err); }
+
+      setSecondaryState("filtered");
+
+    } catch (err) {
+      console.error("Date filter error:", err);
+    }
   };
 
-  const clearDateFilter = () => {
+  const applyDeptFilter = async () => {
+    if (!deptFilterDate) return alert("กรุณาเลือกวันที่");
+    setIsDeptFilterMode(true);
+    try {
+      const resp = await apiGet(`/api/dashboard/opd-dept-range?start_date=${deptFilterDate}`);
+      const depts = resp.departments; // array of dept objects
+
+      // อัปเดตข้อมูลบริการเทคนิคการแพทย์ (X-ray / Lab) ย้อนหลังเข้า State ของหน้าจอ
+      if (resp.technical_services) {
+        setTechServices(resp.technical_services);
+      }
+
+      const findDept = (code) => depts.find(d => d.dept_code === code) || {};
+
+      const mapHistoricalDept = (mainCode, extraCodes = []) => {
+        const allCodes = [mainCode, ...extraCodes];
+        const merged = allCodes.reduce((acc, code) => {
+          const d = findDept(code);
+          acc.total += d.total_opd || 0;
+          acc.waitingScreening += d.waiting_screening || 0;
+          acc.waitingExamCount += d.waiting_exam || 0;
+          acc.waitingLab += d.waiting_lab || 0;
+          acc.waitingXray += d.waiting_xray || 0;
+          acc.waitingDrug += d.waiting_drug || 0;
+          acc.waitingPayment += d.waiting_payment || 0;
+          acc.goHome += d.go_home || 0;
+          acc.other += d.other || 0;
+          return acc;
+        }, {
+          total: 0, waitingScreening: 0, waitingExamCount: 0,
+          waitingLab: 0, waitingXray: 0, waitingDrug: 0,
+          waitingPayment: 0, goHome: 0, other: 0
+        });
+
+        // avg ใช้จาก mainCode เป็นหลัก
+        const d = findDept(mainCode);
+        return {
+          ...merged,
+          redirected: merged.other,
+          avgTotal: formatWaitTime(d.avg_wait_total),
+          avgWaitScreening: formatWaitTime(d.avg_wait_screening),
+          avgWaitExam: formatWaitTime(d.avg_wait_exam),
+          avgWaitDrug: formatWaitTime(d.avg_wait_drug),
+        };
+      };
+
+      setStats010(mapHistoricalDept("010"));
+      setStats062(mapHistoricalDept("062"));
+      setStats108(mapHistoricalDept("108"));
+      setStats109(mapHistoricalDept("109"));
+      setStats110(mapHistoricalDept("110"));
+      setStats111(mapHistoricalDept("111"));
+      setStats011(mapHistoricalDept("011"));
+      setStats075(mapHistoricalDept("075"));
+      setStats044(mapHistoricalDept("044"));
+      setStats033(mapHistoricalDept("033"));
+      setStats072(mapHistoricalDept("072"));
+      setStats063(mapHistoricalDept("063"));
+      setStats005(mapHistoricalDept("005"));
+      setStats042(mapHistoricalDept("042"));
+      setStats041(mapHistoricalDept("041"));
+      setStats074(mapHistoricalDept("074"));
+
+      // บ่อวิน
+      const b901 = findDept("901"), b902 = findDept("902"),
+        b903 = findDept("903"), b904 = findDept("904"), b905 = findDept("905");
+      setStatsBowinAll({
+        total: (b901.total_opd || 0) + (b902.total_opd || 0) + (b903.total_opd || 0) + (b904.total_opd || 0) + (b905.total_opd || 0),
+        waitingScreening: b902.waiting_screening || 0,
+        waitingExamCount: b903.waiting_exam || 0,
+        waitingDental: b905.waiting_exam || 0,
+        waitingDrug: (b904.waiting_drug || 0) + (b902.waiting_drug || 0),
+        waitingPayment: (b902.waiting_payment || 0) + (b903.waiting_payment || 0) + (b905.waiting_payment || 0),
+        goHome: (b901.go_home || 0) + (b902.go_home || 0) + (b903.go_home || 0) + (b904.go_home || 0) + (b905.go_home || 0),
+        avgTotal: formatWaitTime(b902.avg_wait_total),
+        avgWaitScreening: formatWaitTime(b902.avg_wait_screening),
+        avgWaitExam: formatWaitTime(b902.avg_wait_exam),
+        avgWaitDental: formatWaitTime(b905.avg_wait_exam),
+        avgWaitDrug: formatWaitTime(b902.avg_wait_drug),
+        redirected: 0,
+      });
+
+      setSecondaryState("normal");
+    } catch (err) {
+      console.error("Dept filter error:", err);
+    }
+  };
+
+  const clearDeptFilter = () => {
+    setIsDeptFilterMode(false);
+    setDeptFilterDate(getToday());
+    // ถ้า summary filter ก็ไม่ได้ active → คืน dept กลับเป็น normal
+    if (!isFilterMode) setSecondaryState("normal");
+  };
+
+  const clearDateFilter = async () => {
     setStartDate(getToday());
     setEndDate(getToday());
-    setSecondaryState("hidden");
-    setTimeout(() => {
-      setIsFilterMode(false);
-      setSecondaryState("normal");
 
-    }, 200);
+    // คืน UI ทันที
+    setIsFilterMode(false);
+    setSecondaryState("normal");
+
+    try {
+      const data = await apiGetInternal(
+        "/api/dashboard/internal/snapshot"
+      );
+
+      // force update realtime snapshot
+      processData(data);
+
+    } catch (err) {
+      console.error("Reload snapshot error:", err);
+    }
   };
 
   useEffect(() => {
@@ -454,7 +554,7 @@ export default function OPDDashboard() {
     let isCancelled = false;
 
     const connectSSE = () => {
-      if (isFilterMode || isCancelled) return;
+      if (isFilterMode || isDeptFilterMode || isCancelled) return;
 
       es = createInternalEventSource("/api/dashboard/internal/stream");
 
@@ -464,7 +564,7 @@ export default function OPDDashboard() {
       };
 
       es.onmessage = (e) => {
-        if (isCancelled || isFilterMode) return;
+        if (isCancelled || isFilterMode || isDeptFilterMode) return;
         try {
           processData(JSON.parse(e.data));
         } catch (err) {
@@ -480,7 +580,9 @@ export default function OPDDashboard() {
         es = null;
 
         setTimeout(() => {
-          if (!isFilterMode && !isCancelled) connectSSE();
+          if (!isFilterMode && !isDeptFilterMode && !isCancelled) {
+            connectSSE();
+          }
         }, 3000);
       };
     };
@@ -501,7 +603,7 @@ export default function OPDDashboard() {
       }
     };
 
-    if (!isFilterMode) {
+    if (!isFilterMode && !isDeptFilterMode) {
       loadInit();
     }
 
@@ -512,12 +614,9 @@ export default function OPDDashboard() {
         es = null;
       }
     };
-  }, [isFilterMode]);
+  }, [isFilterMode, isDeptFilterMode]);
 
-  // CSS สำหรับ Grayscale และความโปร่งใส
-  const secondaryClasses = `transition-all duration-300 ${secondaryState === "filtered" ? "opacity-30 grayscale pointer-events-none" :
-    secondaryState === "hidden" ? "opacity-0" : "opacity-100"
-    }`;
+  const secondaryClasses = "transition-all duration-300";
 
   return (
     <div className="p-3 md:p-6 min-h-screen bg-[#f1f5f9]" style={{ fontFamily: "'Sarabun', sans-serif" }}>
@@ -571,8 +670,8 @@ export default function OPDDashboard() {
             <DashboardHeader
               title="Dashboard"
               subtitle="ภาพรวมระบบ"
-              statusText={status.text}
-              statusColorClass={status.color}
+              statusText={(isFilterMode || isDeptFilterMode) ? "Filter Mode" : status.text}
+              statusColorClass={(isFilterMode || isDeptFilterMode) ? "bg-amber-100 text-amber-700 font-bold" : status.color}
             >
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
                 <input
@@ -596,6 +695,30 @@ export default function OPDDashboard() {
                   className="bg-[#1e40af] hover:bg-blue-800 text-white text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap active:scale-95">ค้นหา</button>
                 <button onClick={clearDateFilter}
                   className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isFilterMode ? 'hidden' : ''}`}>ล้าง</button>
+              </div>
+
+              {/* ปุ่มใหม่: filter รายแผนก */}
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 bg-purple-50/80 px-3 py-2 rounded-lg border border-purple-200 shadow-sm w-full sm:w-auto">
+                <span className="text-[12px] font-semibold text-purple-700 whitespace-nowrap">ข้อมูลแผนก</span>
+                <input
+                  type="date"
+                  value={deptFilterDate}
+                  onChange={(e) => setDeptFilterDate(e.target.value)}
+                  className="text-[13px] md:text-sm px-2 py-1 rounded border border-purple-300 bg-white text-slate-900 focus:outline-none focus:border-purple-500 flex-1 min-w-[130px] appearance-none"
+                  style={{ colorScheme: 'light' }}
+                />
+                <button
+                  onClick={applyDeptFilter}
+                  className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap active:scale-95"
+                >
+                  ดูย้อนหลัง
+                </button>
+                <button
+                  onClick={clearDeptFilter}
+                  className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isDeptFilterMode ? 'hidden' : ''}`}
+                >
+                  ล้าง
+                </button>
               </div>
             </DashboardHeader>
 
