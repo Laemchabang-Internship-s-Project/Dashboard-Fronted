@@ -192,10 +192,10 @@ export default function OperationRooms() {
 
           <button
             type="submit"
-            className="px-4 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-medium transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+            className="px-4 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95 w-28"
           >
             <FontAwesomeIcon icon={faMagnifyingGlass} size="sm" />
-            ค้นหาข้อมูล
+            ค้นหา
           </button>
 
           {isFilterMode && (
@@ -206,7 +206,7 @@ export default function OperationRooms() {
                 setEndDate(todayStr);
                 setIsFilterMode(false);
               }}
-              className="text-xs text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 rounded-xl px-4 py-1.5 transition-colors font-medium ml-auto shadow-sm active:scale-95 cursor-pointer"
+              className="text-sm text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 rounded-xl px-4 py-1.5 transition-colors font-medium mr-auto shadow-sm active:scale-95 cursor-pointer flex items-center justify-center w-28"
             >
               ล้างตัวกรอง
             </button>
@@ -227,7 +227,7 @@ export default function OperationRooms() {
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
                     จำนวนห้องผ่าตัดทั้งหมด
                   </span>
-                  
+
                 </div>
                 <div className="flex items-baseline gap-1 bg-blue-50/60 border border-blue-100 px-4 py-2 rounded-xl">
                   <AnimatedStat value={roomsData.length} className="text-[34px] font-black leading-none text-blue-600 tracking-tight" />
@@ -240,7 +240,7 @@ export default function OperationRooms() {
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                     ยอดครั้งการเข้าใช้ผ่าตัดรวมในช่วงเวลานี้
                   </span>
-                  
+
                 </div>
                 <div className="flex items-baseline gap-1 bg-amber-50/60 border border-amber-100 px-4 py-2 rounded-xl">
                   <AnimatedStat value={totalCasesSum} className="text-[34px] font-black leading-none text-amber-600 tracking-tight" />
