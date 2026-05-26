@@ -5,15 +5,25 @@ import { HeaderSkeleton, StatCardSkeleton, DepartmentBlockSkeleton } from '../co
 import { DashboardHeader } from '../components/DashboardUI';
 import { TechnicalServicesCard } from '../components/TechnicalServicesCard';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCalendarDays, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+
 // --- Helper: แปลงนาทีเป็น ชม./นาที ---
 function formatWaitTime(minutes) {
   if (minutes == null || isNaN(minutes)) return "-";
-  if (minutes < 60) return `${Math.round(minutes)} นาที`; // ใช้ Math.round เพื่อปัดเศษตามหลักสากล
+  if (minutes < 60) return `${Math.round(minutes)} นาที`;
 
   const hrs = Math.floor(minutes / 60);
   const mins = Math.round(minutes % 60);
   return `${hrs} ชม. ${mins} น.`;
 }
+
+// --- Helper: แปลง 2026-05-01 เป็น 01-05-2026 ---
+const formatShortDate = (dateStr) => {
+  if (!dateStr) return "-";
+  const [year, month, day] = dateStr.split("-");
+  return `${day}-${month}-${year}`;
+};
 
 // --- Helper: ตัวเลขวิ่ง ---
 const AnimatedStat = ({ value, Component = "h2", className = "" }) => {
@@ -74,7 +84,6 @@ const DepartmentBlockBowin = ({ title, stats, theme }) => {
         {title}
       </h2>
 
-      {/* แถวแรก: ปรับช่องรอตรวจให้แสดง 2 บรรทัด */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl text-center shadow-sm border border-white/50">
           <p className="text-[13px] font-bold text-gray-500 mb-1 uppercase tracking-tight">ผู้รับบริการ OPD</p>
@@ -84,7 +93,7 @@ const DepartmentBlockBowin = ({ title, stats, theme }) => {
           <p className="text-[13px] font-bold text-gray-500 mb-1 uppercase tracking-tight">ซักประวัติ</p>
           <AnimatedStat value={stats.waitingScreening} Component="p" className="text-2xl md:text-3xl font-extrabold text-gray-800" />
         </div>
-        <div className="bg-white/60 backdrop-blur-sm p-3 rounded-2xl shadow-sm border border-white/50">
+        <div className="bg-white/30 p-3 rounded-2xl shadow-sm border border-white/50">
           <p className="text-[13px] font-bold text-gray-500 mb-1 uppercase tracking-tight text-center">รอตรวจ (ทั่วไป/ฟัน)</p>
           <div className="flex flex-col gap-0">
             <div className="flex justify-between items-baseline px-2 border-b border-gray-100">
@@ -99,7 +108,6 @@ const DepartmentBlockBowin = ({ title, stats, theme }) => {
         </div>
       </div>
 
-      {/* แถวสอง: ระยะเวลารอคอย (แยก ทั่วไป / ฟัน ในช่องรอพบแพทย์) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <div className="bg-white/30 p-3 rounded-2xl flex flex-col items-center justify-center text-center border border-white/20">
           <p className="text-[11px] font-semibold text-gray-600 mb-1">เฉลี่ยรวม</p>
@@ -122,7 +130,6 @@ const DepartmentBlockBowin = ({ title, stats, theme }) => {
         </div>
       </div>
 
-      {/* แถวสุดท้ายเหมือนเดิม */}
       <div className="grid grid-cols-3 gap-3">
         <div className={`${isBlue ? 'bg-blue-200/50' : 'bg-emerald-200/50'} p-4 rounded-2xl text-center border border-white/40`}>
           <p className={`text-sm font-bold ${isBlue ? 'text-blue-800' : 'text-emerald-800'} mb-1`}>รอรับยา</p>
@@ -141,7 +148,6 @@ const DepartmentBlockBowin = ({ title, stats, theme }) => {
   );
 };
 
-// แก้ไขคอมโพเนนต์ DepartmentBlock ในไฟล์ SummaryOPD.jsx
 const DepartmentBlock = ({ title, stats, theme }) => {
   const isBlue = theme === 'blue';
   const containerBg = isBlue ? "bg-gradient-to-br from-blue-50 to-indigo-100" : "bg-gradient-to-br from-emerald-50 to-teal-100";
@@ -156,7 +162,6 @@ const DepartmentBlock = ({ title, stats, theme }) => {
         {title}
       </h2>
 
-      {/* แถวแรก: 5 ช่องหลัก */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
         {[
           { label: "ผู้รับบริการ OPD", val: stats.total },
@@ -172,7 +177,6 @@ const DepartmentBlock = ({ title, stats, theme }) => {
         ))}
       </div>
 
-      {/* แถวที่เพิ่มใหม่: ส่งต่อ / อื่น ๆ (อยู่ตรงกลาง) */}
       <div className="flex justify-center mb-6">
         <div className="bg-white/40 backdrop-blur-sm px-6 py-2 rounded-xl text-center shadow-sm border border-white/40 flex items-center gap-3">
           <p className="text-[13px] font-bold text-gray-500 uppercase tracking-widest leading-none">ส่งต่อ / อื่น ๆ</p>
@@ -180,7 +184,6 @@ const DepartmentBlock = ({ title, stats, theme }) => {
         </div>
       </div>
 
-      {/* ส่วนเวลาเฉลี่ย และยอดสรุปด้านล่างเหมือนเดิม */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
         {[
           { label: "ระยะเวลารอคอย เฉลี่ยรวม", val: stats.avgTotal },
@@ -229,7 +232,8 @@ export default function OPDDashboard() {
   const [endDate, setEndDate] = useState(getToday());
   const [secondaryState, setSecondaryState] = useState("normal"); // normal, filtered, hidden
   const [techServices, setTechServices] = useState(null);
-  // Filter States (เพิ่มชุดใหม่แยกจากเดิม)
+
+  // Filter States (สถิติรายแผนก)
   const [isDeptFilterMode, setIsDeptFilterMode] = useState(false);
   const [deptFilterDate, setDeptFilterDate] = useState(getToday());
   const [systemStats, setSystemStats] = useState({
@@ -260,6 +264,7 @@ export default function OPDDashboard() {
   const [stats041, setStats041] = useState(initialDepState);
   const [stats074, setStats074] = useState(initialDepState);
   const [statsBowinAll, setStatsBowinAll] = useState(initialDepState);
+
   // --- Clock Effect ---
   useEffect(() => {
     const interval = setInterval(() => {
@@ -273,7 +278,6 @@ export default function OPDDashboard() {
 
   // --- Main Data Process ---
   const processData = (data) => {
-    // บล็อกข้อมูล Real-time ไม่ให้มาทับยอดถ้ากำลังอยู่ในโหมด Filter
     if (!data || isFilterMode || isDeptFilterMode) return;
 
     if (data.technical_services) {
@@ -292,7 +296,6 @@ export default function OPDDashboard() {
       drugDeliveryRider: s?.total_drug_delivery_rider ?? "-"
     });
 
-    // dept ที่ใช้ HosXP เป็น total (NeoQ นับได้ไม่ครบ)
     const HOS_TOTAL_DEPTS = new Set(["062", "072", "063", "033", "044"]);
 
     const mapDept = (mainCode, extraCodes = []) => {
@@ -313,8 +316,6 @@ export default function OPDDashboard() {
         const hosTotal = deptSpecific.total || 0;
         const neoqTotal = room.total || 0;
 
-        // ถ้า dept อยู่ใน HOS_TOTAL_DEPTS ให้ใช้ HosXP เสมอ
-        // ถ้าไม่ใช่ → NeoQ ก่อน ถ้า 0 fallback HosXP
         const useHos = HOS_TOTAL_DEPTS.has(code);
         acc.total += useHos ? hosTotal : (neoqTotal > 0 ? neoqTotal : hosTotal);
         acc.hos_total += hosTotal;
@@ -336,7 +337,6 @@ export default function OPDDashboard() {
         mergedStats.finished;
 
       const redirected = Math.max(0, mergedStats.total - sumHOSStates);
-
       const depSum = data.summary?.[`dep_${mainCode}`] || {};
 
       return {
@@ -358,20 +358,16 @@ export default function OPDDashboard() {
 
     setStats010(mapDept("010"));
     setStats062(mapDept("062"));
-
-
     setStats108(mapDept("108", ["069"]));
     setStats109(mapDept("109", ["047"]));
     setStats110(mapDept("110", ["059"]));
     setStats111(mapDept("111", ["076"]));
     setStats011(mapDept("011"));
-
     setStats075(mapDept("075"));
     setStats044(mapDept("044"));
     setStats033(mapDept("033"));
     setStats072(mapDept("072"));
     setStats063(mapDept("063"));
-
     setStats005(mapDept("005"));
     setStats042(mapDept("042"));
     setStats041(mapDept("041"));
@@ -391,17 +387,15 @@ export default function OPDDashboard() {
       waitingDrug: stats904.waitingDrug + stats902.waitingDrug,
       waitingPayment: stats902.waitingPayment + stats903.waitingPayment + stats905.waitingPayment,
       goHome: stats901.goHome + stats902.goHome + stats903.goHome + stats904.goHome + stats905.goHome,
-
-
       avgTotal: stats902.avgTotal,
       avgWaitScreening: stats902.avgWaitScreening,
-      avgWaitExam: stats902.avgWaitExam,       // ← เปลี่ยนจาก stats903 เป็น stats902
+      avgWaitExam: stats902.avgWaitExam,
       avgWaitDental: stats905.avgWaitExam,
-      avgWaitDrug: stats902.avgWaitDrug,       // ← เปลี่ยนจาก stats904 เป็น stats902
-
+      avgWaitDrug: stats902.avgWaitDrug,
       redirected: 0,
     });
   };
+
   const applyDateFilter = async () => {
     if (!startDate || !endDate) {
       return alert("กรุณาเลือกช่วงเวลา");
@@ -414,7 +408,6 @@ export default function OPDDashboard() {
       const resp = await apiGet(
         `/api/dashboard/summary-range?start_date=${startDate}&end_date=${endDate}`
       );
-
       const d = resp.data || {};
 
       setSystemStats({
@@ -427,7 +420,6 @@ export default function OPDDashboard() {
       });
 
       setSecondaryState("filtered");
-
     } catch (err) {
       console.error("Date filter error:", err);
     }
@@ -438,9 +430,8 @@ export default function OPDDashboard() {
     setIsDeptFilterMode(true);
     try {
       const resp = await apiGet(`/api/dashboard/opd-dept-range?start_date=${deptFilterDate}`);
-      const depts = resp.departments; // array of dept objects
+      const depts = resp.departments;
 
-      // อัปเดตข้อมูลบริการเทคนิคการแพทย์ (X-ray / Lab) ย้อนหลังเข้า State ของหน้าจอ
       if (resp.technical_services) {
         setTechServices(resp.technical_services);
       }
@@ -467,7 +458,6 @@ export default function OPDDashboard() {
           waitingPayment: 0, goHome: 0, other: 0
         });
 
-        // avg ใช้จาก mainCode เป็นหลัก
         const d = findDept(mainCode);
         return {
           ...merged,
@@ -496,7 +486,6 @@ export default function OPDDashboard() {
       setStats041(mapHistoricalDept("041"));
       setStats074(mapHistoricalDept("074"));
 
-      // บ่อวิน
       const b901 = findDept("901"), b902 = findDept("902"),
         b903 = findDept("903"), b904 = findDept("904"), b905 = findDept("905");
       setStatsBowinAll({
@@ -524,26 +513,18 @@ export default function OPDDashboard() {
   const clearDeptFilter = () => {
     setIsDeptFilterMode(false);
     setDeptFilterDate(getToday());
-    // ถ้า summary filter ก็ไม่ได้ active → คืน dept กลับเป็น normal
     if (!isFilterMode) setSecondaryState("normal");
   };
 
   const clearDateFilter = async () => {
     setStartDate(getToday());
     setEndDate(getToday());
-
-    // คืน UI ทันที
     setIsFilterMode(false);
     setSecondaryState("normal");
 
     try {
-      const data = await apiGetInternal(
-        "/api/dashboard/internal/snapshot"
-      );
-
-      // force update realtime snapshot
+      const data = await apiGetInternal("/api/dashboard/internal/snapshot");
       processData(data);
-
     } catch (err) {
       console.error("Reload snapshot error:", err);
     }
@@ -623,37 +604,13 @@ export default function OPDDashboard() {
       <Helmet><title>OPD Summary - LCBH</title></Helmet>
 
       <style>{`
-                .stat-card { transition: all 0.25s ease; }
-                .stat-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); }
-                .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
-                .soft-shadow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
-                .flash { animation: flash 0.4s ease; }
-                @keyframes flash {
-                    0% { background-color: transparent; }
-                    100% { background-color: transparent; }
-                }
-                    input[type="date"] {
-                    position: relative;
-                    min-height: 38px;
-                    }
-                    input[type="date"]::before {
-                    content: attr(placeholder);
-                    position: absolute;
-                    color: #94a3b8;
-                    width: 100%;
-                    left: 8px;
-                    }
-                    input[type="date"]:focus::before,
-                    input[type="date"]:valid::before,
-                    input[type="date"]:not([value=""])::before {
-                        display: none;
-                        content: "";
-                    }
-        `}</style>
+        .stat-card { transition: all 0.25s ease; }
+        .stat-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); }
+        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
+        .soft-shadow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
+      `}</style>
 
-      <div className="max-w-7xl mx-auto">
-
-
+      <div className="max-w-7xl mx-auto space-y-4">
 
         {isLoading ? (
           <div className="space-y-6">
@@ -672,55 +629,113 @@ export default function OPDDashboard() {
               subtitle="ภาพรวมระบบ"
               statusText={(isFilterMode || isDeptFilterMode) ? "Filter Mode" : status.text}
               statusColorClass={(isFilterMode || isDeptFilterMode) ? "bg-amber-100 text-amber-700 font-bold" : status.color}
-            >
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
-                <input
-                  type="date"
-                  value={startDate}
-                  placeholder="วว/ดด/ปปปป"
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[120px] appearance-none"
-                  style={{ colorScheme: 'light' }}
-                />
-                <span className="text-gray-500 text-sm">-</span>
-                <input
-                  type="date"
-                  value={endDate}
-                  placeholder="วว/ดด/ปปปป"
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="text-[13px] md:text-sm px-2 py-1 rounded border border-gray-300 bg-white text-slate-900 focus:outline-none focus:border-[#1e40af] flex-1 min-w-[120px] appearance-none"
-                  style={{ colorScheme: 'light' }}
-                />
-                <button onClick={applyDateFilter}
-                  className="bg-[#1e40af] hover:bg-blue-800 text-white text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap active:scale-95">ค้นหา</button>
-                <button onClick={clearDateFilter}
-                  className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isFilterMode ? 'hidden' : ''}`}>ล้าง</button>
+            />
+
+            {/* ===== แผงตัวกรองสไตล์ REFER OUT ===== */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+              {/* ชุดที่ 1: ช่วงเวลาสถิติระบบ */}
+              <div className="bg-white p-4 rounded-[20px] border border-slate-200/80 shadow-sm flex flex-col gap-3">
+                <div className="flex items-center gap-2 text-slate-700 font-bold text-sm">
+                  <FontAwesomeIcon icon={faCalendarDays} className="text-blue-600 text-base" />
+                  <span>ช่วงเวลาสถิติภาพรวมระบบ</span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 flex-1">
+                    <span className="text-xs text-slate-400 font-medium whitespace-nowrap">เริ่ม:</span>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="bg-transparent text-slate-700 font-semibold text-sm focus:outline-none w-full cursor-pointer"
+                      style={{ colorScheme: 'light' }}
+                    />
+                  </div>
+
+                  <div className="text-slate-400 font-medium text-center sm:text-left">ถึง</div>
+
+                  <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 flex-1">
+                    <span className="text-xs text-slate-400 font-medium whitespace-nowrap">สิ้นสุด:</span>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="bg-transparent text-slate-700 font-semibold text-sm focus:outline-none w-full cursor-pointer"
+                      style={{ colorScheme: 'light' }}
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <button
+                      onClick={applyDateFilter}
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold h-[38px] px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 flex-1 sm:flex-none shrink-0 active:scale-95 cursor-pointer"
+                    >
+                      <FontAwesomeIcon icon={faMagnifyingGlass} />
+                      <span>ค้นหา</span>
+                    </button>
+
+                    {isFilterMode && (
+                      <button
+                        onClick={clearDateFilter}
+                        className="text-sm text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 rounded-xl h-[38px] px-4 transition-colors font-medium shadow-sm active:scale-95 cursor-pointer flex items-center justify-center w-28 shrink-0"
+                      >
+                        ล้างตัวกรอง
+                      </button>
+                    )}
+                  </div>
+                </div>
+                {isFilterMode && (
+                  <p className="text-gray-400 text-xs mt-0.5 pl-1">
+                    ช่วงวันที่: {formatShortDate(startDate)} ถึง {formatShortDate(endDate)}
+                  </p>
+                )}
               </div>
 
-              {/* ปุ่มใหม่: filter รายแผนก */}
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 bg-purple-50/80 px-3 py-2 rounded-lg border border-purple-200 shadow-sm w-full sm:w-auto">
-                <span className="text-[12px] font-semibold text-purple-700 whitespace-nowrap">ข้อมูลแผนก</span>
-                <input
-                  type="date"
-                  value={deptFilterDate}
-                  onChange={(e) => setDeptFilterDate(e.target.value)}
-                  className="text-[13px] md:text-sm px-2 py-1 rounded border border-purple-300 bg-white text-slate-900 focus:outline-none focus:border-purple-500 flex-1 min-w-[130px] appearance-none"
-                  style={{ colorScheme: 'light' }}
-                />
-                <button
-                  onClick={applyDeptFilter}
-                  className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap active:scale-95"
-                >
-                  ดูย้อนหลัง
-                </button>
-                <button
-                  onClick={clearDeptFilter}
-                  className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isDeptFilterMode ? 'hidden' : ''}`}
-                >
-                  ล้าง
-                </button>
+              {/* ชุดที่ 2: สถิติรายแผนกย้อนหลัง */}
+              <div className="bg-white p-4 rounded-[20px] border border-slate-200/80 shadow-sm flex flex-col gap-3">
+                <div className="flex items-center gap-2 text-slate-700 font-bold text-sm">
+                  <FontAwesomeIcon icon={faCalendarDays} className="text-purple-600 text-base" />
+                  <span>ข้อมูลรายแผนกย้อนหลัง</span>
+                </div>
+
+                <div className="flex flex-wrap md:flex-nowrap items-center gap-2">
+                  <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 flex-1 min-w-[180px]">
+                    <span className="text-xs text-slate-400 font-medium whitespace-nowrap">เลือกวันที่:</span>
+                    <input
+                      type="date"
+                      value={deptFilterDate}
+                      onChange={(e) => setDeptFilterDate(e.target.value)}
+                      className="bg-transparent text-slate-700 font-semibold text-sm focus:outline-none w-full cursor-pointer"
+                      style={{ colorScheme: 'light' }}
+                    />
+                  </div>
+
+                  <button
+                    onClick={applyDeptFilter}
+                    className="bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold h-[38px] px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 shrink-0 active:scale-95 cursor-pointer"
+                  >
+                    <FontAwesomeIcon icon={faMagnifyingGlass} />
+                    <span>ค้นหา</span>
+                  </button>
+
+                  {isDeptFilterMode && (
+                    <button
+                      onClick={clearDeptFilter}
+                      className="text-sm text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 rounded-xl h-[38px] px-4 transition-colors font-medium shadow-sm active:scale-95 cursor-pointer flex items-center justify-center w-28 shrink-0"
+                    >
+                      ล้างตัวกรอง
+                    </button>
+                  )}
+                </div>
+                {isDeptFilterMode && (
+                  <p className="text-gray-400 text-xs mt-0.5 pl-1">
+                    วันที่เลือกรายแผนก: {formatShortDate(deptFilterDate)}
+                  </p>
+                )}
               </div>
-            </DashboardHeader>
+
+            </div>
 
             {/* Top 4 Global Cards */}
             <div className="rounded-[20px] p-[6px] mb-4">
@@ -746,9 +761,7 @@ export default function OPDDashboard() {
                   </div>
                   <AnimatedStat value={systemStats.telemed} Component="h2" className="text-[2rem] md:text-[2.8rem] font-bold mt-auto" />
                 </div>
-                {/* Card 4: บริการส่งยา */}
                 <div className="stat-card bg-gradient-to-br from-[#F5F3FF] to-[#EDE9FE] text-[#1e293b] p-4 md:p-5 rounded-[14px] shadow-sm flex flex-col justify-between min-h-[120px] md:min-h-[140px]">
-                  {/* Header */}
                   <div className="flex items-center gap-3 opacity-90 mb-1">
                     <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                       <path fillRule="evenodd" clipRule="evenodd" d="M11.7905 5.25H8.4594L7.7094 7.5H3V18H6.02658C6.20854 19.2721 7.30257 20.25 8.625 20.25C9.94743 20.25 11.0415 19.2721 11.2234 18H13.5266C13.7085 19.2721 14.8026 20.25 16.125 20.25C17.4474 20.25 18.5415 19.2721 18.7234 18H21V13.0986L18.5563 11.4695L16.1746 7.5H12.5405L11.7905 5.25ZM10.9594 7.5L10.7094 6.75H9.54053L9.29053 7.5H10.9594ZM18.4974 16.5H19.5V13.9014L17.7729 12.75H12V9H4.5V16.5H6.25261C6.67391 15.6131 7.57785 15 8.625 15C9.67215 15 10.5761 15.6131 10.9974 16.5H13.7526C14.1739 15.6131 15.0779 15 16.125 15C17.1721 15 18.0761 15.6131 18.4974 16.5ZM15.3254 9L16.6754 11.25H13.5V9H15.3254ZM9.75 17.625C9.75 18.2463 9.24632 18.75 8.625 18.75C8.00368 18.75 7.5 18.2463 7.5 17.625C7.5 17.0037 8.00368 16.5 8.625 16.5C9.24632 16.5 9.75 17.0037 9.75 17.625ZM17.25 17.625C17.25 18.2463 16.7463 18.75 16.125 18.75C15.5037 18.75 15 18.2463 15 17.625C15 17.0037 15.5037 16.5 16.125 16.5C16.7463 16.5 17.25 17.0037 17.25 17.625ZM7.5 9.75V11.25H6V12.75H7.5V14.25H9V12.75H10.5V11.25H9V9.75H7.5Z"></path>
@@ -756,14 +769,9 @@ export default function OPDDashboard() {
                     <span className="text-xs md:text-sm font-medium truncate">บริการส่งยา</span>
                   </div>
 
-                  {/* Body: ตัวเลขรวม และ แยกประเภท */}
                   <div className="flex items-end justify-between mt-auto gap-2">
-
                     <AnimatedStat value={systemStats.drugDelivery} Component="h2" className="text-[2rem] md:text-[2.8rem] font-bold" />
-                    {/* ฝั่งขวา: ยอดแยก (ปรับขยายขนาดกล่อง ตัวหนังสือ และตัวเลข) */}
                     <div className="flex flex-col gap-1.5 w-[45%] max-w-[150px] pb-1">
-
-                      {/* กล่อง ปณ. */}
                       <div className="flex items-center justify-between bg-white/60 px-2 py-1 rounded-md shadow-sm border border-white/50">
                         <span className="text-[11px] md:text-xs text-gray-700 font-medium tracking-wide">📦 ปณ.</span>
                         <AnimatedStat
@@ -772,8 +780,6 @@ export default function OPDDashboard() {
                           className="text-sm md:text-base font-bold text-indigo-700"
                         />
                       </div>
-
-                      {/* กล่อง Rider */}
                       <div className="flex items-center justify-between bg-white/60 px-2 py-1 rounded-md shadow-sm border border-white/50">
                         <span className="text-[11px] md:text-xs text-gray-700 font-medium tracking-wide">🛵 Rider</span>
                         <AnimatedStat
@@ -782,22 +788,15 @@ export default function OPDDashboard() {
                           className="text-sm md:text-base font-bold text-indigo-700"
                         />
                       </div>
-
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Department Blocks - จะกลายเป็นสีเทาเมื่อ Filter */}
+            {/* Department Blocks */}
             <div className={secondaryClasses}>
-              {/* grid-cols-1: ให้เรียงลงมาเป็นแถวเดียวเสมอตามโครงสร้างเดิม */}
               <div className="grid grid-cols-1 gap-4 md:gap-6 w-full mx-auto">
-
-                {/* w-full: เต็มจอในมือถือ 
-       md:max-w-[1000px]: ขนาดกว้างสูงสุดเมื่ออยู่บนจอคอม (ปรับตัวเลขตามความเหมาะสมของ 250 เดิมคุณ)
-       mx-auto: จัดกึ่งกลาง
-    */}
                 <div className="w-full md:max-w-[1000px] mx-auto px-2 md:px-0">
                   <DepartmentBlock
                     title="ผู้รับบริการ OPD (ทั่วไป)"
@@ -805,7 +804,6 @@ export default function OPDDashboard() {
                     theme="blue"
                   />
 
-                  {/* เพิ่ม margin top เล็กน้อยเพื่อให้ห่างกันในมือถือ */}
                   <div className="mt-4 md:mt-6">
                     <DepartmentBlock
                       title="ผู้รับบริการ OPD (นัด)"

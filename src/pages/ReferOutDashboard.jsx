@@ -40,6 +40,12 @@ const AnimatedStat = ({ value, suffix = "", className = "" }) => {
     return <span className={className}>{display}{suffix}</span>;
 };
 
+const formatShortDate = (dateStr) => {
+  if (!dateStr) return "-";
+  const [year, month, day] = dateStr.split("-");
+  return `${day}-${month}-${year}`;
+};
+
 export default function ReferOutDashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [status, setStatus] = useState({ text: "Connecting...", type: "neutral" });
@@ -51,6 +57,29 @@ export default function ReferOutDashboard() {
     const todayStr = new Date().toISOString().split('T')[0];
     const [startDate, setStartDate] = useState(todayStr);
     const [endDate, setEndDate] = useState(todayStr);
+
+    // ─── States และฟังก์ชันสำหรับดึงรายละเอียดเคสรายกลุ่มความรุนแรง ─────────────────
+    const [selectedCases, setSelectedCases] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [activeSeverityTitle, setActiveSeverityTitle] = useState("");
+    const [isCasesLoading, setIsCasesLoading] = useState(false);
+
+    const handleFetchCases = async (severityId, title) => {
+        setIsCasesLoading(true);
+        setActiveSeverityTitle(title);
+        setSelectedCases([]);
+        setIsModalOpen(true);
+        try {
+            const response = await apiGetInternal(`/api/referout/cases?severity_id=${severityId}&start_date=${startDate}&end_date=${endDate}`);
+            if (response && response.status === "success" && Array.isArray(response.data)) {
+                setSelectedCases(response.data);
+            }
+        } catch (error) {
+            console.error("Error fetching refer cases:", error);
+        } finally {
+            setIsCasesLoading(false);
+        }
+    };
 
     // ฟังก์ชันดึงข้อมูลจาก API Summary ของระบบ
     const fetchReferData = useCallback(async (queryParam = "view=today") => {
@@ -97,7 +126,7 @@ export default function ReferOutDashboard() {
     // ฟังก์ชันจัดการค้นหาช่วงวันที่
     const handleSearch = (e) => {
         if (e) e.preventDefault();
-        
+
         if (startDate === todayStr && endDate === todayStr) {
             setIsFilterMode(false);
             setIsLoading(true);
@@ -118,14 +147,14 @@ export default function ReferOutDashboard() {
         fetchReferData(`view=range&start_date=${startDate}&end_date=${endDate}`);
     };
 
-    // ตั้งค่าโครงสร้าง UI สำหรับแต่ละประเภทความรุนแรง
+    // ตั้งค่าโครงสร้าง UI สำหรับแต่ละประเภทความรุนแรง (เพิ่มไอดี 1-6 เพื่อใช้ส่งให้ Endpoint)
     const severityConfigs = [
-        { key: 'life_threatening_count', title: 'Life Threatening', badgeBg: 'bg-red-50', badgeText: 'text-red-600', border: 'border-red-200', iconColor: 'text-red-500' },
-        { key: 'emergency_count', title: 'Emergency', badgeBg: 'bg-orange-50', badgeText: 'text-orange-600', border: 'border-orange-200', iconColor: 'text-orange-500' },
-        { key: 'urgent_count', title: 'Urgent', badgeBg: 'bg-amber-50', badgeText: 'text-amber-600', border: 'border-amber-200', iconColor: 'text-amber-500' },
-        { key: 'acute_count', title: 'Acute', badgeBg: 'bg-yellow-50', badgeText: 'text-yellow-600', border: 'border-yellow-200', iconColor: 'text-yellow-500' },
-        { key: 'non_acute_count', title: 'Non Acute', badgeBg: 'bg-emerald-50', badgeText: 'text-emerald-600', border: 'border-emerald-200', iconColor: 'text-emerald-500' },
-        { key: 'unknown_count', title: 'Unknown / อื่นๆ', badgeBg: 'bg-slate-50', badgeText: 'text-slate-600', border: 'border-slate-200', iconColor: 'text-slate-500' }
+        { id: 1, key: 'life_threatening_count', title: 'Life Threatening', badgeBg: 'bg-red-50', badgeText: 'text-red-600', border: 'border-red-200', iconColor: 'text-red-500' },
+        { id: 2, key: 'emergency_count', title: 'Emergency', badgeBg: 'bg-orange-50', badgeText: 'text-orange-600', border: 'border-orange-200', iconColor: 'text-orange-500' },
+        { id: 3, key: 'urgent_count', title: 'Urgent', badgeBg: 'bg-amber-50', badgeText: 'text-amber-600', border: 'border-amber-200', iconColor: 'text-amber-500' },
+        { id: 4, key: 'acute_count', title: 'Acute', badgeBg: 'bg-yellow-50', badgeText: 'text-yellow-600', border: 'border-yellow-200', iconColor: 'text-yellow-500' },
+        { id: 5, key: 'non_acute_count', title: 'Non Acute', badgeBg: 'bg-emerald-50', badgeText: 'text-emerald-600', border: 'border-emerald-200', iconColor: 'text-emerald-500' },
+        { id: 6, key: 'unknown_count', title: 'Unknown / อื่นๆ', badgeBg: 'bg-slate-50', badgeText: 'text-slate-600', border: 'border-slate-200', iconColor: 'text-slate-500' }
     ];
 
     return (
@@ -144,7 +173,7 @@ export default function ReferOutDashboard() {
                             การส่งต่อผู้ป่วย (Refer Out) {isFilterMode ? "ข้อมูลสถิติย้อนหลัง" : "Real-Time"}
                         </h1>
                         <p className="text-gray-400 text-sm mt-1">
-                            {isFilterMode ? `แสดงผลยอดรวมจำนวนครั้งการส่งต่อผู้ป่วย ในช่วงวันที่ ${startDate} ถึง ${endDate}` : "ภาพรวมยอดการส่งต่อผู้ป่วยและระดับความเร่งด่วนในปัจจุบัน"}
+                            {isFilterMode ? `แสดงผลยอดรวมจำนวนครั้งการส่งต่อผู้ป่วย ในช่วงวันที่ ${formatShortDate(startDate)} ถึง ${formatShortDate(endDate)}` : "ภาพรวมยอดการส่งต่อผู้ป่วยและระดับความเร่งด่วนในปัจจุบัน"}
                         </p>
                     </div>
 
@@ -161,11 +190,10 @@ export default function ReferOutDashboard() {
                             <LiveClock />
                         </div>
 
-                        <span className={`text-[10px] px-3 py-1 rounded-full uppercase font-bold tracking-wider ${
-                            status.type === 'success' ? 'bg-green-100 text-green-700' :
+                        <span className={`text-[10px] px-3 py-1 rounded-full uppercase font-bold tracking-wider ${status.type === 'success' ? 'bg-green-100 text-green-700' :
                             status.text === 'FILTERED' ? 'bg-blue-100 text-blue-700' :
-                            status.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'
-                        }`}>
+                                status.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'
+                            }`}>
                             {status.text}
                         </span>
                     </div>
@@ -214,7 +242,7 @@ export default function ReferOutDashboard() {
                                 setIsLoading(true);
                                 fetchReferData("view=today");
                             }}
-                            className="text-xs text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 rounded-xl px-4 py-1.5 transition-colors font-medium ml-auto shadow-sm active:scale-95 cursor-pointer"
+                            className="text-sm text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 rounded-xl px-4 py-1.5 transition-colors font-medium mr-auto shadow-sm active:scale-95 cursor-pointer flex items-center justify-center w-28"
                         >
                             ล้างตัวกรอง
                         </button>
@@ -275,7 +303,11 @@ export default function ReferOutDashboard() {
                                 const percent = totalValue > 0 ? ((countValue / totalValue) * 100).toFixed(1) : 0;
 
                                 return (
-                                    <div key={cfg.key} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:border-teal-200 hover:shadow-md transition-all flex flex-col justify-between group">
+                                    <div
+                                        key={cfg.key}
+                                        onClick={() => handleFetchCases(cfg.id, cfg.title)}
+                                        className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:border-teal-200 hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer active:scale-[0.99]"
+                                    >
                                         <div className="flex justify-between items-start">
                                             <h3 className="text-sm font-bold text-slate-700">{cfg.title}</h3>
 
@@ -309,6 +341,62 @@ export default function ReferOutDashboard() {
                             })}
                         </div>
 
+                    </div>
+                )}
+
+                {/* หน้าต่างแสดงผล Modal สำหรับรายละเอียดเคสส่งต่อ */}
+                {isModalOpen && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-center items-center p-4">
+                        <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-150">
+
+                            <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-2xl">
+                                <div>
+                                    <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
+                                        รายชื่อกลุ่ม {activeSeverityTitle}
+                                    </h3>
+                                    <p className="text-gray-400 text-xs mt-0.5">
+                                        ช่วงวันที่: {formatShortDate(startDate)} ถึง {formatShortDate(endDate)}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="text-gray-400 hover:text-gray-600 bg-white hover:bg-gray-100 border border-gray-200 rounded-xl px-3 py-1.5 text-sm transition-all font-semibold active:scale-95"
+                                >
+                                    ปิดหน้าต่าง
+                                </button>
+                            </div>
+
+                            <div className="p-5 overflow-y-auto flex-1">
+                                {isCasesLoading ? (
+                                    <div className="flex flex-col items-center justify-center py-12 gap-3">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
+                                        <span className="text-gray-400 text-sm">กำลังโหลดข้อมูลการวินิจฉัย...</span>
+                                    </div>
+                                ) : selectedCases.length === 0 ? (
+                                    <div className="text-center py-12 text-gray-400 text-sm bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                        ไม่พบประวัติข้อมูลส่งต่อในกลุ่มความรุนแรงนี้
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-gray-100 border border-gray-100 rounded-xl overflow-hidden bg-white shadow-sm">
+                                        {selectedCases.map((item, index) => (
+                                            <div key={item.referout_id || index} className="p-4 hover:bg-slate-50/70 transition-colors flex flex-col gap-1">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-100">
+                                                        ReferOut ID: {item.referout_id}
+                                                    </span>
+                                                </div>
+                                                <div className="text-sm font-semibold text-gray-700 pt-1">
+                                                    การวินิจฉัยเบื้องต้น (Pre-Diagnosis):
+                                                </div>
+                                                <p className="text-gray-600 text-sm bg-slate-50 p-2.5 rounded-lg border border-slate-100 whitespace-pre-line">
+                                                    {item.pre_diagnosis}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>

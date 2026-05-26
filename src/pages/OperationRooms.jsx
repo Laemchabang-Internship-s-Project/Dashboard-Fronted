@@ -30,6 +30,11 @@ const AnimatedStat = ({ value, suffix = "", className = "" }) => {
 
   return <span className={className}>{display}{suffix}</span>;
 };
+const formatShortDate = (dateStr) => {
+  if (!dateStr) return "-";
+  const [year, month, day] = dateStr.split("-");
+  return `${day}-${month}-${year}`;
+};
 
 export default function OperationRooms() {
   const [isLoading, setIsLoading] = useState(true);
@@ -147,7 +152,7 @@ export default function OperationRooms() {
               ห้องผ่าตัด {isFilterMode ? "ข้อมูลสถิติย้อนหลัง" : "Real-Time"}
             </h1>
             <p className="text-gray-400 text-sm mt-1">
-              {isFilterMode ? `แสดงผลยอดรวมจำนวนครั้งการผ่าตัด ในช่วงวันที่ ${startDate} ถึง ${endDate}` : "ภาพรวมยอดการใช้ห้องผ่าตัดและสถานะการทำงานปัจจุบัน"}
+              {isFilterMode ? `แสดงผลยอดรวมจำนวนครั้งการผ่าตัด ในช่วงวันที่ ${formatShortDate(startDate)} ถึง ${formatShortDate(endDate)}` : "ภาพรวมยอดการใช้ห้องผ่าตัดและสถานะการทำงานปัจจุบัน"}
             </p>
           </div>
 
