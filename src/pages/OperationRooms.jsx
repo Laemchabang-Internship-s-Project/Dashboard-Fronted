@@ -55,6 +55,10 @@ export default function OperationRooms() {
           total_cases: r.total_cases_today,
           room_status: r.room_status
         }));
+
+        // ➕ จัดเรียงห้องตามชื่อ 1 2 3 4 ก่อนเซ็ต State
+        mapped.sort((a, b) => (a.room_name || "").localeCompare(b.room_name || "", undefined, { numeric: true, sensitivity: 'base' }));
+
         setRoomsData(mapped);
         setStatus({ text: "LIVE", type: "success" });
       }
@@ -65,8 +69,6 @@ export default function OperationRooms() {
     }
   };
 
-  // --- ฟังก์ชันดึงข้อมูลสถิติตามวันที่ผู้ใช้กำหนด (โหมด Filter) ---
-  // --- ฟังก์ชันดึงข้อมูลสถิติตามวันที่ผู้ใช้กำหนด (ในไฟล์ OperationRooms.jsx) ---
   const handleFetchHistoryFilter = async (e) => {
     if (e) e.preventDefault();
 
@@ -91,7 +93,11 @@ export default function OperationRooms() {
     try {
       const response = await apiGetInternal(`/api/dashboard/internal/operation-rooms/history?start_date=${startDate}&end_date=${endDate}`);
       if (response?.status === "success" && Array.isArray(response.data)) {
-        setRoomsData(response.data);
+
+        // ➕ จัดเรียงห้องตามชื่อ 1 2 3 4 ก่อนเซ็ต State ในโหมด Filter
+        const sortedData = [...response.data].sort((a, b) => (a.room_name || "").localeCompare(b.room_name || "", undefined, { numeric: true, sensitivity: 'base' }));
+
+        setRoomsData(sortedData);
         setStatus({ text: "FILTERED", type: "neutral" });
       } else {
         setStatus({ text: "ERROR", type: "error" });
@@ -103,6 +109,8 @@ export default function OperationRooms() {
       setIsLoading(false);
     }
   };
+
+
 
   // รัน Polling ข้อมูล Real-time ปกติเฉพาะตอนไม่ได้เปิดโหมดฟิลเตอร์ย้อนหลัง
   useEffect(() => {
@@ -226,7 +234,7 @@ export default function OperationRooms() {
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
                     จำนวนห้องผ่าตัดทั้งหมด
                   </span>
-                  
+
                 </div>
                 <div className="flex items-baseline gap-1 bg-blue-50/60 border border-blue-100 px-4 py-2 rounded-xl">
                   <AnimatedStat value={roomsData.length} className="text-[34px] font-black leading-none text-blue-600 tracking-tight" />
@@ -239,7 +247,7 @@ export default function OperationRooms() {
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                     ยอดครั้งการเข้าใช้ผ่าตัดรวมในช่วงเวลานี้
                   </span>
-                  
+
                 </div>
                 <div className="flex items-baseline gap-1 bg-amber-50/60 border border-amber-100 px-4 py-2 rounded-xl">
                   <AnimatedStat value={totalCasesSum} className="text-[34px] font-black leading-none text-amber-600 tracking-tight" />

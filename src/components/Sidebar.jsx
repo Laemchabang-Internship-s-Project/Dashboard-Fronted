@@ -15,6 +15,7 @@ import {
   faTooth,
   faBrain,
   faSkullCrossbones,
+  faAmbulance,
   faMoneyBillWave
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -26,7 +27,7 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
     { path: '/opd', name: 'OPD Real-time', icon: faNotesMedical, public: false },
     { path: '/ipd', name: 'IPD Real-time', icon: faBed, public: false },
     { path: '/gas', name: 'Gas & Oil', icon: faGasPump, public: false },
-    { path: '/referout', name: 'Refer Out', icon: faChartPie, public: false }, 
+    { path: '/referout', name: 'Refer Out', icon: faAmbulance, public: false }, 
     { path: '/operation-rooms', name: 'Operation Rooms', icon: faScissors, public: false },
     { path: '/graph', name: 'Doctor Ops', icon: faChartLine, public: false },
     { path: '/dental', name: 'Dental', icon: faTooth, public: false },
