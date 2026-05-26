@@ -773,7 +773,7 @@ export default function OPDDashboard() {
                     <AnimatedStat value={systemStats.drugDelivery} Component="h2" className="text-[2rem] md:text-[2.8rem] font-bold" />
                     <div className="flex flex-col gap-1.5 w-[45%] max-w-[150px] pb-1">
                       <div className="flex items-center justify-between bg-white/60 px-2 py-1 rounded-md shadow-sm border border-white/50">
-                        <span className="text-[11px] md:text-xs text-gray-700 font-medium tracking-wide">📦 ปณ.</span>
+                        <span className="text-[11px] md:text-xs text-gray-700 font-medium tracking-wide">ปณ.</span>
                         <AnimatedStat
                           value={systemStats.drugDeliveryPostal !== undefined ? systemStats.drugDeliveryPostal : "-"}
                           Component="span"
@@ -781,7 +781,7 @@ export default function OPDDashboard() {
                         />
                       </div>
                       <div className="flex items-center justify-between bg-white/60 px-2 py-1 rounded-md shadow-sm border border-white/50">
-                        <span className="text-[11px] md:text-xs text-gray-700 font-medium tracking-wide">🛵 Rider</span>
+                        <span className="text-[11px] md:text-xs text-gray-700 font-medium tracking-wide">Rider</span>
                         <AnimatedStat
                           value={systemStats.drugDeliveryRider !== undefined ? systemStats.drugDeliveryRider : "-"}
                           Component="span"
