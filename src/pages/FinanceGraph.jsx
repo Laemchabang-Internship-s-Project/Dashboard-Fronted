@@ -29,31 +29,29 @@ const CURRENT_YEAR = new Date().getFullYear().toString();
 const CURRENT_MONTH = `${CURRENT_YEAR}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
 
 // ─── กลุ่มสิทธิ์ (pttype_code → group name) ───────────────────────────────────
-// Mapping ตามมาตรฐานโรงพยาบาลรัฐบาลไทย (ปรับได้ตามฐานข้อมูลจริง)
+// Mapping ตามข้อมูลสิทธิ.md
 const PTTYPE_GROUP_MAP = {
-  // บัตรทอง / UC
-  UC: ['uc', 'ucl', '89', '71', '72', '73', '74', '75', '76', '77', '78', '79', '80', '81', '82', '83', '84', '85', '86', '87', '88'],
-  // ข้าราชการ / รัฐวิสาหกิจ
-  'ข้าราชการ': ['of', 'oc', '01', '02', '03', '11', '12', '13', '14', '15'],
-  // ประกันสังคม
-  'ประกันสังคม': ['ss', 'ssi', '30', '31', '32', '33', '34', '35'],
-  // ชำระเงินเอง
-  'ชำระเงินเอง': ['ca', 'cash', '00', '90', '91', '92', '93'],
-  // อื่นๆ
-  'อื่นๆ': [],
+  'ชำระเงินเอง': ['00', '02', '03', '04'],
+  'สิทธิ uc แหลมฉบัง': ['11', '19', '1a', '1b', '1g', '23', '27', '32', 'ho', 'mo', 'กก'],
+  'สิทธิ uc ต่างจังหวัด': ['1c', '1d', '1e', '1f', '1m', '1n', '1o', '1p', '24', '25', '28', '29'],
+  'สิทธิ ข้าราชการ': ['m1'],
+  'สิทธิประกันสังคม': ['2a', '74', '92', 'h1'],
+  'ประกันสังคมอื่นๆ': ['1h', '1s', '2b', '2c', '95', '97'],
+  'มิตรไมตรี': ['n2', 'n4'],
+  'อื่น ๆ': [],
 };
 
 /**
  * จัดกลุ่ม pttype_code → ชื่อกลุ่ม
- * ถ้าไม่ตรง pattern ไหนเลย → "อื่นๆ"
+ * ถ้าไม่ตรง pattern ไหนเลย → "อื่น ๆ"
  */
 function getPttypeGroup(code = '') {
   const c = String(code).toLowerCase().trim();
   for (const [group, codes] of Object.entries(PTTYPE_GROUP_MAP)) {
-    if (group === 'อื่นๆ') continue;
+    if (group === 'อื่น ๆ') continue;
     if (codes.some(k => c === k || c.startsWith(k))) return group;
   }
-  return 'อื่นๆ';
+  return 'อื่น ๆ';
 }
 
 /** รวม rows เป็น Top N + อื่นๆ (เรียงตาม total_amount) */
@@ -501,7 +499,7 @@ export default function FinanceGraph() {
                       title="แยกตามกลุ่มสิทธิ์ (365 วันล่าสุด)"
                       icon={faLayerGroup}
                       colorClass="bg-sky-500"
-                      subtitle="บัตรทอง / ข้าราชการ / ประกันสังคม / ชำระเอง / อื่นๆ"
+                      subtitle="ชำระเงินเอง / UC / ข้าราชการ / ประกันสังคม / มิตรไมตรี / อื่น ๆ"
                     />
                   )}
                   {activeTab === 'yearly' && (
