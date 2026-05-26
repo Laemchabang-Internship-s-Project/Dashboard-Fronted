@@ -55,7 +55,7 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
           </div>
         </div>
 
-        <nav className="flex-1 px-1 space-y-2">
+        <nav className="flex-1 px-1 space-y-2 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {filteredMenu.map(item => (
             <NavLink
               key={item.path}
