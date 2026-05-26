@@ -55,6 +55,10 @@ export default function OperationRooms() {
           total_cases: r.total_cases_today,
           room_status: r.room_status
         }));
+
+        // ➕ จัดเรียงห้องตามชื่อ 1 2 3 4 ก่อนเซ็ต State
+        mapped.sort((a, b) => (a.room_name || "").localeCompare(b.room_name || "", undefined, { numeric: true, sensitivity: 'base' }));
+
         setRoomsData(mapped);
         setStatus({ text: "LIVE", type: "success" });
       }
@@ -65,8 +69,6 @@ export default function OperationRooms() {
     }
   };
 
-  // --- ฟังก์ชันดึงข้อมูลสถิติตามวันที่ผู้ใช้กำหนด (โหมด Filter) ---
-  // --- ฟังก์ชันดึงข้อมูลสถิติตามวันที่ผู้ใช้กำหนด (ในไฟล์ OperationRooms.jsx) ---
   const handleFetchHistoryFilter = async (e) => {
     if (e) e.preventDefault();
 
@@ -91,7 +93,11 @@ export default function OperationRooms() {
     try {
       const response = await apiGetInternal(`/api/dashboard/internal/operation-rooms/history?start_date=${startDate}&end_date=${endDate}`);
       if (response?.status === "success" && Array.isArray(response.data)) {
-        setRoomsData(response.data);
+
+        // ➕ จัดเรียงห้องตามชื่อ 1 2 3 4 ก่อนเซ็ต State ในโหมด Filter
+        const sortedData = [...response.data].sort((a, b) => (a.room_name || "").localeCompare(b.room_name || "", undefined, { numeric: true, sensitivity: 'base' }));
+
+        setRoomsData(sortedData);
         setStatus({ text: "FILTERED", type: "neutral" });
       } else {
         setStatus({ text: "ERROR", type: "error" });
@@ -103,6 +109,8 @@ export default function OperationRooms() {
       setIsLoading(false);
     }
   };
+
+
 
   // รัน Polling ข้อมูล Real-time ปกติเฉพาะตอนไม่ได้เปิดโหมดฟิลเตอร์ย้อนหลัง
   useEffect(() => {
@@ -136,7 +144,6 @@ export default function OperationRooms() {
         <div className="flex flex-wrap justify-between items-center glass p-5 rounded-2xl soft-shadow border border-white/40 gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
-              <FontAwesomeIcon icon={faHospital} className="text-teal-600 text-xl" />
               ห้องผ่าตัด {isFilterMode ? "ข้อมูลสถิติย้อนหลัง" : "Real-Time"}
             </h1>
             <p className="text-gray-400 text-sm mt-1">
