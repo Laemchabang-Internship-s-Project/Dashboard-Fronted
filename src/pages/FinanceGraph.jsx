@@ -479,9 +479,9 @@ export default function FinanceGraph() {
                 {/* ── KPI Row 2: แยกตามกลุ่มสิทธิ์ ── */}
                 {groupedTodayRows.map((g, idx) => {
                   const config = [
-                    { icon: faCoins, color: 'bg-emerald-500' },
-                    { icon: faIdCard, color: 'bg-blue-500' },
+                    { icon: faCoins, color: 'bg-blue-500' },
                     { icon: faIdCard, color: 'bg-sky-500' },
+                    { icon: faIdCard, color: 'bg-pink-500' },
                     { icon: faUsers, color: 'bg-amber-500' },
                     { icon: faHeartPulse, color: 'bg-pink-500' },
                     { icon: faHeartPulse, color: 'bg-rose-500' },
