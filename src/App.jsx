@@ -16,6 +16,7 @@ import IPD from './pages/IPD';
 import NotFound from './pages/NotFound';
 import { authLogin, authVerify } from './services/api';
 import OperationRooms from './pages/OperationRooms';
+import ReferOutDashboard from './pages/ReferOutDashboard';
 
 // ─── Token Helpers ───────────────────────────────────────────────────────────
 const TOKEN_KEY = 'dashboard_token';
@@ -238,6 +239,11 @@ function App() {
         <Route path="/finance" element={
           <ProtectedRoute isAuthenticated={isAuthenticated} onAuthenticate={handleAuthenticate}>
             <FinanceGraph />
+          </ProtectedRoute>
+        } />
+        <Route path="/referout" element={
+          <ProtectedRoute isAuthenticated={isAuthenticated} onAuthenticate={handleAuthenticate}>
+            <ReferOutDashboard />
           </ProtectedRoute>
         } />
       </Route>

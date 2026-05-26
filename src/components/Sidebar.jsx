@@ -26,12 +26,14 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
     { path: '/opd', name: 'OPD Real-time', icon: faNotesMedical, public: false },
     { path: '/ipd', name: 'IPD Real-time', icon: faBed, public: false },
     { path: '/gas', name: 'Gas & Oil', icon: faGasPump, public: false },
+    { path: '/referout', name: 'Refer Out', icon: faChartPie, public: false }, 
     { path: '/operation-rooms', name: 'Operation Rooms', icon: faScissors, public: false },
     { path: '/graph', name: 'Doctor Ops', icon: faChartLine, public: false },
     { path: '/dental', name: 'Dental', icon: faTooth, public: false },
     { path: '/depression', name: 'Depression', icon: faBrain, public: false },
     { path: '/death', name: 'Death', icon: faSkullCrossbones, public: false },
-    { path: '/finance', name: 'Finance', icon: faMoneyBillWave, public: false }
+    { path: '/finance', name: 'Finance', icon: faMoneyBillWave, public: false },
+
   ];
 
   // กรองเมนู: ถ้าล็อกอินแล้วเห็นทั้งหมด ถ้ายังให้เห็นแค่ public
@@ -112,8 +114,8 @@ export default function Sidebar({ isAuthenticated, onLogout }) {
       {/* แก้ไขส่วนนี้: เปลี่ยน flex, ซ่อน scrollbar, เว้นระยะด้วย gap-2 */}
       {/* ======= Mobile Bottom Nav (< md) ======= */}
       <nav className={`md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f172a] border-t border-slate-800 flex items-center h-16 px-4 safe-area-bottom sidebar-google-font ${isAuthenticated
-          ? "overflow-x-auto gap-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-          : "justify-between"
+        ? "overflow-x-auto gap-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        : "justify-between"
         }`}>
 
         {/* 1. เพิ่ม Invisible Spacer เฉพาะตอนยังไม่ Login เพื่อดัน Overview ให้ไปอยู่ตรงกลางพอดี */}

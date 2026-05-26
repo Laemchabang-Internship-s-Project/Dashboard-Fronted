@@ -872,33 +872,9 @@ export default function OPDDashboard() {
 
                   <div className="mt-4 md:mt-6">
                     <DepartmentBlock
-                      title="คลีนิกโรคหัวใจ"
-                      stats={stats033}
-                      theme="emerald"
-                    />
-                  </div>
-
-                  <div className="mt-4 md:mt-6">
-                    <DepartmentBlock
-                      title="คลีนิก Warfarin"
-                      stats={stats072}
-                      theme="blue"
-                    />
-                  </div>
-
-                  <div className="mt-4 md:mt-6">
-                    <DepartmentBlock
-                      title="คลีนิกโรคไต"
-                      stats={stats063}
-                      theme="emerald"
-                    />
-                  </div>
-
-                  <div className="mt-4 md:mt-6">
-                    <DepartmentBlock
                       title="คลินิกทันตกรรม"
                       stats={stats005}
-                      theme="blue"
+                      theme="emerald"
                     />
                   </div>
 
@@ -906,7 +882,7 @@ export default function OPDDashboard() {
                     <DepartmentBlock
                       title="กายภาพ"
                       stats={stats042}
-                      theme="emerald"
+                      theme="blue"
                     />
                   </div>
 
@@ -914,7 +890,7 @@ export default function OPDDashboard() {
                     <DepartmentBlock
                       title="แพทย์แผนไทย"
                       stats={stats041}
-                      theme="blue"
+                      theme="emerald"
                     />
                   </div>
 
@@ -922,7 +898,7 @@ export default function OPDDashboard() {
                     <DepartmentBlock
                       title="หน่วยไตเทียม"
                       stats={stats074}
-                      theme="emerald"
+                      theme="blue"
                     />
                   </div>
 
