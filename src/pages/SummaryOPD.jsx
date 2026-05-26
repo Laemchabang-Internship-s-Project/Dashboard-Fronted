@@ -364,6 +364,7 @@ export default function OPDDashboard() {
     setStats109(mapDept("109", ["047"]));
     setStats110(mapDept("110", ["059"]));
     setStats111(mapDept("111", ["076"]));
+    setStats108(mapDept("108"));
     setStats011(mapDept("011"));
 
     setStats075(mapDept("075"));
@@ -651,9 +652,7 @@ export default function OPDDashboard() {
                     }
         `}</style>
 
-      <div className="max-w-7xl mx-auto">
-
-
+      <div className="max-w-7xl mx-auto space-y-4">
 
         {isLoading ? (
           <div className="space-y-6">
@@ -672,8 +671,13 @@ export default function OPDDashboard() {
               subtitle="ภาพรวมระบบ"
               statusText={(isFilterMode || isDeptFilterMode) ? "Filter Mode" : status.text}
               statusColorClass={(isFilterMode || isDeptFilterMode) ? "bg-amber-100 text-amber-700 font-bold" : status.color}
-            >
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 bg-white/50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full sm:w-auto">
+            />
+
+            {/* แผงฟอร์มตัวกรอง ย้ายลงมาอยู่นอกกล่องหัวหน้าตามต้องการ */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* ตัวกรองช่วงเวลาภาพรวมระบบ */}
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 bg-white px-3 py-2 rounded-xl border border-gray-200 shadow-sm w-full">
+                <span className="text-[12px] font-semibold text-blue-700 whitespace-nowrap">ช่วงเวลาสถิติ:</span>
                 <input
                   type="date"
                   value={startDate}
@@ -692,14 +696,14 @@ export default function OPDDashboard() {
                   style={{ colorScheme: 'light' }}
                 />
                 <button onClick={applyDateFilter}
-                  className="bg-[#1e40af] hover:bg-blue-800 text-white text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap active:scale-95">ค้นหา</button>
+                  className="bg-[#1e40af] hover:bg-blue-800 text-white text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap active:scale-95 cursor-pointer">ค้นหา</button>
                 <button onClick={clearDateFilter}
-                  className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isFilterMode ? 'hidden' : ''}`}>ล้าง</button>
+                  className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition cursor-pointer ${!isFilterMode ? 'hidden' : ''}`}>ล้าง</button>
               </div>
 
-              {/* ปุ่มใหม่: filter รายแผนก */}
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 bg-purple-50/80 px-3 py-2 rounded-lg border border-purple-200 shadow-sm w-full sm:w-auto">
-                <span className="text-[12px] font-semibold text-purple-700 whitespace-nowrap">ข้อมูลแผนก</span>
+              {/* ตัวกรองสถิติรายแผนก */}
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 bg-purple-50/80 px-3 py-2 rounded-xl border border-purple-200 shadow-sm w-full">
+                <span className="text-[12px] font-semibold text-purple-700 whitespace-nowrap">ข้อมูลรายแผนก:</span>
                 <input
                   type="date"
                   value={deptFilterDate}
@@ -709,18 +713,18 @@ export default function OPDDashboard() {
                 />
                 <button
                   onClick={applyDeptFilter}
-                  className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap active:scale-95"
+                  className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-3 py-1.5 rounded transition shadow-sm whitespace-nowrap active:scale-95 cursor-pointer"
                 >
                   ดูย้อนหลัง
                 </button>
                 <button
                   onClick={clearDeptFilter}
-                  className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition ${!isDeptFilterMode ? 'hidden' : ''}`}
+                  className={`bg-gray-400 hover:bg-gray-500 text-white text-sm px-3 py-1.5 rounded transition cursor-pointer ${!isDeptFilterMode ? 'hidden' : ''}`}
                 >
                   ล้าง
                 </button>
               </div>
-            </DashboardHeader>
+            </div>
 
             {/* Top 4 Global Cards */}
             <div className="rounded-[20px] p-[6px] mb-4">
@@ -765,7 +769,7 @@ export default function OPDDashboard() {
 
                       {/* กล่อง ปณ. */}
                       <div className="flex items-center justify-between bg-white/60 px-2 py-1 rounded-md shadow-sm border border-white/50">
-                        <span className="text-[11px] md:text-xs text-gray-700 font-medium tracking-wide">📦 ปณ.</span>
+                        <span className="text-[11px] md:text-xs text-gray-700 font-medium tracking-wide">ปณ.</span>
                         <AnimatedStat
                           value={systemStats.drugDeliveryPostal !== undefined ? systemStats.drugDeliveryPostal : "-"}
                           Component="span"
@@ -775,7 +779,7 @@ export default function OPDDashboard() {
 
                       {/* กล่อง Rider */}
                       <div className="flex items-center justify-between bg-white/60 px-2 py-1 rounded-md shadow-sm border border-white/50">
-                        <span className="text-[11px] md:text-xs text-gray-700 font-medium tracking-wide">🛵 Rider</span>
+                        <span className="text-[11px] md:text-xs text-gray-700 font-medium tracking-wide">Rider</span>
                         <AnimatedStat
                           value={systemStats.drugDeliveryRider !== undefined ? systemStats.drugDeliveryRider : "-"}
                           Component="span"
@@ -795,9 +799,9 @@ export default function OPDDashboard() {
               <div className="grid grid-cols-1 gap-4 md:gap-6 w-full mx-auto">
 
                 {/* w-full: เต็มจอในมือถือ 
-       md:max-w-[1000px]: ขนาดกว้างสูงสุดเมื่ออยู่บนจอคอม (ปรับตัวเลขตามความเหมาะสมของ 250 เดิมคุณ)
-       mx-auto: จัดกึ่งกลาง
-    */}
+                   md:max-w-[1000px]: ขนาดกว้างสูงสุดเมื่ออยู่บนจอคอม (ปรับตัวเลขตามความเหมาะสมของ 250 เดิมคุณ)
+                   mx-auto: จัดกึ่งกลาง
+                */}
                 <div className="w-full md:max-w-[1000px] mx-auto px-2 md:px-0">
                   <DepartmentBlock
                     title="ผู้รับบริการ OPD (ทั่วไป)"
