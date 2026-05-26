@@ -40,6 +40,12 @@ const AnimatedStat = ({ value, suffix = "", className = "" }) => {
     return <span className={className}>{display}{suffix}</span>;
 };
 
+const formatShortDate = (dateStr) => {
+  if (!dateStr) return "-";
+  const [year, month, day] = dateStr.split("-");
+  return `${day}-${month}-${year}`;
+};
+
 export default function ReferOutDashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [status, setStatus] = useState({ text: "Connecting...", type: "neutral" });
@@ -120,7 +126,7 @@ export default function ReferOutDashboard() {
     // ฟังก์ชันจัดการค้นหาช่วงวันที่
     const handleSearch = (e) => {
         if (e) e.preventDefault();
-        
+
         if (startDate === todayStr && endDate === todayStr) {
             setIsFilterMode(false);
             setIsLoading(true);
@@ -167,7 +173,7 @@ export default function ReferOutDashboard() {
                             การส่งต่อผู้ป่วย (Refer Out) {isFilterMode ? "ข้อมูลสถิติย้อนหลัง" : "Real-Time"}
                         </h1>
                         <p className="text-gray-400 text-sm mt-1">
-                            {isFilterMode ? `แสดงผลยอดรวมจำนวนครั้งการส่งต่อผู้ป่วย ในช่วงวันที่ ${startDate} ถึง ${endDate}` : "ภาพรวมยอดการส่งต่อผู้ป่วยและระดับความเร่งด่วนในปัจจุบัน"}
+                            {isFilterMode ? `แสดงผลยอดรวมจำนวนครั้งการส่งต่อผู้ป่วย ในช่วงวันที่ ${formatShortDate(startDate)} ถึง ${formatShortDate(endDate)}` : "ภาพรวมยอดการส่งต่อผู้ป่วยและระดับความเร่งด่วนในปัจจุบัน"}
                         </p>
                     </div>
 
@@ -184,11 +190,10 @@ export default function ReferOutDashboard() {
                             <LiveClock />
                         </div>
 
-                        <span className={`text-[10px] px-3 py-1 rounded-full uppercase font-bold tracking-wider ${
-                            status.type === 'success' ? 'bg-green-100 text-green-700' :
+                        <span className={`text-[10px] px-3 py-1 rounded-full uppercase font-bold tracking-wider ${status.type === 'success' ? 'bg-green-100 text-green-700' :
                             status.text === 'FILTERED' ? 'bg-blue-100 text-blue-700' :
-                            status.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'
-                        }`}>
+                                status.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'
+                            }`}>
                             {status.text}
                         </span>
                     </div>
@@ -237,7 +242,7 @@ export default function ReferOutDashboard() {
                                 setIsLoading(true);
                                 fetchReferData("view=today");
                             }}
-                            className="text-xs text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 rounded-xl px-4 py-1.5 transition-colors font-medium ml-auto shadow-sm active:scale-95 cursor-pointer"
+                            className="text-sm text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 rounded-xl px-4 py-1.5 transition-colors font-medium mr-auto shadow-sm active:scale-95 cursor-pointer flex items-center justify-center w-28"
                         >
                             ล้างตัวกรอง
                         </button>
@@ -298,8 +303,8 @@ export default function ReferOutDashboard() {
                                 const percent = totalValue > 0 ? ((countValue / totalValue) * 100).toFixed(1) : 0;
 
                                 return (
-                                    <div 
-                                        key={cfg.key} 
+                                    <div
+                                        key={cfg.key}
                                         onClick={() => handleFetchCases(cfg.id, cfg.title)}
                                         className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:border-teal-200 hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer active:scale-[0.99]"
                                     >
@@ -343,15 +348,17 @@ export default function ReferOutDashboard() {
                 {isModalOpen && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-center items-center p-4">
                         <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-150">
-                            
+
                             <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-2xl">
                                 <div>
                                     <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
                                         รายชื่อกลุ่ม {activeSeverityTitle}
                                     </h3>
-                                    <p className="text-gray-400 text-xs mt-0.5">ช่วงวันที่: {startDate} ถึง {endDate}</p>
+                                    <p className="text-gray-400 text-xs mt-0.5">
+                                        ช่วงวันที่: {formatShortDate(startDate)} ถึง {formatShortDate(endDate)}
+                                    </p>
                                 </div>
-                                <button 
+                                <button
                                     onClick={() => setIsModalOpen(false)}
                                     className="text-gray-400 hover:text-gray-600 bg-white hover:bg-gray-100 border border-gray-200 rounded-xl px-3 py-1.5 text-sm transition-all font-semibold active:scale-95"
                                 >
