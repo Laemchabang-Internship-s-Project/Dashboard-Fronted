@@ -559,7 +559,7 @@ export default function OPDDashboard() {
 
                         {/* กล่อง ปณ. */}
                         <div className="flex items-center justify-between bg-white/60 px-2 py-1 rounded-md shadow-sm border border-white/50">
-                          <span className="text-[11px] md:text-xs text-gray-700 font-medium tracking-wide">📦 ปณ.</span>
+                          <span className="text-[11px] md:text-xs text-gray-700 font-medium tracking-wide">ปณ.</span>
                           <AnimatedStat
                             value={stats.drugDeliveryPostal !== undefined ? stats.drugDeliveryPostal : "-"}
                             Component="span"
@@ -569,7 +569,7 @@ export default function OPDDashboard() {
 
                         {/* กล่อง Rider */}
                         <div className="flex items-center justify-between bg-white/60 px-2 py-1 rounded-md shadow-sm border border-white/50">
-                          <span className="text-[11px] md:text-xs text-gray-700 font-medium tracking-wide">🛵 Rider</span>
+                          <span className="text-[11px] md:text-xs text-gray-700 font-medium tracking-wide">Rider</span>
                           <AnimatedStat
                             value={stats.drugDeliveryRider !== undefined ? stats.drugDeliveryRider : "-"}
                             Component="span"
