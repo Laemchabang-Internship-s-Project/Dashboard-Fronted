@@ -27,6 +27,7 @@ const YEAR_OPTIONS = Array.from(
 );
 const CURRENT_YEAR = new Date().getFullYear().toString();
 const CURRENT_MONTH = `${CURRENT_YEAR}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+const CURRENT_DATE = `${CURRENT_MONTH}-${String(new Date().getDate()).padStart(2, '0')}`;
 
 // ─── กลุ่มสิทธิ์ (pttype_code → group name) ───────────────────────────────────
 // Mapping ตามข้อมูลสิทธิ.md
@@ -109,6 +110,7 @@ export default function FinanceGraph() {
   const [activeTab, setActiveTab] = useState('by_pttype');
   const [kpi, setKpi] = useState(null);
   const [byPttypeRows, setByPttypeRows] = useState([]);
+  const [todayPttypeRows, setTodayPttypeRows] = useState([]);
   const [yearlyRows, setYearlyRows] = useState([]);
   const [monthlyRows, setMonthlyRows] = useState([]);
   const [dailyRows, setDailyRows] = useState([]);
@@ -126,6 +128,7 @@ export default function FinanceGraph() {
       let url = `/api/finance/summary?view=${view}`;
       if (params.year) url += `&year=${params.year}`;
       if (params.month) url += `&month=${params.month}`;
+      if (params.date) url += `&date=${params.date}`;
       const res = await apiGetInternal(url);
       if (!res || res.status !== 'success') throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
       return res.data;
@@ -138,18 +141,20 @@ export default function FinanceGraph() {
   const loadAll = useCallback(async () => {
     setLoading(true);
     setError('');
-    const [kpiData, ptypeData, yearlyData, monthlyData, dailyData] = await Promise.all([
+    const [kpiData, ptypeData, yearlyData, monthlyData, dailyData, todayPtypeData] = await Promise.all([
       fetchView('kpi'),
       fetchView('by_pttype'),
       fetchView('yearly'),
       fetchView('monthly', { year: filterYear }),
       fetchView('daily', { month: filterMonth }),
+      fetchView('by_pttype', { date: CURRENT_DATE }),
     ]);
     if (kpiData) setKpi(kpiData);
     if (ptypeData) setByPttypeRows(ptypeData);
     if (yearlyData) setYearlyRows(yearlyData);
     if (monthlyData) setMonthlyRows(monthlyData);
     if (dailyData) setDailyRows(dailyData);
+    if (todayPtypeData) setTodayPttypeRows(todayPtypeData);
     setLoading(false);
   }, [fetchView, filterYear, filterMonth]);
 
@@ -199,19 +204,42 @@ export default function FinanceGraph() {
   const groupedRows = useMemo(() => {
     if (!byPttypeRows.length) return [];
     const map = {};
+    // เตรียมข้อมูลตามลำดับใน PTTYPE_GROUP_MAP
+    Object.keys(PTTYPE_GROUP_MAP).forEach(k => {
+      map[k] = { group: k, cash_amount: 0, debtor_amount: 0, unpaid_amount: 0, total_amount: 0, total_patients: 0, total_visits: 0, count: 0 };
+    });
+
     byPttypeRows.forEach(r => {
       const g = getPttypeGroup(r.pttype_code);
-      if (!map[g]) map[g] = { group: g, cash_amount: 0, debtor_amount: 0, unpaid_amount: 0, total_amount: 0, total_patients: 0, total_visits: 0, count: 0 };
-      map[g].cash_amount += r.cash_amount ?? 0;
-      map[g].debtor_amount += r.debtor_amount ?? 0;
-      map[g].unpaid_amount += r.unpaid_amount ?? 0;
-      map[g].total_amount += r.total_amount ?? 0;
-      map[g].total_patients += r.total_patients ?? 0;
-      map[g].total_visits += r.total_visits ?? 0;
-      map[g].count++;
+      if (map[g]) {
+        map[g].cash_amount += r.cash_amount ?? 0;
+        map[g].debtor_amount += r.debtor_amount ?? 0;
+        map[g].unpaid_amount += r.unpaid_amount ?? 0;
+        map[g].total_amount += r.total_amount ?? 0;
+        map[g].total_patients += r.total_patients ?? 0;
+        map[g].total_visits += r.total_visits ?? 0;
+        map[g].count++;
+      }
     });
-    return Object.values(map).sort((a, b) => b.total_amount - a.total_amount);
+    // คืนค่าเป็น Array ตามลำดับเดิม (ไม่ต้อง sort)
+    return Object.values(map);
   }, [byPttypeRows]);
+
+  const groupedTodayRows = useMemo(() => {
+    if (!todayPttypeRows) return [];
+    const map = {};
+    Object.keys(PTTYPE_GROUP_MAP).forEach(k => {
+      map[k] = { group: k, total_amount: 0 };
+    });
+
+    todayPttypeRows.forEach(r => {
+      const g = getPttypeGroup(r.pttype_code);
+      if (map[g]) {
+        map[g].total_amount += r.total_amount ?? 0;
+      }
+    });
+    return Object.values(map);
+  }, [todayPttypeRows]);
 
   const groupedChartData = useMemo(() => {
     if (!groupedRows.length) return null;
@@ -419,67 +447,60 @@ export default function FinanceGraph() {
 
             <ErrorMessage error={error} />
 
-            {/* ── KPI Row 1: ยอดตามปฏิทิน (Calendar-based) ── */}
+            {/* ── KPI Combined ── */}
             {kpi && (
-              <>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-fade-up">
-                  <MetricCard
-                    label="รายรับวันนี้"
-                    value={fmtBaht(kpi.today_total)}
-                    icon={faCoins}
-                    color="bg-emerald-500"
-                  />
-                  <MetricCard
-                    label="รายรับเดือนนี้"
-                    value={fmtBaht(kpi.month_total)}
-                    icon={faFileInvoiceDollar}
-                    color="bg-indigo-500"
-                  />
-                  <MetricCard
-                    label="รายรับปีนี้ (ตั้งแต่ 1 ม.ค.)"
-                    value={fmtBaht(kpi.year_total)}
-                    icon={faChartBar}
-                    color="bg-violet-500"
-                  />
-                  <MetricCard
-                    label="ค้างชำระปีนี้"
-                    value={fmtBaht(kpi.year_unpaid ?? 0)}
-                    icon={faTriangleExclamation}
-                    color="bg-amber-500"
-                  />
-                </div>
-              </>
-            )}
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-3 animate-fade-up">
+                {/* ── KPI Row 1: ยอดตามปฏิทิน ── */}
+                <MetricCard
+                  label="รายรับวันนี้"
+                  value={fmtBaht(kpi.today_total)}
+                  icon={faCoins}
+                  color="bg-emerald-500"
+                />
+                <MetricCard
+                  label="รายรับเดือนนี้"
+                  value={fmtBaht(kpi.month_total)}
+                  icon={faFileInvoiceDollar}
+                  color="bg-indigo-500"
+                />
+                <MetricCard
+                  label="รายรับปีนี้ (ตั้งแต่ 1 ม.ค.)"
+                  value={fmtBaht(kpi.year_total)}
+                  icon={faChartBar}
+                  color="bg-violet-500"
+                />
+                <MetricCard
+                  label="ค้างชำระปีนี้"
+                  value={fmtBaht(kpi.year_unpaid ?? 0)}
+                  icon={faTriangleExclamation}
+                  color="bg-amber-500"
+                />
 
-            {/* ── KPI Row 2: ยอดย้อนหลัง 365 วัน (Rolling Year) ── */}
-            <>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-fade-up">
-                <MetricCard
-                  label="ผู้รับบริการ (365 วันล่าสุด)"
-                  value={fmt(totalByPttype.patients)}
-                  icon={faUsers}
-                  color="bg-blue-500"
-                />
-                <MetricCard
-                  label="รายรับรวม (365 วันล่าสุด)"
-                  value={fmtBaht(totalByPttype.total)}
-                  icon={faMoneyBillWave}
-                  color="bg-teal-500"
-                />
-                <MetricCard
-                  label="ชำระเงินสด (365 วันล่าสุด)"
-                  value={fmtBaht(totalByPttype.cash)}
-                  icon={faCheckCircle}
-                  color="bg-green-500"
-                />
-                <MetricCard
-                  label="ยังค้างชำระ (365 วันล่าสุด)"
-                  value={fmtBaht(totalByPttype.unpaid)}
-                  icon={faCreditCard}
-                  color="bg-rose-500"
-                />
+                {/* ── KPI Row 2: แยกตามกลุ่มสิทธิ์ ── */}
+                {groupedTodayRows.map((g, idx) => {
+                  const config = [
+                    { icon: faCoins, color: 'bg-emerald-500' },
+                    { icon: faIdCard, color: 'bg-blue-500' },
+                    { icon: faIdCard, color: 'bg-sky-500' },
+                    { icon: faUsers, color: 'bg-amber-500' },
+                    { icon: faHeartPulse, color: 'bg-pink-500' },
+                    { icon: faHeartPulse, color: 'bg-rose-500' },
+                    { icon: faCheckCircle, color: 'bg-teal-500' },
+                    { icon: faLayerGroup, color: 'bg-gray-500' },
+                  ][idx] || { icon: faLayerGroup, color: 'bg-gray-500' };
+
+                  return (
+                    <MetricCard
+                      key={g.group}
+                      label={g.group}
+                      value={fmtBaht(g.total_amount)}
+                      icon={config.icon}
+                      color={config.color}
+                    />
+                  );
+                })}
               </div>
-            </>
+            )}
 
             {/* Chart Card */}
             <GlassCard className="animate-fade-up">
