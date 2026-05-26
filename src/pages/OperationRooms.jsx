@@ -136,7 +136,6 @@ export default function OperationRooms() {
         <div className="flex flex-wrap justify-between items-center glass p-5 rounded-2xl soft-shadow border border-white/40 gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
-              <FontAwesomeIcon icon={faHospital} className="text-teal-600 text-xl" />
               ห้องผ่าตัด {isFilterMode ? "ข้อมูลสถิติย้อนหลัง" : "Real-Time"}
             </h1>
             <p className="text-gray-400 text-sm mt-1">
