@@ -35,10 +35,10 @@ const PTTYPE_GROUP_MAP = {
   'ชำระเงินเอง': ['00', '02', '03', '04'],
   'สิทธิ uc แหลมฉบัง': ['11', '19', '1a', '1b', '1g', '23', '27', '32', 'ho', 'mo', 'กก'],
   'สิทธิ uc ต่างจังหวัด': ['1c', '1d', '1e', '1f', '1m', '1n', '1o', '1p', '24', '25', '28', '29'],
+  'มิตรไมตรี': ['n2', 'n4'],
   'สิทธิ ข้าราชการ': ['m1'],
   'สิทธิประกันสังคม': ['2a', '74', '92', 'h1'],
   'ประกันสังคมอื่นๆ': ['1h', '1s', '2b', '2c', '95', '97'],
-  'มิตรไมตรี': ['n2', 'n4'],
   'อื่น ๆ': [],
 };
 
@@ -229,13 +229,14 @@ export default function FinanceGraph() {
     if (!todayPttypeRows) return [];
     const map = {};
     Object.keys(PTTYPE_GROUP_MAP).forEach(k => {
-      map[k] = { group: k, total_amount: 0 };
+      map[k] = { group: k, total_amount: 0, total_patients: 0 };
     });
 
     todayPttypeRows.forEach(r => {
       const g = getPttypeGroup(r.pttype_code);
       if (map[g]) {
         map[g].total_amount += r.total_amount ?? 0;
+        map[g].total_patients += r.total_patients ?? 0;
       }
     });
     return Object.values(map);
@@ -452,12 +453,24 @@ export default function FinanceGraph() {
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-3 animate-fade-up">
                 {/* ── KPI Row 1: ยอดตามปฏิทิน ── */}
                 <MetricCard
+                  label="ผู้รับบริการวันนี้"
+                  value={`${(kpi.today_patients ?? 0).toLocaleString('th-TH')} คน`}
+                  icon={faUsers}
+                  color="bg-sky-500"
+                />
+                <MetricCard
+                  label="ชำระเงินเองวันนี้"
+                  value={`${(kpi.today_cash_patients ?? 0).toLocaleString('th-TH')} คน`}
+                  icon={faCoins}
+                  color="bg-blue-500"
+                />
+                {/* <MetricCard
                   label="รายรับวันนี้"
                   value={fmtBaht(kpi.today_total)}
                   icon={faCoins}
                   color="bg-emerald-500"
-                />
-                <MetricCard
+                /> */}
+                {/* <MetricCard
                   label="รายรับเดือนนี้"
                   value={fmtBaht(kpi.month_total)}
                   icon={faFileInvoiceDollar}
@@ -468,13 +481,13 @@ export default function FinanceGraph() {
                   value={fmtBaht(kpi.year_total)}
                   icon={faChartBar}
                   color="bg-violet-500"
-                />
-                <MetricCard
-                  label="ค้างชำระปีนี้"
+                /> */}
+                {/* <MetricCard
+                  label="ค้างชำระวันนี้"
                   value={fmtBaht(kpi.year_unpaid ?? 0)}
                   icon={faTriangleExclamation}
                   color="bg-amber-500"
-                />
+                /> */}
 
                 {/* ── KPI Row 2: แยกตามกลุ่มสิทธิ์ ── */}
                 {groupedTodayRows.map((g, idx) => {
@@ -493,7 +506,7 @@ export default function FinanceGraph() {
                     <MetricCard
                       key={g.group}
                       label={g.group}
-                      value={fmtBaht(g.total_amount)}
+                      value={`${(g.total_patients ?? 0).toLocaleString('th-TH')} คน`}
                       icon={config.icon}
                       color={config.color}
                     />
