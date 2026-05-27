@@ -32,7 +32,7 @@ const CURRENT_DATE = `${CURRENT_MONTH}-${String(new Date().getDate()).padStart(2
 // ─── กลุ่มสิทธิ์ (pttype_code → group name) ───────────────────────────────────
 // Mapping ตามข้อมูลสิทธิ.md
 const PTTYPE_GROUP_MAP = {
-  'ชำระเงินเอง': ['00', '02', '03', '04'],
+  'สิทธิชำระเงินเอง': ['00', '02', '03', '04'],
   'สิทธิ uc แหลมฉบัง': ['11', '19', '1a', '1b', '1g', '23', '27', '32', 'ho', 'mo', 'กก'],
   'สิทธิ uc ต่างจังหวัด': ['1c', '1d', '1e', '1f', '1m', '1n', '1o', '1p', '24', '25', '28', '29'],
   'มิตรไมตรี': ['n2', 'n4'],
@@ -460,9 +460,11 @@ export default function FinanceGraph() {
                 />
                 <MetricCard
                   label="ชำระเงินเองวันนี้"
-                  value={`${(kpi.today_cash_patients ?? 0).toLocaleString('th-TH')} คน`}
+                  value={fmtBaht(kpi.today_cash)}
+                  subtext={`${(kpi.today_cash_patients ?? 0).toLocaleString('th-TH')} คน`}
                   icon={faCoins}
                   color="bg-blue-500"
+                /*ผู้ป่วยไม่ซํ้าคนในวันนี้ ที่ เป็น 1 จ่ายเองเบิกได้ กับ 3 จ่ายเองเบิกไม่ได้ */
                 />
                 {/* <MetricCard
                   label="รายรับวันนี้"
@@ -743,8 +745,9 @@ export default function FinanceGraph() {
               <GlassCard className="animate-fade-up overflow-x-auto">
                 <SectionHeader
                   title="ตารางสรุปแยกสิทธิ์ (365 วันล่าสุด)"
-                  icon={faFileInvoiceDollar}
-                  colorClass="bg-teal-500"
+                  icon={faMoneyBillWave}
+                  colorClass="bg-emerald-500"
+                  iconColorClass="text-black"
                 />
                 <table className="w-full text-sm text-left">
                   <thead>

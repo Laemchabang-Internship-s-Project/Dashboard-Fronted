@@ -47,7 +47,7 @@ export const DashboardStyles = () => (
 /**
  * MetricCard: Displays a single KPI with an icon
  */
-export const MetricCard = ({ label, value, icon, color, onClick, isClickable }) => (
+export const MetricCard = ({ label, value, subtext, icon, color, onClick, isClickable }) => (
   <div
     className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4 transition-all duration-200
       ${isClickable ? 'cursor-pointer hover:shadow-md hover:border-blue-200 hover:-translate-y-1' : ''}`}
@@ -59,6 +59,7 @@ export const MetricCard = ({ label, value, icon, color, onClick, isClickable }) 
     <div className="min-w-0 flex-1">
       <p className="text-xs text-gray-400 font-semibold truncate" title={label}>{label}</p>
       <p className="text-xl font-bold text-gray-800 truncate">{value ?? '—'}</p>
+      {subtext && <p className="text-xs text-gray-500 mt-0.5 font-medium truncate">{subtext}</p>}
       {isClickable && <p className="text-[10px] text-blue-500 mt-0.5 font-medium">คลิกดูรายละเอียด</p>}
     </div>
   </div>
@@ -76,11 +77,11 @@ export const GlassCard = ({ children, className = "", noPadding = false }) => (
 /**
  * SectionHeader: A consistent title block for dashboard sections
  */
-export const SectionHeader = ({ title, icon, colorClass, subtitle }) => (
+export const SectionHeader = ({ title, icon, colorClass, iconColorClass, subtitle }) => (
   <div className="mb-6">
     <h2 className="font-bold text-gray-800 text-lg flex items-center gap-2">
       <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${colorClass} bg-opacity-10`}>
-        <FontAwesomeIcon icon={icon} className={colorClass.replace('bg-', 'text-')} />
+        <FontAwesomeIcon icon={icon} className={iconColorClass || colorClass.replace('bg-', 'text-')} />
       </div>
       {title}
     </h2>
