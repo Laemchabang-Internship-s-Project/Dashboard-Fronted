@@ -84,7 +84,8 @@ const DepartmentBlockBowin = ({ title, stats, theme }) => {
         {title}
       </h2>
 
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      {/* แถวบน: ตัวเลขสถิติหลัก */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
         <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl text-center shadow-sm border border-white/50">
           <p className="text-[13px] font-bold text-gray-500 mb-1 uppercase tracking-tight">ผู้รับบริการ OPD</p>
           <AnimatedStat value={stats.total} Component="p" className="text-2xl md:text-3xl font-extrabold text-gray-800" />
@@ -105,6 +106,16 @@ const DepartmentBlockBowin = ({ title, stats, theme }) => {
               <AnimatedStat value={stats.waitingDental} className="text-xl font-bold text-emerald-600" />
             </div>
           </div>
+        </div>
+        {/* เพิ่มแสดงผล รอ Lab */}
+        <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl text-center shadow-sm border border-white/50">
+          <p className="text-[13px] font-bold text-gray-500 mb-1 uppercase tracking-tight">รอ Lab</p>
+          <AnimatedStat value={stats.waitingLab} Component="p" className="text-2xl md:text-3xl font-extrabold text-gray-800" />
+        </div>
+        {/* เพิ่มแสดงผล รอ X-ray */}
+        <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl text-center shadow-sm border border-white/50">
+          <p className="text-[13px] font-bold text-gray-500 mb-1 uppercase tracking-tight">X-ray</p>
+          <AnimatedStat value={stats.waitingXray} Component="p" className="text-2xl md:text-3xl font-extrabold text-gray-800" />
         </div>
       </div>
 
@@ -186,7 +197,7 @@ const DepartmentBlock = ({ title, stats, theme }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
         {[
-          { label: "ระยะเวลารอคอย เฉลี่ยรวม", val: stats.avgTotal },
+          { label: "ระยะเวลารоคอย เฉลี่ยรวม", val: stats.avgTotal },
           { label: "ระยะเวลา รอซักประวัติ", val: stats.avgWaitScreening },
           { label: "ระยะเวลา รอพบแพทย์", val: stats.avgWaitExam },
           { label: "ระยะเวลา รอรับยา", val: stats.avgWaitDrug },
@@ -384,6 +395,9 @@ export default function OPDDashboard() {
       waitingScreening: stats902.waitingScreening,
       waitingExamCount: stats903.waitingExamCount,
       waitingDental: stats905.waitingExamCount,
+      // รวบรวมข้อมูลรอ Lab และ X-ray จากทุก stats ของบ่อวิน
+      waitingLab: stats901.waitingLab + stats902.waitingLab + stats903.waitingLab + stats904.waitingLab + stats905.waitingLab,
+      waitingXray: stats901.waitingXray + stats902.waitingXray + stats903.waitingXray + stats904.waitingXray + stats905.waitingXray,
       waitingDrug: stats904.waitingDrug + stats902.waitingDrug,
       waitingPayment: stats902.waitingPayment + stats903.waitingPayment + stats905.waitingPayment,
       goHome: stats901.goHome + stats902.goHome + stats903.goHome + stats904.goHome + stats905.goHome,
@@ -493,6 +507,9 @@ export default function OPDDashboard() {
         waitingScreening: b902.waiting_screening || 0,
         waitingExamCount: b903.waiting_exam || 0,
         waitingDental: b905.waiting_exam || 0,
+        // เพิ่มการ Map สำหรับโหมดฟิลเตอร์ย้อนหลังของบ่อวิน
+        waitingLab: (b901.waiting_lab || 0) + (b902.waiting_lab || 0) + (b903.waiting_lab || 0) + (b904.waiting_lab || 0) + (b905.waiting_lab || 0),
+        waitingXray: (b901.waiting_xray || 0) + (b902.waiting_xray || 0) + (b903.waiting_xray || 0) + (b904.waiting_xray || 0) + (b905.waiting_xray || 0),
         waitingDrug: (b904.waiting_drug || 0) + (b902.waiting_drug || 0),
         waitingPayment: (b902.waiting_payment || 0) + (b903.waiting_payment || 0) + (b905.waiting_payment || 0),
         goHome: (b901.go_home || 0) + (b902.go_home || 0) + (b903.go_home || 0) + (b904.go_home || 0) + (b905.go_home || 0),
