@@ -502,20 +502,26 @@ export default function OPDDashboard() {
 
       const b901 = findDept("901"), b902 = findDept("902"),
         b903 = findDept("903"), b904 = findDept("904"), b905 = findDept("905");
+
       setStatsBowinAll({
+        // แก้จาก stats90x.total เป็น b90x.total_opd เพื่อให้ดึงข้อมูลฟิลเตอร์มาครบถ้วน
         total: (b901.total_opd || 0) + (b902.total_opd || 0) + (b903.total_opd || 0) + (b904.total_opd || 0) + (b905.total_opd || 0),
         waitingScreening: b902.waiting_screening || 0,
-        waitingExamCount: b903.waiting_exam || 0,
+
+        // รวมยอด waiting_exam จากจุดซักประวัติ (b902) และห้องตรวจ (b903) ของบ่อวิน
+        waitingExamCount: (b902.waiting_exam || 0) + (b903.waiting_exam || 0),
+
         waitingDental: b905.waiting_exam || 0,
-        // เพิ่มการ Map สำหรับโหมดฟิลเตอร์ย้อนหลังของบ่อวิน
         waitingLab: (b901.waiting_lab || 0) + (b902.waiting_lab || 0) + (b903.waiting_lab || 0) + (b904.waiting_lab || 0) + (b905.waiting_lab || 0),
         waitingXray: (b901.waiting_xray || 0) + (b902.waiting_xray || 0) + (b903.waiting_xray || 0) + (b904.waiting_xray || 0) + (b905.waiting_xray || 0),
         waitingDrug: (b904.waiting_drug || 0) + (b902.waiting_drug || 0),
         waitingPayment: (b902.waiting_payment || 0) + (b903.waiting_payment || 0) + (b905.waiting_payment || 0),
         goHome: (b901.go_home || 0) + (b902.go_home || 0) + (b903.go_home || 0) + (b904.go_home || 0) + (b905.go_home || 0),
+
+        // ครอบฟังก์ชัน formatWaitTime แปลงเวลารอคอยของข้อมูลที่ฟิลเตอร์มา
         avgTotal: formatWaitTime(b902.avg_wait_total),
         avgWaitScreening: formatWaitTime(b902.avg_wait_screening),
-        avgWaitExam: formatWaitTime(b902.avg_wait_exam),
+        avgWaitExam: b903.avg_wait_exam ? formatWaitTime(b903.avg_wait_exam) : formatWaitTime(b902.avg_wait_exam),
         avgWaitDental: formatWaitTime(b905.avg_wait_exam),
         avgWaitDrug: formatWaitTime(b902.avg_wait_drug),
         redirected: 0,
